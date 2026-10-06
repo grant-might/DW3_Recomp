@@ -1,0 +1,66 @@
+# DW3 Recompiled+ - public tree
+#
+# The launcher ships NO game code and NO game data. Everything derived from the player's own disc
+# - the recompiled sources, the extracted game executables, the disc images themselves and every
+# build artefact - is produced at run time and must never be committed. These rules enforce that;
+# `verify_launcher.py` section X re-checks the patterns and the shipped engine's BIOS exception.
+
+# --- build output: the tree root `build/` (generated sources, CMake tree) and Builds/ (the
+#     finished regional runtimes the Play tab makes) --------------------------------
+build/
+Builds/
+dist/
+out/
+
+# --- the player's own disc images and cards (never distributable) -----------------
+Discs/
+discs/
+*.bin
+*.cue
+*.iso
+*.chd
+*.mdf
+*.mds
+*.img
+*.mcr
+*.mcd
+*.mcs
+
+# --- recompiler / generated C shards (derivative work) ---------------------------
+# Root-level only: the engine's vendored libraries legitimately contain their own `generated/`
+# source directories (rabbitizer), and those must still ship.
+/generated/
+*_full.c
+*_full_*.c
+*_dispatch.c
+*_decls.h
+*.ranges
+bios-generated/
+
+# --- runtime diagnostics ----------------------------------------------------------
+psx_freeze_dump_*.json
+psx_freeze_heartbeat.json
+psx_last_run_report.json
+/logs/
+*.log
+
+# --- python / env -----------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+launcher.json
+
+# --- OS / editor junk -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- exceptions: the one BIOS image that is legal to ship ------------------------
+# OpenBIOS is MIT (PCSX-Redux); its notice ships alongside as OpenBIOS.LICENSE. The bundled engine
+# needs it so the player only ever has to supply a disc, so it is deliberately tracked despite the
+# broad `*.bin` rule above.
+!engine/framework/bios/openbios.bin
+!engine/framework/bios/*.LICENSE

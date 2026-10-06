@@ -1,0 +1,7 @@
+# The Memory Card tab embeds the save editor's window and core in-process, and that core imports
+# numpy at module level (dmw3editor/core/memcard.py). So numpy is a hard runtime dependency here,
+# not an optional extra: without it the tab cannot load the editor at all. Pinned to the editor's
+# own pin (its requirements.txt) so the two sides cannot drift.
+PySide6>=6.6
+tomlkit>=0.12
+numpy==2.5.2
