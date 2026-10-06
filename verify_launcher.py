@@ -19,6 +19,15 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+# Some detail strings quote the UI verbatim, and the Play buttons carry a "▶" glyph. A cp1252
+# console (cmd.exe, or `make test` under MSYS) would otherwise raise UnicodeEncodeError and abort a
+# whole section instead of reporting a single check. Be explicit about the stream encoding.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    except Exception:  # noqa: BLE001
+        pass
+
 from dmw3launcher import disc, paths, runtime, saves      # noqa: E402
 from dmw3launcher import settings as st                   # noqa: E402
 from dmw3launcher.ui import theme                         # noqa: E402

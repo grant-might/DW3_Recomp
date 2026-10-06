@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import tempfile
 
 APP_NAME = "DW3 Recompiled+"
 APP_ID = "DMW3Launcher"
@@ -44,7 +45,22 @@ def config_path() -> pathlib.Path:
 
 
 def user_data_dir() -> pathlib.Path:
-    base = pathlib.Path(os.environ.get("LOCALAPPDATA", pathlib.Path.home())) / APP_ID
+    """A writable per-user folder the launcher keeps its own data in.
+
+    LOCALAPPDATA is not guaranteed: a stripped build/test environment (MSYS make, a service) can
+    drop it, and `Path.home()` raises RuntimeError when neither HOME nor USERPROFILE is set. Neither
+    is assumed, and the old `os.environ.get("LOCALAPPDATA", Path.home())` was worse than it looks -
+    the default is evaluated eagerly, so the crash happened even when LOCALAPPDATA was present.
+    """
+    env = os.environ.get("LOCALAPPDATA")
+    if env:
+        base = pathlib.Path(env)
+    else:
+        try:
+            base = pathlib.Path.home()
+        except RuntimeError:
+            base = pathlib.Path(tempfile.gettempdir())
+    base = base / APP_ID
     base.mkdir(parents=True, exist_ok=True)
     return base
 
