@@ -1667,6 +1667,13 @@ try:
     check(_bd.work_root() == paths.launcher_root() / "build",
           "W6 the builder's generated sources live under the launcher's build/ (which git ignores)",
           str(_bd.work_root()))
+    check(_bd._is_cli_safe(_bd.cli_root()) and _bd.cli_root().is_dir(),
+          "W6b the bundled CLI is handed a short path its shell-built helper commands survive "
+          "(no space, no bracket)",
+          f"{_bd.cli_root()} (launcher at {paths.launcher_root()})")
+    _wprobe = _bd._via(paths.launcher_root())
+    check(_wprobe.samefile(paths.launcher_root()),
+          "W6c ...and that short path is the SAME directory, not a copy", str(_wprobe))
     check(_bd.expected_exe_name(_wus.title) == _wus.exe_name.rsplit(".", 1)[0]
           and _bd.expected_exe_name(_weu.title) == _weu.exe_name.rsplit(".", 1)[0],
           "W7 the builder predicts the runtime's exe name the way CMake does",
@@ -1762,6 +1769,45 @@ try:
                       lambda s: None)
     check(not _wres.ok and "not found" in _wres.message.lower(),
           "W23 build() refuses a missing disc image before doing anything", _wres.message[:80])
+
+    # W24 the shipped CLI is the CLI's WHOLE package, and keeps the one file its project-root
+    # discovery depends on. The engine's config_loader walks up from a profile looking for a
+    # .gitignore/.git/CMakeLists.txt marker; the framework carries a .gitignore precisely so a
+    # generated project's psxrecomp/ is found as the framework root. Drop it and the BIOS profile
+    # resolves its seeds against the game project instead, and the BIOS step dies with
+    # "cannot open seed file". That is a functional file, not decoration.
+    _eng = _bd.engine_dir()
+    _missing_cli = [str(p.relative_to(_eng)) for p in (
+        _eng / "psxrecomp.exe", _eng / "libexec" / "psxrecomp-bios.exe",
+        _eng / "libexec" / "psxrecomp-game.exe", _eng / "libexec" / "psxrecomp-toml.exe",
+        _eng / "framework" / ".gitignore", _eng / "framework" / "bios" / "OpenBIOS.toml",
+        _eng / "framework" / "recompiler" / "seeds" / "openbios_elf_seeds.json",
+        _eng / "framework" / "runtime" / "runtime.cmake",
+        _eng / "share" / "phase2_ghidra_seeds.json")
+        if not p.is_file()]
+    check(not _missing_cli,
+          "W24 the bundled CLI is its complete package (exe, libexec helpers, framework, seeds, "
+          "share) - and keeps the framework/.gitignore marker its project-root walk needs",
+          str(_missing_cli))
+
+    # W25 a dependency FetchContent leaves inside its archive's top-level folder must be
+    # unwrapped, or CMake finds no CMakeLists.txt and the configure dies ("SDL3 3.4+ was not
+    # found"). Synthetic tree, real helper.
+    _wfd = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-deps-"))
+    try:
+        _src = _wfd / "_deps" / "demo-src" / "Demo-1.0"
+        _src.mkdir(parents=True)
+        (_src / "CMakeLists.txt").write_text("project(demo)\n", encoding="utf-8")
+        (_src / "lib").mkdir()
+        _flat = _bd._flatten_fetched_deps(_wfd)
+        check(_flat == ["demo-src"]
+              and (_wfd / "_deps" / "demo-src" / "CMakeLists.txt").is_file()
+              and not (_wfd / "_deps" / "demo-src" / "Demo-1.0").exists()
+              and _bd._flatten_fetched_deps(_wfd) == [],
+              "W25 a wrapped FetchContent source is unwrapped once, and the second pass is a no-op",
+              f"flattened={_flat}")
+    finally:
+        shutil.rmtree(_wfd, ignore_errors=True)
 except Exception as _exc:  # noqa: BLE001
     check(False, "W1-W22 builder checks raised", f"{type(_exc).__name__}: {_exc}")
 

@@ -24,6 +24,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 
 from . import builds, disc, paths
@@ -60,9 +61,90 @@ def engine_present() -> bool:
 
 
 def work_root() -> pathlib.Path:
-    """Where generated sources and the CMake build tree go — under the root `build/`, which the
+    """Where generated sources and the CMake build tree go - under the root `build/`, which the
     tree's .gitignore excludes."""
     return paths.launcher_root() / "build"
+
+
+# ---------------------------------------------------------------- a CLI-safe path
+
+# The bundled recompiler builds its helper command lines with a shell and does NOT survive a space
+# (or a bracket) anywhere in a path it touches: with the tree at
+# `D:\AGENT\Digimon World 3 Launcher [public]`, `psxrecomp-bios` is handed `D:\AGENT\Digimon` and
+# dies with "config file not found". The fix is to hand the CLI - and only the CLI - the SAME
+# directory under its 8.3 short name (`D:\AGENT\DI23A3~1`), which has no space and no bracket.
+_UNSAFE = " \t[](){}!&^<>|\"'"
+
+
+def _is_cli_safe(p: pathlib.Path) -> bool:
+    return not any(ch in _UNSAFE for ch in str(p))
+
+
+_SHORT_CACHE: dict[str, pathlib.Path] = {}
+
+
+def _short_path(p: pathlib.Path) -> pathlib.Path:
+    """Windows 8.3 form of `p` (space- and bracket-free), or `p` when the volume gives none."""
+    if sys.platform != "win32":
+        return p
+    key = str(p)
+    if key in _SHORT_CACHE:
+        return _SHORT_CACHE[key]
+    out = p
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(32768)
+        n = ctypes.windll.kernel32.GetShortPathNameW(str(p), buf, 32768)
+        cand = pathlib.Path(buf.value) if n else p
+        if str(cand) != str(p) and _is_cli_safe(cand) and cand.is_dir():
+            out = cand
+    except Exception:  # noqa: BLE001
+        out = p
+    _SHORT_CACHE[key] = out
+    return out
+
+
+def _junction_alias(real: pathlib.Path) -> pathlib.Path | None:
+    """A last resort for volumes with 8.3 disabled: a directory junction under a clean path.
+
+    Junctions need no elevation. Best effort - returns None when no clean writable base exists.
+    """
+    try:
+        import hashlib
+        base = os.environ.get("ProgramData") or tempfile.gettempdir()
+        b = pathlib.Path(base)
+        if not b.is_dir() or not _is_cli_safe(b):
+            return None
+        link = b / ("DW3RecompiledPlus-" + hashlib.sha1(str(real).encode()).hexdigest()[:8])
+        if link.is_dir():
+            return link
+        res = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(real)],
+                             capture_output=True, text=True, errors="replace")
+        return link if res.returncode == 0 and link.is_dir() else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def cli_root() -> pathlib.Path:
+    """The root to hand the bundled CLI: the launcher's own folder, or its short form when the
+    folder's own name contains a character the CLI's shell-built command lines cannot carry."""
+    real = paths.launcher_root()
+    if _is_cli_safe(real):
+        return real
+    short = _short_path(real)
+    if _is_cli_safe(short):
+        return short
+    return _junction_alias(real) or real
+
+
+def _via(p: pathlib.Path) -> pathlib.Path:
+    """`p` expressed under `cli_root()`, for the paths the CLI and its CMake build are given."""
+    root = paths.launcher_root()
+    croot = cli_root()
+    try:
+        return croot / p.relative_to(root)
+    except ValueError:
+        return _short_path(p)
 
 
 # ---------------------------------------------------------------- the toolchain pre-flight
@@ -298,10 +380,13 @@ def generate(image: pathlib.Path, project_dir: pathlib.Path, name: str, log) -> 
         return False
     if project_dir.exists():
         shutil.rmtree(project_dir, ignore_errors=True)
-    project_dir.parent.mkdir(parents=True, exist_ok=True)
-    argv = [str(cli_path()), "build", "--disc", str(image), "--bios", str(bios_path()),
-            "--output", str(project_dir), "--name", name]
-    code = _run_stream(argv, engine_dir(), log, timeout=3600)
+    project_dir.mkdir(parents=True, exist_ok=True)
+    if not _is_cli_safe(paths.launcher_root()):
+        log(f"   the launcher folder's name needs the CLI's short form: {cli_root()}")
+    argv = [str(_via(cli_path())), "build", "--disc", str(image),
+            "--bios", str(_via(bios_path())), "--output", str(_via(project_dir)),
+            "--name", name]
+    code = _run_stream(argv, _via(engine_dir()), log, timeout=3600)
     if code != 0 or not (project_dir / "game.toml").is_file():
         log(f"!! the recompiler stopped (exit {code})")
         return False
@@ -325,13 +410,52 @@ def _write_build_script(script: pathlib.Path, tc: ToolChain, project_dir: pathli
         lines.append("if errorlevel 1 exit /b 10")
     cfg = [f'"{cmake}"', "-S", f'"{project_dir}"', "-B", f'"{cmake_build}"',
            "-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release", "-DPSX_RECOMP_UI=OFF",
-           f'-DRECOMP_RBENGINE_ROOT="{rbengine_dir()}"']
+           f'-DRECOMP_RBENGINE_ROOT="{_via(rbengine_dir())}"']
     if tc.ninja:
         cfg += ["-DCMAKE_MAKE_PROGRAM=" + f'"{tc.ninja}"']
     lines += [" ".join(cfg), "if errorlevel 1 exit /b 11"]
     lines += [f'"{cmake}" --build "{cmake_build}" --config Release --parallel',
               "exit /b %errorlevel%"]
     script.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
+
+
+def _flatten_fetched_deps(cmake_build: pathlib.Path) -> list[str]:
+    """Unwrap a dependency FetchContent left inside its archive's top-level folder.
+
+    CMake's URL download extracts an archive as-is, so a release tarball that ships a single
+    enclosing directory (SDL3-3.4.10/, libchdr-<sha>/, zlib-<sha>/) leaves the real source one
+    level down. FetchContent then finds no CMakeLists.txt at the source root, adds no target, and
+    the configure dies with "SDL3 3.4+ was not found" (or a later "no linkable target"). Moving
+    that folder's contents up makes the fetched tree the flat layout the project expects.
+
+    Returns the dependency names it flattened, so the caller can decide to retry the configure.
+    """
+    deps = cmake_build / "_deps"
+    if not deps.is_dir():
+        return []
+    changed: list[str] = []
+    for src in sorted(deps.glob("*-src")):
+        try:
+            if (src / "CMakeLists.txt").is_file():
+                continue
+            entries = list(src.iterdir())
+        except OSError:
+            continue
+        kids = [p for p in entries if p.is_dir()]
+        files = [p for p in entries if p.is_file()]
+        if len(kids) != 1 or files:
+            continue
+        inner = kids[0]
+        try:
+            if not (inner / "CMakeLists.txt").is_file() and not any(inner.iterdir()):
+                continue
+            for item in list(inner.iterdir()):
+                shutil.move(str(item), str(src / item.name))
+            inner.rmdir()
+        except OSError:
+            continue
+        changed.append(src.name)
+    return changed
 
 
 def compile_project(project_dir: pathlib.Path, cmake_build: pathlib.Path, tc: ToolChain,
@@ -342,14 +466,16 @@ def compile_project(project_dir: pathlib.Path, cmake_build: pathlib.Path, tc: To
     script = script_dir / "build.cmd"
     script.parent.mkdir(parents=True, exist_ok=True)
     if tc.compiler_kind == "msvc" and sys.platform == "win32":
-        _write_build_script(script, tc, project_dir, cmake_build)
-        argv = [os.environ.get("ComSpec", "cmd.exe"), "/c", str(script)]
-        code = _run_stream(argv, script_dir, log)
+        _write_build_script(script, tc, _via(project_dir), _via(cmake_build))
+
+        def _run_once() -> int:
+            return _run_stream([os.environ.get("ComSpec", "cmd.exe"), "/c", str(_via(script))],
+                               script_dir, log)
     else:
         cmake = tc.cmake
-        argv = [cmake, "-S", str(project_dir), "-B", str(cmake_build), "-G", "Ninja",
+        argv = [cmake, "-S", str(_via(project_dir)), "-B", str(_via(cmake_build)), "-G", "Ninja",
                 "-DCMAKE_BUILD_TYPE=Release", "-DPSX_RECOMP_UI=OFF",
-                f"-DRECOMP_RBENGINE_ROOT={rbengine_dir()}"]
+                f"-DRECOMP_RBENGINE_ROOT={_via(rbengine_dir())}"]
         if tc.ninja:
             argv.append(f"-DCMAKE_MAKE_PROGRAM={tc.ninja}")
         if tc.compiler and tc.compiler_kind in ("clang", "gcc"):
@@ -357,14 +483,29 @@ def compile_project(project_dir: pathlib.Path, cmake_build: pathlib.Path, tc: To
             if tc.compiler_kind == "clang":
                 cxx = _which("clang++") or tc.compiler
                 argv += [f"-DCMAKE_CXX_COMPILER={cxx}"]
-        code = _run_stream(argv, script_dir, log)
+
+        def _run_once() -> int:
+            code = _run_stream(argv, script_dir, log)
+            if code == 0:
+                code = _run_stream([cmake, "--build", str(_via(cmake_build)), "--config",
+                                    "Release", "--parallel"], script_dir, log)
+            return code
+
+    # A configure that dies because a fetched dependency stayed wrapped can be repaired and
+    # retried; each pass unwraps whatever the failed pass had just downloaded (SDL3 and libchdr
+    # together, then zlib), so it converges in a couple of attempts and is a no-op afterwards.
+    code = 1
+    for _attempt in range(4):
+        code = _run_once()
         if code == 0:
-            code = _run_stream([cmake, "--build", str(cmake_build), "--config", "Release",
-                                "--parallel"], script_dir, log)
-    if code != 0:
-        log(f"!! the compiler stopped (exit {code})")
-        return False
-    return True
+            return True
+        flattened = _flatten_fetched_deps(cmake_build)
+        if not flattened:
+            break
+        log("   a fetched dependency stayed inside its archive folder; unwrapped "
+            + ", ".join(flattened) + " and retrying the configure")
+    log(f"!! the compiler stopped (exit {code})")
+    return False
 
 
 def _find_exe(out_dir: pathlib.Path, expected: str) -> pathlib.Path | None:
