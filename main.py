@@ -1,4 +1,4 @@
-"""DW3 Recompiled+ — the launcher for the native recompilation.
+"""DW3 Recompiled+, the launcher for the native recompilation.
 
     python main.py
 """

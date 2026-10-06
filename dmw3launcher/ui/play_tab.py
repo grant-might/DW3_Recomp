@@ -5,7 +5,7 @@ The launcher ships no game code. Its Play tab is therefore a BUILDER plus two la
   * the player points at their own Digimon World 3 disc image (Europe OR USA - both are
     first-class, nothing is refused for its region);
   * the tab reads the disc's own serial to name the region, pre-flights the C/C++ toolchain and
-    says precisely what is missing BEFORE starting a 10-15 minute recompile;
+    says precisely what is missing BEFORE starting a 10 to 20 minute recompile;
   * it runs the bundled recompiler and compiles the result with the player's own CMake + Ninja +
     compiler, streaming honest progress into the Activity log;
   * the finished build lands in Builds/EUR or Builds/USA beside the launcher, where the two Play
@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (QFileDialog, QFrame, QGroupBox, QHBoxLayout, QLab
                                QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
                                QPushButton, QScrollArea, QVBoxLayout, QWidget)
 
-from .. import builder, builds, disc, paths, runtime
+from .. import builder, builds, disc, runtime
 from . import theme
 
 # One size for the three control buttons, so the two Play buttons read as a pair with Stop. The
@@ -409,7 +409,7 @@ class PlayTab(QWidget):
             where = (builds.spec(region).folder
                      if region in (builds.REGION_EU, builds.REGION_US) else "OTHER")
             self.lbl_progress.setText(
-                f"Ready to build {img.name} -> Builds/{where}. A recompile takes 10-15 minutes.")
+                f"Ready to build {img.name} -> Builds/{where}. A recompile takes 10 to 20 minutes.")
         self.btn_recheck.setEnabled(not busy)
 
     # ------------------------------------------------------------------ disc router
@@ -444,31 +444,23 @@ class PlayTab(QWidget):
         self.list_discs.setCurrentRow(self.list_discs.count() - 1)
 
     def check_selected(self) -> bool:
-        """Report the selected image's region (and, if a DiscTool copy is present, its report).
+        """Report the selected image's own region and whether it looks usable.
 
-        This never gates a build or a launch: it reports the router's verdict, and DiscTool's own
-        output when the tool happens to be beside the launcher, purely as information.
+        This never gates a build or a launch: it reads the image's own serial and says what it
+        found. The recompiler is the real judge of whether the disc builds.
         """
         sel = self._selected_disc()
         if not sel:
             QMessageBox.information(self, "No disc", "Add or select a disc image first.")
             return False
-        img, region = sel
-        serial = disc.serial_of_image(img)
+        img, _region = sel
         self._say(f"- checking {img.name} -")
-        self._say(f"   region: {_region_label(region)}"
-                  + (f"   serial: {serial}" if serial else "   (no serial found)"))
-        self.lbl_disc.setText(f"{img.name}: {_region_label(region)}"
-                              + (f"  -  serial {serial}" if serial else ""))
-        tool = paths.disc_tool(paths.launcher_root())
-        if not tool.is_file():
-            self._say("   DiscTool.exe is not bundled (the launcher does not need it): the disc "
-                      "serial above is what routes the build.")
-            return region != disc.REGION_UNKNOWN
-        chk = disc.verify(tool, img)
+        chk = disc.verify(img)
+        self._say(f"   region: {_region_label(chk.region)}")
         for line in chk.lines:
             self._say("   " + line)
-        return region != disc.REGION_UNKNOWN
+        self.lbl_disc.setText(f"{img.name}: {_region_label(chk.region)}")
+        return chk.ok
 
     def _open_builds(self) -> None:
         d = builds.builds_dir()
@@ -482,7 +474,7 @@ class PlayTab(QWidget):
             QMessageBox.information(self, "No disc", "Add or select a disc image first.")
             return
         img, region = sel
-        # PRE-FLIGHT: never start a 10-15 minute recompile that cannot finish. Say precisely what
+        # PRE-FLIGHT: never start a 10 to 20 minute recompile that cannot finish. Say precisely what
         # is missing instead.
         self.toolchain = builder.preflight(refresh=True)
         self._update_toolchain_label()

@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT))
 
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from dmw3launcher import paths, saves  # noqa: E402
+from dmw3launcher import builds, paths, saves  # noqa: E402
 from dmw3launcher.ui import theme  # noqa: E402
 from dmw3launcher.ui.main_window import MainWindow  # noqa: E402
 
@@ -24,8 +24,8 @@ print("stylesheet applied")
 cfg = paths.load_config()
 print("config:", cfg)
 
-root = paths.resolve_runtime(cfg)
-print("runtime:", root)
+print("builds:", ", ".join(f"{s.label}={'ready' if builds.build_status(s.region)[0] else 'missing'}"
+                          for s in builds.BUILDS))
 print("editor :", paths.resolve_editor(cfg))
 
 try:
@@ -53,10 +53,9 @@ for name, cls in (("PlayTab", PlayTab), ("SettingsTab", SettingsTab),
         print(f"{name}: FAILED")
         traceback.print_exc()
 
-if root:
-    found = saves.discover(root)
-    print(f"saves discovered: {len(found)}")
-    for f in found[:8]:
-        print("   ", f.kind, f.path.name, f.size, "bytes")
+found = saves.discover()
+print(f"memory cards discovered: {len(found)}")
+for f in found[:8]:
+    print("   ", f.kind, f.path.name, f.size, "bytes")
 
 print("RESULT:", "FAILURES: " + ", ".join(fails) if fails else "all tabs built")

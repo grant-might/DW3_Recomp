@@ -12695,7 +12695,15 @@ session_reboot:
     /* Host refresh: if the panel is within ~2% of 60 Hz, record it so driver
      * vsync can own cadence (pacer skipped). Non-~60 Hz and unknown refresh
      * (common on Wayland) keep PSX 59.94 Hz pacing and force swap interval 0
-     * — vsync as the clock would run the sim at the panel rate. */
+     * — vsync as the clock would run the sim at the panel rate.
+     *
+     * `SDL_DisplayMode.refresh_rate` is a float in SDL3 (it was an int in
+     * SDL2). Passing it to `%d` — as this block used to — is undefined
+     * behaviour: the vararg float goes in an XMM register while `%d` reads an
+     * integer register, so the log printed a garbage int (e.g.
+     * "-1073741824 Hz") even though the query had returned the real rate and
+     * every pacing decision below used it correctly. Format it as a float on
+     * both backends so the reported rate is the measured one. */
     {
         SDL_DisplayMode dm;
         int disp_idx = SDL_GetWindowDisplayIndex(sdl_window);
@@ -12704,12 +12712,15 @@ session_reboot:
             g_host_refresh_hz = host_hz;
             if (host_hz >= 58.8 && host_hz <= 61.2) {
                 g_frame_period_ms = 1000.0 / host_hz;
-                std::printf("psxrecomp: sync-to-host-refresh: pacing to %d Hz panel "
-                            "(%.4f ms/frame)\n", dm.refresh_rate, g_frame_period_ms);
+                std::printf("psxrecomp: sync-to-host-refresh: pacing to %.1f Hz panel "
+                            "(%.4f ms/frame)\n", host_hz, g_frame_period_ms);
             } else {
-                std::printf("psxrecomp: host panel %d Hz not ~60 Hz; keeping PSX "
-                            "59.94 Hz pacing\n", dm.refresh_rate);
+                std::printf("psxrecomp: host panel %.1f Hz not ~60 Hz; keeping PSX "
+                            "59.94 Hz pacing\n", host_hz);
             }
+        } else {
+            std::printf("psxrecomp: host refresh unknown (display-mode query "
+                        "failed); keeping PSX 59.94 Hz pacing\n");
         }
     }
 

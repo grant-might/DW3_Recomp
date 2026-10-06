@@ -13,8 +13,10 @@ dist/
 out/
 
 # --- the player's own disc images and cards (never distributable) -----------------
+# Root-level only: the save editor ships its own card-art folder under editor/, which must stay.
 Discs/
 discs/
+/cards/
 *.bin
 *.cue
 *.iso

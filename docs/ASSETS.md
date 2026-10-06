@@ -1,11 +1,11 @@
-# Asset manifest — DW3 Recompiled+
+# Asset manifest: DW3 Recompiled+
 
 Seven slots are supplied: your logo, the **five** tab word-images and the hero banner. **`background.png`
-and `header_bar.png` are optional** — with no file the app paints the live theme's colour and the
+and `header_bar.png` are optional**, with no file the app paints the live theme's colour and the
 header falls back to a flat panel, so you do not need either. The app icon is still a placeholder.
 Replace or add them one at a time: nothing breaks in between, and a missing file falls back.
 
-## Supplied — yours
+## Supplied: yours
 
 | File in `assets/` | Your size | Drawn at | Aspect | Notes |
 |---|---|---|---|---|
@@ -15,7 +15,7 @@ Replace or add them one at a time: nothing breaks in between, and a missing file
 | `tab_mods.png` | 320 × 80 | 160 × 40 | 4:1 | as above |
 | `tab_decomp.png` | 320 × 80 | 160 × 40 | 4:1 | as above. Sits between MODS and SETTINGS in the bar. |
 | `tab_settings.png` | 320 × 80 | 160 × 40 | 4:1 | as above |
-| `header_bar.png` | 1280 × 72 | *not used — see below* | 17.8:1 | You asked for the header to stay blank, so this one is **not installed**. Your file is untouched in the project root and switching it back on is one copy. |
+| `header_bar.png` | 1280 × 72 | *not used, see below* | 17.8:1 | You asked for the header to stay blank, so this one is **not installed**. Your file is untouched in the project root and switching it back on is one copy. |
 | `play_banner.png` | 1150 × 220 | fit to the content width | 5.23:1 | Hero strip at the top of the Play tab. Drawn fit-to-width, so nothing is cropped and the height follows the width. |
 
 These arrived in the project root named `logo.png`, `play_tab.png`, `memory_tab.png`, `mods_tab.png`,
@@ -27,11 +27,11 @@ needs **990 px**, so the window's minimum width is 1060 px. A sixth tab would ne
 (the app would rather refuse to shrink than scroll its own labels out of view).
 
 `header_bar.png` and `play_banner.png` are authored at the 1× design size, which is exactly what the
-slots expect — 2× is only worth it if you want extra crispness on a 4K display.
+slots expect, 2× is only worth it if you want extra crispness on a 4K display.
 
 ### What the launcher does to the tab art (and why)
 
-Your tab art draws its word in **black ink on transparent**, which is invisible against this chrome —
+Your tab art draws its word in **black ink on transparent**, which is invisible against this chrome -
 measured against it, MEMORY/SETTINGS ink was **1.30:1**, MODS **2.03:1**, PLAY **2.98:1**. So the
 launcher uses a **pre-baked white-word copy** instead of recolouring your art at run time:
 
@@ -50,10 +50,10 @@ pixels different between what the bar draws and the original icon**, scaled the 
   ratio when replacing one, or its neighbours will shift.
 - The tabs **no longer draw text**: each keeps its name as a hover tooltip ("Memory Card", not
   "Memory"), and the selected tab is marked by the orange underline.
-- PLAY and MODS carry a pixel icon; MEMORY and SETTINGS are text-only. If that is deliberate, fine —
+- PLAY and MODS carry a pixel icon; MEMORY and SETTINGS are text-only. If that is deliberate, fine -
   if you want the row uniform, add icons to the other two and they will be kept as drawn.
 - If a tab ever has no `_white` copy, the launcher falls back to recolouring the dark ink at load
-  time — and that fallback also skips icon columns, so an icon cannot be flattened that way either.
+  time, and that fallback also skips icon columns, so an icon cannot be flattened that way either.
 
 Regenerate them with `.\.venv\Scripts\python.exe make_placeholders.py --force`. Without `--force`
 it only fills gaps and never clobbers your art. Anything you supplied is kept alongside as
@@ -63,58 +63,58 @@ it only fills gaps and never clobbers your art. Anything you supplied is kept al
 
 | # | File | Design size | Draw at 2× | Format | Transparency | Where it appears |
 |---|---|---|---|---|---|---|
-| 1 | `icon.ico` | multi-size: 16, 24, 32, 48, 64, 128, 256 in **one** file | — | ICO | yes | Taskbar and Explorer. The only asset that wants several sizes packed into one file. |
+| 1 | `icon.ico` | multi-size: 16, 24, 32, 48, 64, 128, 256 in **one** file | - | ICO | yes | Taskbar and Explorer. The only asset that wants several sizes packed into one file. |
 | 2 | `icon.png` | 256 × 256 | 512 × 512 | PNG | yes | Only a fallback if `icon.ico` is absent, so you can supply either while working. |
 
-### `background.png` — optional, and you do not need one
+### `background.png`: optional, and you do not need one
 
 With no `background.png` the app paints **the live theme's own colour** as the page background, so it
 always matches whichever theme is active without any art. Measured across the five themes:
 `#0f2040` on digimon-blue, `#0d0d10` on guilmon-black, `#f4f0e6` on eggshell-green, `#201742` on
 beelzemon-purple, `#17371f` on gargomon-green.
 
-Drop a `background.png` in and it is used instead — drawn full-bleed at 28% opacity and
+Drop a `background.png` in and it is used instead, drawn full-bleed at 28% opacity and
 centre-cropped. If you ever do make one, author it to 1280 × 800 (2×: 2560 × 1600) and keep the
 middle **1024 × 640** clear of anything that matters, since the rest is what gets cropped away. The
 generated placeholder that used to sit here is kept as `background.png.placeholder.bak`.
 
-### `header_bar.png` — removed at your request, and the header is blank without it
+### `header_bar.png`: removed at your request, and the header is blank without it
 
 The header is now a **flat panel in the theme's panel tone** with the logo and the two buttons on it
 and nothing behind them; to put your header art back, copy the `header_bar.png` that is still in the
 project root into `assets/`. When present it is drawn scaled-to-fill and centre-cropped, so its outer
-edges can be cut as the window changes shape — keep detail in the middle band.
+edges can be cut as the window changes shape, keep detail in the middle band.
 
-Author art at **2× the listed size** and let the launcher downscale — it looks sharper on the
+Author art at **2× the listed size** and let the launcher downscale, it looks sharper on the
 1440p/4K displays this game is usually played on. The Design column is the design size; the 2×
 column is what to actually draw.
 
 **There is no button art.** Buttons are styled by the launcher's stylesheet, which keeps them crisp
 at any DPI and preserves focus/hover/disabled states. If you want an illustrated Play button, say
-so and I'll add the slot — but it costs the hover and press feedback unless you also supply those
+so and I'll add the slot, but it costs the hover and press feedback unless you also supply those
 states.
 
 ## Notes that matter for the art
 
 - **Fonts**: the UI uses Segoe UI at 13 px. If you put text *inside* an image (a banner wordmark),
   keep it above 40 px in the 2× file or it will mush when scaled down.
-- **The four tab word-images must match each other** — same typeface, weight, cap height and visual
+- **The four tab word-images must match each other**, same typeface, weight, cap height and visual
   mass. They sit next to each other in one row, and one (PLAY) is marked selected by the orange
   underline underneath the word.
 - **Background**: it is drawn centred and cropped (`KeepAspectRatioByExpanding`), so the safe area
-  is the middle **1024 × 640** — nothing important outside that, and nothing important under the
+  is the middle **1024 × 640**, nothing important outside that, and nothing important under the
   tab strip at the bottom.
 - **Aspect ratios are fixed by the slot.** Art of the wrong shape is letterboxed or centre-cropped
   rather than stretched, so author to the listed ratio.
 - **Palette in use** (so the art matches the chrome):
   `#12141c` background · `#1e2230` panels · `#333a52` borders · `#f2a33c` accent (DW3 orange) ·
   `#e8ecf7` text.
-- **If you'd rather have the background at full strength**, say so — it's one constant
+- **If you'd rather have the background at full strength**, say so, it's one constant
   (`p.setOpacity(0.28)` in `dmw3launcher/ui/main_window.py`).
 
 ## Worth knowing
 
-- The **save editor already has** `logo.png` (5462 B) and `logo.ico` (44249 B) in its own folder —
+- The **save editor already has** `logo.png` (5462 B) and `logo.ico` (44249 B) in its own folder -
   reuse them, or make a matched pair so the editor and launcher look like one product.
 - The launcher's generated `icon.png` placeholder is coincidentally also 5462 B. That is a
-  coincidence, **not** a copy of the editor's logo — don't assume they are interchangeable.
+  coincidence, **not** a copy of the editor's logo, don't assume they are interchangeable.

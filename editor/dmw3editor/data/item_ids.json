@@ -1,0 +1,1414 @@
+{
+ "source": "decomp item_id.rs idx 35-386 (save slot = decomp idx - 35); subclass boundaries confirmed vs user's live item/weapon screens 2026-09-02 | NAMES VERIFIED 2026-09-02 against ROM usitmnam.toml (save slot N == table N+43; USA==EUR in range). 62 spacing/typo errors corrected.",
+ "count": 352,
+ "ids": {
+  "0": {
+   "raw": "PowerCharge",
+   "name": "Power Charge"
+  },
+  "1": {
+   "raw": "SuperCharge",
+   "name": "Super Charge"
+  },
+  "2": {
+   "raw": "UltraCharge",
+   "name": "Ultra Charge"
+  },
+  "3": {
+   "raw": "MaxCharge",
+   "name": "Max Charge"
+  },
+  "4": {
+   "raw": "HPChip",
+   "name": "HP Chip"
+  },
+  "5": {
+   "raw": "MPChip",
+   "name": "MP Chip"
+  },
+  "6": {
+   "raw": "PowerChip",
+   "name": "Power Chip"
+  },
+  "7": {
+   "raw": "ArmorChip",
+   "name": "Armor Chip"
+  },
+  "8": {
+   "raw": "MindChip",
+   "name": "Mind Chip"
+  },
+  "9": {
+   "raw": "WisdomChip",
+   "name": "Wisdom Chip"
+  },
+  "10": {
+   "raw": "BoostChip",
+   "name": "Boost Chip"
+  },
+  "11": {
+   "raw": "CharismaChip",
+   "name": "Charisma Chip"
+  },
+  "12": {
+   "raw": "FireChip",
+   "name": "Fire Chip"
+  },
+  "13": {
+   "raw": "WaterChip",
+   "name": "Water Chip"
+  },
+  "14": {
+   "raw": "IceChip",
+   "name": "Ice Chip"
+  },
+  "15": {
+   "raw": "WindChip",
+   "name": "Wind Chip"
+  },
+  "16": {
+   "raw": "ThunderChip",
+   "name": "Thunder Chip"
+  },
+  "17": {
+   "raw": "MetalChip",
+   "name": "Metal Chip"
+  },
+  "18": {
+   "raw": "DevilChip",
+   "name": "Devil Chip"
+  },
+  "19": {
+   "raw": "TrainChip1",
+   "name": "Train Chip 1"
+  },
+  "20": {
+   "raw": "TrainChip2",
+   "name": "Train Chip 2"
+  },
+  "21": {
+   "raw": "TrainChip3",
+   "name": "Train Chip 3"
+  },
+  "22": {
+   "raw": "TrainChipV",
+   "name": "Train Chip V"
+  },
+  "23": {
+   "raw": "AntidoteDisk",
+   "name": "Antidote Disk"
+  },
+  "24": {
+   "raw": "ReviveDisk",
+   "name": "Revive Disk"
+  },
+  "25": {
+   "raw": "SoberDisk",
+   "name": "Sober Disk"
+  },
+  "26": {
+   "raw": "EnergyDisk",
+   "name": "Energy Disk"
+  },
+  "27": {
+   "raw": "LifeDisk",
+   "name": "Life Disk"
+  },
+  "28": {
+   "raw": "LifePlug",
+   "name": "Life Plug"
+  },
+  "29": {
+   "raw": "MachPlug",
+   "name": "Mach Plug"
+  },
+  "30": {
+   "raw": "PowerPlug",
+   "name": "Power Plug"
+  },
+  "31": {
+   "raw": "GuardPlug",
+   "name": "Guard Plug"
+  },
+  "32": {
+   "raw": "AuraPlug",
+   "name": "Aura Plug"
+  },
+  "33": {
+   "raw": "DVPlug",
+   "name": "DV Plug"
+  },
+  "34": {
+   "raw": "FlameField",
+   "name": "Flame Field"
+  },
+  "35": {
+   "raw": "WaterField",
+   "name": "Water Field"
+  },
+  "36": {
+   "raw": "IceField",
+   "name": "Ice Field"
+  },
+  "37": {
+   "raw": "WindField",
+   "name": "Wind Field"
+  },
+  "38": {
+   "raw": "ThunderField",
+   "name": "Thunder Field"
+  },
+  "39": {
+   "raw": "MachineField",
+   "name": "Machine Field"
+  },
+  "40": {
+   "raw": "DarkField",
+   "name": "Dark Field"
+  },
+  "41": {
+   "raw": "UnknownField",
+   "name": "Unknown Field"
+  },
+  "42": {
+   "raw": "CrimsonCable",
+   "name": "Crimson Cable"
+  },
+  "43": {
+   "raw": "ChaosWave",
+   "name": "Chaos Wave"
+  },
+  "44": {
+   "raw": "CharmGas",
+   "name": "Charm Gas"
+  },
+  "45": {
+   "raw": "CursedPuppet",
+   "name": "Cursed Puppet"
+  },
+  "46": {
+   "raw": "SpiderWeb",
+   "name": "Spider Web"
+  },
+  "47": {
+   "raw": "TNTBall",
+   "name": "TNT Ball"
+  },
+  "48": {
+   "raw": "Booster01a",
+   "name": "Booster 01a"
+  },
+  "49": {
+   "raw": "ShortSword",
+   "name": "Short Sword"
+  },
+  "50": {
+   "raw": "ZandenSword",
+   "name": "Zanden Sword"
+  },
+  "51": {
+   "raw": "CrimsonBlade",
+   "name": "Crimson Blade"
+  },
+  "52": {
+   "raw": "MightyBlade",
+   "name": "Mighty Blade"
+  },
+  "53": {
+   "raw": "Shiratorimaru",
+   "name": "Shiratorimaru"
+  },
+  "54": {
+   "raw": "ShineBlade",
+   "name": "Shine Blade"
+  },
+  "55": {
+   "raw": "RoninBlade",
+   "name": "Ronin Blade"
+  },
+  "56": {
+   "raw": "Onimaru",
+   "name": "Onimaru"
+  },
+  "57": {
+   "raw": "Tenjinmaru",
+   "name": "Tenjinmaru"
+  },
+  "58": {
+   "raw": "FuujinBlade",
+   "name": "Fuujin Blade"
+  },
+  "59": {
+   "raw": "RustyKatana",
+   "name": "Rusty Katana"
+  },
+  "60": {
+   "raw": "Kotetsu",
+   "name": "Kotetsu"
+  },
+  "61": {
+   "raw": "Masamune",
+   "name": "Masamune"
+  },
+  "62": {
+   "raw": "Muramasa",
+   "name": "Muramasa"
+  },
+  "63": {
+   "raw": "LeatherGlove",
+   "name": "Leather Glove"
+  },
+  "64": {
+   "raw": "CatGlove",
+   "name": "Cat Glove"
+  },
+  "65": {
+   "raw": "IronGlove",
+   "name": "Iron Glove"
+  },
+  "66": {
+   "raw": "NeedleGlove",
+   "name": "Needle Glove"
+  },
+  "67": {
+   "raw": "PowerArm",
+   "name": "Power Arm"
+  },
+  "68": {
+   "raw": "TigerGlove",
+   "name": "Tiger Glove"
+  },
+  "69": {
+   "raw": "WildGlove",
+   "name": "Wild Glove"
+  },
+  "70": {
+   "raw": "KaiserFist",
+   "name": "Kaiser Fist"
+  },
+  "71": {
+   "raw": "TempestArm",
+   "name": "Tempest Arm"
+  },
+  "72": {
+   "raw": "RaijinFist",
+   "name": "Raijin Fist"
+  },
+  "73": {
+   "raw": "RustyGlove",
+   "name": "Rusty Glove"
+  },
+  "74": {
+   "raw": "Zodiac",
+   "name": "Zodiac"
+  },
+  "75": {
+   "raw": "Prominence",
+   "name": "Prominence"
+  },
+  "76": {
+   "raw": "SuperNova",
+   "name": "Super Nova"
+  },
+  "77": {
+   "raw": "Handgun",
+   "name": "Handgun"
+  },
+  "78": {
+   "raw": "Machinegun",
+   "name": "Machinegun"
+  },
+  "79": {
+   "raw": "Shotgun",
+   "name": "Shotgun"
+  },
+  "80": {
+   "raw": "PsychoBlaster",
+   "name": "Psycho Blaster"
+  },
+  "81": {
+   "raw": "SniperCannon",
+   "name": "Sniper Cannon"
+  },
+  "82": {
+   "raw": "ClusterCannon",
+   "name": "Cluster Cannon"
+  },
+  "83": {
+   "raw": "LaserCannon",
+   "name": "Laser Cannon"
+  },
+  "84": {
+   "raw": "SuijinCannon",
+   "name": "Suijin Cannon"
+  },
+  "85": {
+   "raw": "RustyRifle",
+   "name": "Rusty Rifle"
+  },
+  "86": {
+   "raw": "Justice",
+   "name": "Justice"
+  },
+  "87": {
+   "raw": "Judgment",
+   "name": "Judgment"
+  },
+  "88": {
+   "raw": "Punishment",
+   "name": "Punishment"
+  },
+  "89": {
+   "raw": "WoodenRod",
+   "name": "Wooden Rod"
+  },
+  "90": {
+   "raw": "MagicianRod",
+   "name": "Magician Rod"
+  },
+  "91": {
+   "raw": "BoneRod",
+   "name": "Bone Rod"
+  },
+  "92": {
+   "raw": "MistyRod",
+   "name": "Misty Rod"
+  },
+  "93": {
+   "raw": "DivineRod",
+   "name": "Divine Rod"
+  },
+  "94": {
+   "raw": "YinYangWand",
+   "name": "Yin Yang Wand"
+  },
+  "95": {
+   "raw": "Khakkhara",
+   "name": "Khakkhara"
+  },
+  "96": {
+   "raw": "CrystalRod",
+   "name": "Crystal Rod"
+  },
+  "97": {
+   "raw": "Millenium",
+   "name": "Millenium"
+  },
+  "98": {
+   "raw": "OldWand",
+   "name": "Old Wand"
+  },
+  "99": {
+   "raw": "Twinkle",
+   "name": "Twinkle"
+  },
+  "100": {
+   "raw": "Immaculate",
+   "name": "Immaculate"
+  },
+  "101": {
+   "raw": "Eternally",
+   "name": "Eternally"
+  },
+  "102": {
+   "raw": "WolfFang",
+   "name": "Wolf Fang"
+  },
+  "103": {
+   "raw": "GhostFang",
+   "name": "Ghost Fang"
+  },
+  "104": {
+   "raw": "CerberusFang",
+   "name": "Cerberus Fang"
+  },
+  "105": {
+   "raw": "EvilFang",
+   "name": "Evil Fang"
+  },
+  "106": {
+   "raw": "HazardFang",
+   "name": "Hazard Fang"
+  },
+  "107": {
+   "raw": "SaberFang",
+   "name": "Saber Fang"
+  },
+  "108": {
+   "raw": "VenomFang",
+   "name": "Venom Fang"
+  },
+  "109": {
+   "raw": "BelialFang",
+   "name": "Belial Fang"
+  },
+  "110": {
+   "raw": "OldClaw",
+   "name": "Old Claw"
+  },
+  "111": {
+   "raw": "Vanquish",
+   "name": "Vanquish"
+  },
+  "112": {
+   "raw": "Destruction",
+   "name": "Destruction"
+  },
+  "113": {
+   "raw": "Invincible",
+   "name": "Invincible"
+  },
+  "114": {
+   "raw": "Dagger",
+   "name": "Dagger"
+  },
+  "115": {
+   "raw": "Shishioumaru",
+   "name": "Shishioumaru"
+  },
+  "116": {
+   "raw": "LongSword",
+   "name": "Long Sword"
+  },
+  "117": {
+   "raw": "Shamshir",
+   "name": "Shamshir"
+  },
+  "118": {
+   "raw": "WingSword",
+   "name": "Wing Sword"
+  },
+  "119": {
+   "raw": "KulonSword",
+   "name": "Kulon Sword"
+  },
+  "120": {
+   "raw": "BraveSword",
+   "name": "Brave Sword"
+  },
+  "121": {
+   "raw": "Excalibur",
+   "name": "Excalibur"
+  },
+  "122": {
+   "raw": "GreySword",
+   "name": "Grey Sword"
+  },
+  "123": {
+   "raw": "FenrirSword",
+   "name": "Fenrir Sword"
+  },
+  "124": {
+   "raw": "BambooSpear",
+   "name": "Bamboo Spear"
+  },
+  "125": {
+   "raw": "Spear",
+   "name": "Spear"
+  },
+  "126": {
+   "raw": "FairyTale",
+   "name": "Fairy Tale"
+  },
+  "127": {
+   "raw": "Partisan",
+   "name": "Partisan"
+  },
+  "128": {
+   "raw": "DivineLance",
+   "name": "Divine Lance"
+  },
+  "129": {
+   "raw": "Trent",
+   "name": "Trent"
+  },
+  "130": {
+   "raw": "VampireLance",
+   "name": "Vampire Lance"
+  },
+  "131": {
+   "raw": "RoyalSpear",
+   "name": "Royal Spear"
+  },
+  "132": {
+   "raw": "OrochiSpear",
+   "name": "Orochi Spear"
+  },
+  "133": {
+   "raw": "Claymore",
+   "name": "Claymore"
+  },
+  "134": {
+   "raw": "ChainSaw",
+   "name": "Chain Saw"
+  },
+  "135": {
+   "raw": "Zweihander",
+   "name": "Zweihander"
+  },
+  "136": {
+   "raw": "Flamberge",
+   "name": "Flamberge"
+  },
+  "137": {
+   "raw": "RockBreaker",
+   "name": "Rock Breaker"
+  },
+  "138": {
+   "raw": "AtlasBuster",
+   "name": "Atlas Buster"
+  },
+  "139": {
+   "raw": "GulfSword",
+   "name": "Gulf Sword"
+  },
+  "140": {
+   "raw": "Halberd",
+   "name": "Halberd"
+  },
+  "141": {
+   "raw": "Naginata",
+   "name": "Naginata"
+  },
+  "142": {
+   "raw": "Berdys",
+   "name": "Berdys"
+  },
+  "143": {
+   "raw": "SoulChopper",
+   "name": "Soul Chopper"
+  },
+  "144": {
+   "raw": "Ryuuzanmaru",
+   "name": "Ryuuzanmaru"
+  },
+  "145": {
+   "raw": "GaeaHalberd",
+   "name": "Gaea Halberd"
+  },
+  "146": {
+   "raw": "OmegaHalberd",
+   "name": "Omega Halberd"
+  },
+  "147": {
+   "raw": "LongBow",
+   "name": "Long Bow"
+  },
+  "148": {
+   "raw": "Shuriken",
+   "name": "Shuriken"
+  },
+  "149": {
+   "raw": "Crossbow",
+   "name": "Crossbow"
+  },
+  "150": {
+   "raw": "AngelBow",
+   "name": "Angel Bow"
+  },
+  "151": {
+   "raw": "RavenBow",
+   "name": "Raven Bow"
+  },
+  "152": {
+   "raw": "LightningBow",
+   "name": "Lightning Bow"
+  },
+  "153": {
+   "raw": "SeraphicBow",
+   "name": "Seraphic Bow"
+  },
+  "154": {
+   "raw": "GaruruCannon",
+   "name": "Garuru Cannon"
+  },
+  "155": {
+   "raw": "PositronCannon",
+   "name": "Positron Cannon"
+  },
+  "156": {
+   "raw": "MiniGuard",
+   "name": "Mini Guard"
+  },
+  "157": {
+   "raw": "PulseGuard",
+   "name": "Pulse Guard"
+  },
+  "158": {
+   "raw": "MetalGuard",
+   "name": "Metal Guard"
+  },
+  "159": {
+   "raw": "MightyGuard",
+   "name": "Mighty Guard"
+  },
+  "160": {
+   "raw": "DramonGuard",
+   "name": "Dramon Guard"
+  },
+  "161": {
+   "raw": "MachGuard",
+   "name": "Mach Guard"
+  },
+  "162": {
+   "raw": "MegaGuard",
+   "name": "Mega Guard"
+  },
+  "163": {
+   "raw": "DeusGuard",
+   "name": "Deus Guard"
+  },
+  "164": {
+   "raw": "MetalHorn",
+   "name": "Metal Horn"
+  },
+  "165": {
+   "raw": "DrillHorn",
+   "name": "Drill Horn"
+  },
+  "166": {
+   "raw": "KabuteriHorn",
+   "name": "Kabuteri Horn"
+  },
+  "167": {
+   "raw": "ShockHorn",
+   "name": "Shock Horn"
+  },
+  "168": {
+   "raw": "DramonHorn",
+   "name": "Dramon Horn"
+  },
+  "169": {
+   "raw": "ScissorHorn",
+   "name": "Scissor Horn"
+  },
+  "170": {
+   "raw": "Trihorn",
+   "name": "Trihorn"
+  },
+  "171": {
+   "raw": "GloriousHorn",
+   "name": "Glorious Horn"
+  },
+  "172": {
+   "raw": "Bandanna",
+   "name": "Bandanna"
+  },
+  "173": {
+   "raw": "SunVisor",
+   "name": "Sun Visor"
+  },
+  "174": {
+   "raw": "BaseballCap",
+   "name": "Baseball Cap"
+  },
+  "175": {
+   "raw": "SchoolCap",
+   "name": "School Cap"
+  },
+  "176": {
+   "raw": "WoolCap",
+   "name": "Wool Cap"
+  },
+  "177": {
+   "raw": "KungFuCap",
+   "name": "Kung Fu Cap"
+  },
+  "178": {
+   "raw": "YinYangHat",
+   "name": "Yin Yang Hat"
+  },
+  "179": {
+   "raw": "SniperGoggle",
+   "name": "Sniper Goggle"
+  },
+  "180": {
+   "raw": "NightVision",
+   "name": "Night Vision"
+  },
+  "181": {
+   "raw": "Beret",
+   "name": "Beret"
+  },
+  "182": {
+   "raw": "RedCap",
+   "name": "Red Cap"
+  },
+  "183": {
+   "raw": "Ribbon",
+   "name": "Ribbon"
+  },
+  "184": {
+   "raw": "CatEars",
+   "name": "Cat Ears"
+  },
+  "185": {
+   "raw": "Headband",
+   "name": "Headband"
+  },
+  "186": {
+   "raw": "MythrilCrown",
+   "name": "Mythril Crown"
+  },
+  "187": {
+   "raw": "MagicalCrown",
+   "name": "Magical Crown"
+  },
+  "188": {
+   "raw": "ShamanMask",
+   "name": "Shaman Mask"
+  },
+  "189": {
+   "raw": "DivineCrown",
+   "name": "Divine Crown"
+  },
+  "190": {
+   "raw": "AngelRing",
+   "name": "Angel Ring"
+  },
+  "191": {
+   "raw": "RoyalCrown",
+   "name": "Royal Crown"
+  },
+  "192": {
+   "raw": "GoddessCrown",
+   "name": "Goddess Crown"
+  },
+  "193": {
+   "raw": "HideHelmet",
+   "name": "Hide Helmet"
+  },
+  "194": {
+   "raw": "TinHelmet",
+   "name": "Tin Helmet"
+  },
+  "195": {
+   "raw": "IronHelmet",
+   "name": "Iron Helmet"
+  },
+  "196": {
+   "raw": "KnightHelmet",
+   "name": "Knight Helmet"
+  },
+  "197": {
+   "raw": "WingHelmet",
+   "name": "Wing Helmet"
+  },
+  "198": {
+   "raw": "KulonHelmet",
+   "name": "Kulon Helmet"
+  },
+  "199": {
+   "raw": "WildHelmet",
+   "name": "Wild Helmet"
+  },
+  "200": {
+   "raw": "RoninHelmet",
+   "name": "Ronin Helmet"
+  },
+  "201": {
+   "raw": "BraveHelmet",
+   "name": "Brave Helmet"
+  },
+  "202": {
+   "raw": "HazardHelmet",
+   "name": "Hazard Helmet"
+  },
+  "203": {
+   "raw": "DTamaHelmet",
+   "name": "D-Tama Helmet"
+  },
+  "204": {
+   "raw": "MatrixHelmet",
+   "name": "Matrix Helmet"
+  },
+  "205": {
+   "raw": "MugenHelmet",
+   "name": "Mugen Helmet"
+  },
+  "206": {
+   "raw": "LeatherCoat",
+   "name": "Leather Coat"
+  },
+  "207": {
+   "raw": "GymSuit",
+   "name": "Gym Suit"
+  },
+  "208": {
+   "raw": "PriestRobe",
+   "name": "Priest Robe"
+  },
+  "209": {
+   "raw": "RubberSuit",
+   "name": "Rubber Suit"
+  },
+  "210": {
+   "raw": "DarkCloak",
+   "name": "Dark Cloak"
+  },
+  "211": {
+   "raw": "DownJacket",
+   "name": "Down Jacket"
+  },
+  "212": {
+   "raw": "DivineRobe",
+   "name": "Divine Robe"
+  },
+  "213": {
+   "raw": "SniperSuit",
+   "name": "Sniper Suit"
+  },
+  "214": {
+   "raw": "YinYangSuit",
+   "name": "Yin Yang Suit"
+  },
+  "215": {
+   "raw": "WildSuit",
+   "name": "Wild Suit"
+  },
+  "216": {
+   "raw": "BodyArmor",
+   "name": "Body Armor"
+  },
+  "217": {
+   "raw": "MirageRobe",
+   "name": "Mirage Robe"
+  },
+  "218": {
+   "raw": "KingsMantle",
+   "name": "King's Mantle"
+  },
+  "219": {
+   "raw": "LeatherMail",
+   "name": "Leather Mail"
+  },
+  "220": {
+   "raw": "TinMail",
+   "name": "Tin Mail"
+  },
+  "221": {
+   "raw": "IronArmor",
+   "name": "Iron Armor"
+  },
+  "222": {
+   "raw": "DigitamaMail",
+   "name": "Digitama Mail"
+  },
+  "223": {
+   "raw": "DarkArmor",
+   "name": "Dark Armor"
+  },
+  "224": {
+   "raw": "KulonArmor",
+   "name": "Kulon Armor"
+  },
+  "225": {
+   "raw": "DramonArmor",
+   "name": "Dramon Armor"
+  },
+  "226": {
+   "raw": "RoninArmor",
+   "name": "Ronin Armor"
+  },
+  "227": {
+   "raw": "HazardArmor",
+   "name": "Hazard Armor"
+  },
+  "228": {
+   "raw": "BraveArmor",
+   "name": "Brave Armor"
+  },
+  "229": {
+   "raw": "BeamArmor",
+   "name": "Beam Armor"
+  },
+  "230": {
+   "raw": "MistyArmor",
+   "name": "Misty Armor"
+  },
+  "231": {
+   "raw": "CrimsonMail",
+   "name": "Crimson Mail"
+  },
+  "232": {
+   "raw": "Buckler",
+   "name": "Buckler"
+  },
+  "233": {
+   "raw": "TinShield",
+   "name": "Tin Shield"
+  },
+  "234": {
+   "raw": "IronShield",
+   "name": "Iron Shield"
+  },
+  "235": {
+   "raw": "KnightShield",
+   "name": "Knight Shield"
+  },
+  "236": {
+   "raw": "GuardBarrier",
+   "name": "Guard Barrier"
+  },
+  "237": {
+   "raw": "KulonShield",
+   "name": "Kulon Shield"
+  },
+  "238": {
+   "raw": "DivineBarrier",
+   "name": "Divine Barrier"
+  },
+  "239": {
+   "raw": "SniperShield",
+   "name": "Sniper Shield"
+  },
+  "240": {
+   "raw": "YinYangWard",
+   "name": "Yin Yang Ward"
+  },
+  "241": {
+   "raw": "RoninShield",
+   "name": "Ronin Shield"
+  },
+  "242": {
+   "raw": "WildShield",
+   "name": "Wild Shield"
+  },
+  "243": {
+   "raw": "BraveShield",
+   "name": "Brave Shield"
+  },
+  "244": {
+   "raw": "HazardShield",
+   "name": "Hazard Shield"
+  },
+  "245": {
+   "raw": "DramonShield",
+   "name": "Dramon Shield"
+  },
+  "246": {
+   "raw": "BeamShield",
+   "name": "Beam Shield"
+  },
+  "247": {
+   "raw": "HighSecurity",
+   "name": "High Security"
+  },
+  "248": {
+   "raw": "Apocalypse",
+   "name": "Apocalypse"
+  },
+  "249": {
+   "raw": "PowerGem",
+   "name": "Power Gem"
+  },
+  "250": {
+   "raw": "PowerRing",
+   "name": "Power Ring"
+  },
+  "251": {
+   "raw": "GuardGem",
+   "name": "Guard Gem"
+  },
+  "252": {
+   "raw": "GuardRing",
+   "name": "Guard Ring"
+  },
+  "253": {
+   "raw": "SpiritGem",
+   "name": "Spirit Gem"
+  },
+  "254": {
+   "raw": "SpiritRing",
+   "name": "Spirit Ring"
+  },
+  "255": {
+   "raw": "WisdomGem",
+   "name": "Wisdom Gem"
+  },
+  "256": {
+   "raw": "WisdomRing",
+   "name": "Wisdom Ring"
+  },
+  "257": {
+   "raw": "BoostGem",
+   "name": "Boost Gem"
+  },
+  "258": {
+   "raw": "BoostRing",
+   "name": "Boost Ring"
+  },
+  "259": {
+   "raw": "CharismaGem",
+   "name": "Charisma Gem"
+  },
+  "260": {
+   "raw": "CharismaRing",
+   "name": "Charisma Ring"
+  },
+  "261": {
+   "raw": "FlameRing",
+   "name": "Flame Ring"
+  },
+  "262": {
+   "raw": "WaterRing",
+   "name": "Water Ring"
+  },
+  "263": {
+   "raw": "IceRing",
+   "name": "Ice Ring"
+  },
+  "264": {
+   "raw": "WindRing",
+   "name": "Wind Ring"
+  },
+  "265": {
+   "raw": "ThunderRing",
+   "name": "Thunder Ring"
+  },
+  "266": {
+   "raw": "MachineRing",
+   "name": "Machine Ring"
+  },
+  "267": {
+   "raw": "DarkRing",
+   "name": "Dark Ring"
+  },
+  "268": {
+   "raw": "AntidoteRing",
+   "name": "Antidote Ring"
+  },
+  "269": {
+   "raw": "ReviveRing",
+   "name": "Revive Ring"
+  },
+  "270": {
+   "raw": "AwakeRing",
+   "name": "Awake Ring"
+  },
+  "271": {
+   "raw": "SoberRing",
+   "name": "Sober Ring"
+  },
+  "272": {
+   "raw": "PrayerRing",
+   "name": "Prayer Ring"
+  },
+  "273": {
+   "raw": "MultiCrest",
+   "name": "Multi Crest"
+  },
+  "274": {
+   "raw": "SearchCrest",
+   "name": "Search Crest"
+  },
+  "275": {
+   "raw": "CounterCrest",
+   "name": "Counter Crest"
+  },
+  "276": {
+   "raw": "BinderCrest",
+   "name": "Binder Crest"
+  },
+  "277": {
+   "raw": "RecoverCrest",
+   "name": "Recover Crest"
+  },
+  "278": {
+   "raw": "EXPAdapter",
+   "name": "EXP Adapter"
+  },
+  "279": {
+   "raw": "BITAdapter",
+   "name": "BIT Adapter"
+  },
+  "280": {
+   "raw": "MPProxy",
+   "name": "MP Proxy"
+  },
+  "281": {
+   "raw": "MPMegaProxy",
+   "name": "MP Mega Proxy"
+  },
+  "282": {
+   "raw": "HPProxy",
+   "name": "HP Proxy"
+  },
+  "283": {
+   "raw": "HPMegaProxy",
+   "name": "HP Mega Proxy"
+  },
+  "284": {
+   "raw": "HackSticker",
+   "name": "Hack Sticker"
+  },
+  "285": {
+   "raw": "HackSystem",
+   "name": "Hack System"
+  },
+  "286": {
+   "raw": "OverClocked",
+   "name": "Over Clocked"
+  },
+  "287": {
+   "raw": "OverLoad",
+   "name": "Over Load"
+  },
+  "288": {
+   "raw": "Glasses",
+   "name": "Glasses"
+  },
+  "289": {
+   "raw": "Goggles",
+   "name": "Goggles"
+  },
+  "290": {
+   "raw": "DanceFeather",
+   "name": "Dance Feather"
+  },
+  "291": {
+   "raw": "DanceWing",
+   "name": "Dance Wing"
+  },
+  "292": {
+   "raw": "RunnerSandal",
+   "name": "Runner Sandal"
+  },
+  "293": {
+   "raw": "RunnerShoes",
+   "name": "Runner Shoes"
+  },
+  "294": {
+   "raw": "TrainingBook",
+   "name": "Training Book"
+  },
+  "295": {
+   "raw": "PowerBrace",
+   "name": "Power Brace"
+  },
+  "296": {
+   "raw": "FirePower1",
+   "name": "Fire Power 1"
+  },
+  "297": {
+   "raw": "FirePower2",
+   "name": "Fire Power 2"
+  },
+  "298": {
+   "raw": "FirePowerS",
+   "name": "Fire Power S"
+  },
+  "299": {
+   "raw": "WaterPower1",
+   "name": "Water Power 1"
+  },
+  "300": {
+   "raw": "WaterPower2",
+   "name": "Water Power 2"
+  },
+  "301": {
+   "raw": "WaterPowerS",
+   "name": "Water Power S"
+  },
+  "302": {
+   "raw": "IcePower1",
+   "name": "Ice Power 1"
+  },
+  "303": {
+   "raw": "IcePower2",
+   "name": "Ice Power 2"
+  },
+  "304": {
+   "raw": "IcePowerS",
+   "name": "Ice Power S"
+  },
+  "305": {
+   "raw": "WindPower1",
+   "name": "Wind Power 1"
+  },
+  "306": {
+   "raw": "WindPower2",
+   "name": "Wind Power 2"
+  },
+  "307": {
+   "raw": "WindPowerS",
+   "name": "Wind Power S"
+  },
+  "308": {
+   "raw": "BoltPower1",
+   "name": "Bolt Power 1"
+  },
+  "309": {
+   "raw": "BoltPower2",
+   "name": "Bolt Power 2"
+  },
+  "310": {
+   "raw": "BoltPowerS",
+   "name": "Bolt Power S"
+  },
+  "311": {
+   "raw": "MetalPower1",
+   "name": "Metal Power 1"
+  },
+  "312": {
+   "raw": "MetalPower2",
+   "name": "Metal Power 2"
+  },
+  "313": {
+   "raw": "MetalPowerS",
+   "name": "Metal Power S"
+  },
+  "314": {
+   "raw": "DarkPower1",
+   "name": "Dark Power 1"
+  },
+  "315": {
+   "raw": "DarkPower2",
+   "name": "Dark Power 2"
+  },
+  "316": {
+   "raw": "DarkPowerS",
+   "name": "Dark Power S"
+  },
+  "317": {
+   "raw": "MonmonDDNA",
+   "name": "Monmon DDNA"
+  },
+  "318": {
+   "raw": "Booster02a",
+   "name": "Booster 02a"
+  },
+  "319": {
+   "raw": "Booster03a",
+   "name": "Booster 03a"
+  },
+  "320": {
+   "raw": "Booster04a",
+   "name": "Booster 04a"
+  },
+  "321": {
+   "raw": "Booster05a",
+   "name": "Booster 05a"
+  },
+  "322": {
+   "raw": "Booster06a",
+   "name": "Booster 06a"
+  },
+  "323": {
+   "raw": "Booster07a",
+   "name": "Booster 07a"
+  },
+  "324": {
+   "raw": "Booster08a",
+   "name": "Booster 08a"
+  },
+  "325": {
+   "raw": "Booster09a",
+   "name": "Booster 09a"
+  },
+  "326": {
+   "raw": "Booster10a",
+   "name": "Booster 10a"
+  },
+  "327": {
+   "raw": "Booster11a",
+   "name": "Booster 11a"
+  },
+  "328": {
+   "raw": "Booster12a",
+   "name": "Booster 12a"
+  },
+  "329": {
+   "raw": "Booster13a",
+   "name": "Booster 13a"
+  },
+  "330": {
+   "raw": "Booster14a",
+   "name": "Booster 14a"
+  },
+  "331": {
+   "raw": "Booster15a",
+   "name": "Booster 15a"
+  },
+  "332": {
+   "raw": "Booster1b",
+   "name": "Booster 1b"
+  },
+  "333": {
+   "raw": "Booster2b",
+   "name": "Booster 2b"
+  },
+  "334": {
+   "raw": "Booster3b",
+   "name": "Booster 3b"
+  },
+  "335": {
+   "raw": "Booster4b",
+   "name": "Booster 4b"
+  },
+  "336": {
+   "raw": "Booster5b",
+   "name": "Booster 5b"
+  },
+  "337": {
+   "raw": "Booster6b",
+   "name": "Booster 6b"
+  },
+  "338": {
+   "raw": "Booster7b",
+   "name": "Booster 7b"
+  },
+  "339": {
+   "raw": "Booster8b",
+   "name": "Booster 8b"
+  },
+  "340": {
+   "raw": "Booster9b",
+   "name": "Booster 9b"
+  },
+  "341": {
+   "raw": "Booster10b",
+   "name": "Booster 10b"
+  },
+  "342": {
+   "raw": "Booster11b",
+   "name": "Booster 11b"
+  },
+  "343": {
+   "raw": "Booster12b",
+   "name": "Booster 12b"
+  },
+  "344": {
+   "raw": "Booster13b",
+   "name": "Booster 13b"
+  },
+  "345": {
+   "raw": "Booster14b",
+   "name": "Booster 14b"
+  },
+  "346": {
+   "raw": "Booster15b",
+   "name": "Booster 15b"
+  },
+  "347": {
+   "raw": "RBooster01",
+   "name": "R-Booster 01"
+  },
+  "348": {
+   "raw": "RBooster02",
+   "name": "R-Booster 02"
+  },
+  "349": {
+   "raw": "RBooster03",
+   "name": "R-Booster 03"
+  },
+  "350": {
+   "raw": "RBooster04",
+   "name": "R-Booster 04"
+  },
+  "351": {
+   "raw": "RBooster05",
+   "name": "R-Booster 05"
+  }
+ }
+}

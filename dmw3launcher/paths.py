@@ -1,7 +1,11 @@
 """Filesystem layout for the DW3 launcher.
 
-Everything is discovered, nothing is hard-coded to one machine: the runtime (the recompiled
-game install) can live anywhere and is recorded in the launcher config once located.
+Everything is discovered relative to the launcher itself: the app root is derived from this file,
+and the save editor the Memory Card tab embeds ships beside the launcher in ``editor/``. No path is
+hard-coded to one machine.
+
+The two regional game builds live in ``Builds/`` and are described by ``builds.py``. The launcher
+no longer reads a third-party port install, so nothing here points outside the tree.
 """
 from __future__ import annotations
 
@@ -13,15 +17,11 @@ import tempfile
 APP_NAME = "DW3 Recompiled+"
 APP_ID = "DMW3Launcher"
 
-# Where the recompiled install is likely to be, newest-known first.
-_RUNTIME_CANDIDATES = (
-    r"D:\AGENT\Digimon World 3 Recomp\DigimonWorld2003",
-    r"D:\AGENT\NEWEST DIGIMON WORLD 3 COMPLETE PROJECT\DigimonWorld2003",
-    r"C:\Games\DigimonWorld2003",
-)
-
-# The save editor dev tree that we embed as the Memory Card tab.
-_EDITOR_CANDIDATES = (
+# The save editor is a published project of its own. It ships beside the launcher as ``editor/``
+# and is imported live from there, so an editor fix reaches this launcher with no copying. A
+# developer's own checkout is kept only as a last-resort fallback for someone working on the editor
+# and the launcher together; it is never how a shipped build finds the editor.
+_LEGACY_EDITOR_DIRS = (
     r"D:\AGENT\NEWEST DIGIMON WORLD 3 COMPLETE PROJECT\Digimon World 3 Save Editor [dev]",
     r"D:\AGENT\Digimon World 3 Save Editor [dev]",
 )
@@ -39,6 +39,16 @@ def docs_dir() -> pathlib.Path:
     return launcher_root() / "docs"
 
 
+def cards_dir() -> pathlib.Path:
+    """Memory cards the player drops beside the launcher, alongside Builds/ and Discs/."""
+    return launcher_root() / "cards"
+
+
+def editor_dir() -> pathlib.Path:
+    """The save editor shipped beside the launcher."""
+    return launcher_root() / "editor"
+
+
 def config_path() -> pathlib.Path:
     """Portable: the launcher keeps its own config beside itself."""
     return launcher_root() / "launcher.json"
@@ -49,8 +59,8 @@ def user_data_dir() -> pathlib.Path:
 
     LOCALAPPDATA is not guaranteed: a stripped build/test environment (MSYS make, a service) can
     drop it, and `Path.home()` raises RuntimeError when neither HOME nor USERPROFILE is set. Neither
-    is assumed, and the old `os.environ.get("LOCALAPPDATA", Path.home())` was worse than it looks -
-    the default is evaluated eagerly, so the crash happened even when LOCALAPPDATA was present.
+    is assumed, and `os.environ.get("LOCALAPPDATA", Path.home())` was worse than it looks, because
+    that default is evaluated eagerly and crashed even when LOCALAPPDATA was present.
     """
     env = os.environ.get("LOCALAPPDATA")
     if env:
@@ -65,87 +75,34 @@ def user_data_dir() -> pathlib.Path:
     return base
 
 
-# ---------------------------------------------------------------- runtime install
+# ---------------------------------------------------------------- the embedded save editor
 
-def looks_like_runtime(path: pathlib.Path) -> bool:
-    """A runtime install has the exe, the config and the extracted disc tree."""
-    return (
-        (path / "Binaries" / "DigimonWorld2003.exe").is_file()
-        and (path / "Engine" / "Config" / "game.toml").is_file()
-    )
-
-
-def find_runtime() -> pathlib.Path | None:
-    for cand in _RUNTIME_CANDIDATES:
-        p = pathlib.Path(cand)
-        if looks_like_runtime(p):
-            return p
-    return None
-
-
-def bin_dir(root: pathlib.Path) -> pathlib.Path:
-    return root / "Binaries"
-
-
-def exe_path(root: pathlib.Path) -> pathlib.Path:
-    return bin_dir(root) / "DigimonWorld2003.exe"
-
-
-def settings_toml(root: pathlib.Path) -> pathlib.Path:
-    return bin_dir(root) / "settings.toml"
-
-
-def game_toml(root: pathlib.Path) -> pathlib.Path:
-    return root / "Engine" / "Config" / "game.toml"
-
-
-def idioma_ini(root: pathlib.Path) -> pathlib.Path:
-    return root / "Engine" / "Config" / "idioma.ini"
-
-
-def savedata_dir(root: pathlib.Path) -> pathlib.Path:
-    """Where the runtime keeps its saves (game.toml sets memcard_dir to this)."""
-    return root / "DMW3Game" / "SAVEDATA"
-
-
-def discs_dir(root: pathlib.Path) -> pathlib.Path:
-    return root / "discs"
-
-
-def mods_dir(root: pathlib.Path) -> pathlib.Path:
-    """Mod payloads: files/modules the launcher can enable or disable."""
-    return root / "mods"
-
-
-def disc_tool(root: pathlib.Path) -> pathlib.Path:
-    """DiscTool ships at the top of the recomp project, one level above the install."""
-    for cand in (root.parent / "DiscTool.exe", root / "DiscTool.exe",
-                 launcher_root() / "tools" / "DiscTool.exe"):
-        if cand.is_file():
-            return cand
-    return root.parent / "DiscTool.exe"
+def _looks_like_editor_tree(path: pathlib.Path) -> bool:
+    """An editor tree carries the importable package the Memory Card tab imports."""
+    return (path / "dmw3editor" / "core" / "save.py").is_file()
 
 
 def find_editor() -> pathlib.Path | None:
-    """The save-editor dev tree (importable package lives under it)."""
-    for cand in _EDITOR_CANDIDATES:
+    """The save editor tree: the bundled ``editor/`` first, a dev checkout only as a fallback."""
+    bundled = editor_dir()
+    if _looks_like_editor_tree(bundled):
+        return bundled
+    for cand in _LEGACY_EDITOR_DIRS:
         p = pathlib.Path(cand)
-        if (p / "dmw3editor" / "core" / "save.py").is_file():
+        if _looks_like_editor_tree(p):
             return p
     return None
 
 
 # ---------------------------------------------------------------- launcher config
 
-_DEFAULT = {"version": 1, "runtime_root": None, "editor_root": None, "profiles": {}, "active": None}
+_DEFAULT = {"version": 1, "editor_root": None}
 
 
 def load_config() -> dict:
     p = config_path()
     if not p.is_file():
-        cfg = dict(_DEFAULT)
-        cfg["profiles"] = {}
-        return cfg
+        return dict(_DEFAULT)
     try:
         cfg = json.loads(p.read_text(encoding="utf-8"))
     except Exception:
@@ -159,21 +116,12 @@ def save_config(cfg: dict) -> None:
     config_path().write_text(json.dumps(cfg, indent=2), encoding="utf-8")
 
 
-def resolve_runtime(cfg: dict | None = None) -> pathlib.Path | None:
-    cfg = cfg if cfg is not None else load_config()
-    root = cfg.get("runtime_root")
-    if root:
-        p = pathlib.Path(root)
-        if looks_like_runtime(p):
-            return p
-    return find_runtime()
-
-
 def resolve_editor(cfg: dict | None = None) -> pathlib.Path | None:
+    """The editor tree to embed: a config override first, then the bundled ``editor/``."""
     cfg = cfg if cfg is not None else load_config()
     root = cfg.get("editor_root")
     if root:
         p = pathlib.Path(root)
-        if (p / "dmw3editor").is_dir():
+        if _looks_like_editor_tree(p):
             return p
     return find_editor()

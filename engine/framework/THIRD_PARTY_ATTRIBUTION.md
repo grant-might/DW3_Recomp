@@ -25,12 +25,37 @@ rather than LGPL linkage.
 
 The runtime expects an end-user bundle at
 `&lt;exe_dir&gt;/overlay_toolchain/{python/, tcc/tcc.exe, compile_overlays.py, …}`
-(`runtime/src/main.cpp`). **No script in this repository populates that
-directory**, so if release packaging supplies it, that step lives outside this
-repo and the TinyCC license notice must be shipped alongside it there.
+(`runtime/src/main.cpp`). The TinyCC license notice is shipped alongside the
+binary in that bundle; `tools/package_overlay_toolchain.py` (below) is the
+supported way to build it.
+
+`tools/package_overlay_toolchain.py` now assembles that directory from inputs
+you already have (the TinyCC win64 zip, the CPython embeddable zip, and this
+tree's `psxrecomp-game.exe` + `runtime/include`). It copies the TinyCC LGPL-2.1
+text (`packaging/licenses/LGPL-2.1.txt`) to `tcc/COPYING`, the CPython
+`LICENSE.txt` (PSF-2.0) to `python/`, and writes `THIRD_PARTY_NOTICES.txt` with
+each input's SHA-256 so a release can be audited. Pass `--tcc-zip` and
+`--python-zip` (nothing is downloaded for you). The exact upstream artefacts
+the shipped bundle was built from are:
+`tcc-0.9.27-win64-bin.zip` (sha256
+`34a721949a2583fdff725312da092fa0f5f1f284b702e6f811c6954714faabb2`) and
+`python-3.12.10-embed-amd64.zip` (sha256
+`4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3`).
 
 Developers with `gcc` on `PATH` use the gcc tier instead; the bundled tcc matters
 only for end-user release packages (`docs/BUILDING.md`).
+
+## CPython — embedded interpreter inside the overlay toolchain bundle
+
+[Python](https://www.python.org/) (CPython), licensed **PSF-2.0** (permissive;
+the licence text ships as `python/LICENSE.txt` in the bundle, from the embeddable
+distribution itself). The end-user `overlay_toolchain/` bundle carries an
+*embedded* CPython so the runtime can run `tools/compile_overlays.py` without the
+player installing Python — `runtime/src/main.cpp` probes for
+`overlay_toolchain/python/python.exe` and spawns it as a subprocess. Nothing in
+the runtime links against libpython. `tools/package_overlay_toolchain.py` copies
+the licence next to the interpreter. No CPython source or binary is tracked in
+this repository.
 
 ## JRickey / gba-recomp — verified-enhancement shadow + screen color science
 

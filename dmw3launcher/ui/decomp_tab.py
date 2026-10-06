@@ -26,7 +26,7 @@ MONO_FAMILIES = ("Cascadia Mono", "Consolas", "DejaVu Sans Mono", "Liberation Mo
 GUTTER_PAD = 10
 SEGMENT_H = 30
 MAX_TABS = 12        # open files kept at once; the oldest tab closes to make room
-# USA leads Europe in every region list on this tab — the same order the build list uses.
+# USA leads Europe in every region list on this tab: the same order the build list uses.
 REGION_RANK = {"USA": 0, "Europe": 1}
 
 
@@ -380,7 +380,7 @@ class ProgressCard(QFrame):
         # USA first, Europe second, matching the build order everywhere else. The height is a
         # MINIMUM, not a fixed size: the #segment sheet's own padding needs more than 30px once the
         # labels carry their percentage, and a fixed 30 was ignored while the layout still reserved
-        # only 30 — which is what let the buttons overrun the headline below them.
+        # only 30: which is what let the buttons overrun the headline below them.
         for region in ("USA", "Europe"):
             b = QPushButton(region)
             b.setObjectName("segment")
@@ -393,7 +393,7 @@ class ProgressCard(QFrame):
         switch.addStretch(1)
         left.addLayout(switch)
 
-        self.percent = QLabel("—")
+        self.percent = QLabel("-")
         self.percent.setObjectName("bigPct")
         left.addWidget(self.percent)
         self.counts = QLabel("")
@@ -408,7 +408,7 @@ class ProgressCard(QFrame):
             tag.setObjectName("dim")
             tag.setFixedWidth(38)
             bar = Bar(8, token)
-            value = QLabel("—")
+            value = QLabel("-")
             value.setFixedWidth(64)
             value.setObjectName("dim")
             row.addWidget(tag)
@@ -437,21 +437,21 @@ class ProgressCard(QFrame):
         """Render the project's published numbers, or say plainly that they are ours instead."""
         self._regions = dict(published.get("regions", {}))
         if not self._regions:
-            self.title.setText("Progress — not published in this tree")
-            self.percent.setText("—")
+            self.title.setText("Progress, not published in this tree")
+            self.percent.setText("-")
             files, lines, funcs, stubs = totals
             self.counts.setText(f"{files:,} files · {lines:,} lines of code · "
                                 f"{funcs:,} functions counted · {stubs} stubs")
             for bar in (self.bar_code, self.bar_data):
                 bar.set_value(0.0)
-            self.value_code.setText("—")
-            self.value_data.setText("—")
+            self.value_code.setText("-")
+            self.value_data.setText("-")
             self._clear_rows()
             self.basis.setText("The README's progress table could not be read, so no percentage is "
                                "shown: a count of our own would be a guess, not the project's word.")
             return
 
-        self.title.setText("Progress — as published by the project")
+        self.title.setText("Progress, as published by the project")
         badges = published.get("badges", {})
         # One line, and only the badges that mean something here: the platform badge just repeats
         # the tab's own name and pushed the line to a third row.

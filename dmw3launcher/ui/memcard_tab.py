@@ -1,23 +1,22 @@
 """The Memory Card tab.
 
-Wires the player's saves straight into the existing save editor, in-process, so there is one
-window and no file dialog: the tab finds the saves the runtime is using and opens them.
+Wires the player's memory cards straight into the existing save editor, in-process, so there is one
+window and no file dialog: the tab finds the cards the builds stream saves from and opens them.
 
-The editor's WHOLE main window is embedded (a QMainWindow parented as a child widget), so its
-menu bar, status bar and pages all come along and the tab is the standalone editor, not a
-reimplementation of it. Its theme is applied the way its own `main()` applies it — to the
-QApplication — so all 5 of its themes are app-wide and the launcher adopts the same palette.
+The editor's WHOLE main window is embedded (a QMainWindow parented as a child widget), so its menu
+bar, status bar and pages all come along and the tab is the standalone editor, not a
+reimplementation of it. Its theme is applied the way its own `main()` applies it, to the
+QApplication, so all 5 of its themes are app-wide and the launcher adopts the same palette.
 
 Two facts this module has to be honest about:
 
-* The editor's core imports numpy at module level, so this interpreter must provide it (see
-  requirements.txt). If that import does fail, the reason is kept in `_editor_error` and stays
-  visible: a tab showing a healthy save list with nothing behind it is worse than one that fails
-  loudly.
-* The editor edits PSX memory-card payloads (PAYLOAD_SIZE bytes, with a DMW3 tag). The recomp's
-  own `saveN.sav` slots are **not** that format — they are its private save (10,060 bytes here),
-  with no tag. Those are listed but marked not editable, and opening one explains why instead of
-  raising at a file the list implied was fine.
+* The editor ships beside the launcher in `editor/` and is imported live from there. Its core
+  imports numpy at module level, so this interpreter must provide it (see requirements.txt). If
+  that import does fail, the reason is kept in `_editor_error` and stays visible: a tab showing a
+  healthy card list with nothing behind it is worse than one that fails loudly.
+* The editor edits PSX memory-card payloads (a 128 KiB card holds one). Each regional build keeps
+  its own `card1.mcd` / `card2.mcd`, and players can drop extra cards in `cards/` beside the
+  launcher; every card found is listed and every one of them can be opened.
 """
 from __future__ import annotations
 
@@ -31,7 +30,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QGroupBox, QHB
                                QListWidget, QListWidgetItem, QMessageBox, QPushButton,
                                QScrollArea, QVBoxLayout, QWidget)
 
-from .. import paths, runtime, saves
+from .. import builds, paths, runtime, saves
 from . import theme
 
 # Tabs currently embedding the editor. dmw3editor's theme picker applies a theme to the whole
@@ -48,7 +47,6 @@ class MemcardTab(QWidget):
     def __init__(self, cfg: dict) -> None:
         super().__init__()
         self.cfg = cfg
-        self.root: pathlib.Path | None = paths.resolve_runtime(cfg)
         self.editor_root: pathlib.Path | None = paths.resolve_editor(cfg)
         self._editor = None
         self._editor_widget = None
@@ -78,14 +76,14 @@ class MemcardTab(QWidget):
         head.addWidget(self.btn_addcard)
         lay.addLayout(head)
 
-        box = QGroupBox("Saves found")
+        box = QGroupBox("Memory cards found")
         self.box = box
         bl = QVBoxLayout(box)
         bl.setContentsMargins(theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD)
         bl.setSpacing(theme.ROW_GAP)
         self.list_saves = QListWidget()
         # compact on purpose: the embedded editor below is this tab's content and should get the
-        # space, while still listing every save found and which of them the editor can open
+        # space, while still listing every card found and which build it belongs to
         self.list_saves.setMinimumHeight(66)
         self.list_saves.setMaximumHeight(92)
         self.list_saves.itemActivated.connect(lambda _i: self.open_selected())
@@ -123,8 +121,8 @@ class MemcardTab(QWidget):
     def _load_editor(self) -> None:
         self._editor_error = None
         if not self.editor_root:
-            self._editor_error = ("Save editor not found. Use “Locate editor…” to point at the "
-                                  "save editor project folder.")
+            self._editor_error = ("Save editor not found. The launcher expects it in the "
+                                  "editor/ folder beside it.")
             self.lbl_status.setText(self._editor_error)
             return
         if str(self.editor_root) not in sys.path:
@@ -285,105 +283,63 @@ class MemcardTab(QWidget):
         theme_mod.apply = apply_everywhere
         theme_mod._dmw3_launcher_hooked = True
 
-    # ------------------------------------------------------------------ saves
+    # ------------------------------------------------------------------ cards
     def rescan(self) -> None:
-        self.root = paths.resolve_runtime(self.cfg)
         self.list_saves.clear()
-        if not self.root:
-            self._set_status("No install located yet — the Play tab finds it.")
-            return
-        found = saves.discover(self.root)
-        editable_any = False
+        found = saves.discover()
+        directories = saves.search_dirs()
         for f in found:
-            kind = "card" if f.is_card else "slot"
-            size = f"{f.size:,} B"
-            editable, note = self._classify(f)
-            editable_any = editable_any or editable
-            suffix = "" if editable else "   ·   not editable here"
-            it = QListWidgetItem(f"{f.label}   ·   {size}{suffix}")
-            it.setData(Qt.ItemDataRole.UserRole, (kind, str(f.path), editable, note))
-            it.setToolTip(note or "")
+            it = QListWidgetItem(f"{f.label}   ·   {f.size:,} B")
+            it.setData(Qt.ItemDataRole.UserRole, f"card\x00{f.path}\x00true\x00")
+            it.setToolTip("PS1 memory card; the Digimon World 3 entry inside it is opened.")
             self.list_saves.addItem(it)
-        where = paths.savedata_dir(self.root)
-        n_slot = sum(1 for f in found if not f.is_card)
-        n_card = sum(1 for f in found if f.is_card)
 
-        # No dead UI: when nothing found is something the editor can open, the list is hidden and
-        # the situation is stated in one line, leaving the whole tab to the editor. It comes back
-        # by itself as soon as a file the editor can actually read exists.
-        self.box.setVisible(editable_any)
-        if not editable_any:
-            what = f"{n_slot} save slot(s) in {where}" if n_slot else ""
-            if n_card:
-                what = (what + "   ·   " if what else "") + f"{n_card} memory card(s)"
-            self._editor_hint = (
-                (what + "   ·   " if what else "")
-                + "nothing here is a PSX card payload the editor can edit. Use “Open memory "
-                  "card…” to open a .mcr.")
-            self._set_status(self._editor_hint)
+        # No dead UI: with nothing to open the list is hidden and the situation is stated in one
+        # line, leaving the whole tab to the editor. It comes back as soon as a card exists.
+        self.box.setVisible(bool(found))
+        if not found:
+            ready = builds.ready_regions()
+            where = ("no build has run yet" if not ready
+                     else "build(s) " + ", ".join(ready) + " found")
+            self._set_status(
+                f"No memory card found ({where}). Each build keeps its own card1.mcd / card2.mcd, "
+                f"and you can drop extra cards in {paths.cards_dir()} or open one directly.")
             self.btn_open.setEnabled(False)
             return
 
-        tail = ("  Opening a save here edits the same file the game reads."
-                if self._editor is not None else "")
-        self._set_status(f"{n_slot} save slot(s) in {where}   ·   {n_card} memory card(s) found."
-                         + tail)
+        self._set_status(f"{len(found)} memory card(s) found.")
         self._on_select(self.list_saves.currentRow())
 
     def _set_status(self, scan: str) -> None:
         """One place that decides what the tab says, so a scan can never mask a dead editor."""
         if self._editor_error:
-            self.lbl_status.setText(f"{scan}\n⚠ Save editor unavailable — {self._editor_error}")
+            self.lbl_status.setText(f"{scan}\n⚠ Save editor unavailable, {self._editor_error}")
             self.btn_open.setEnabled(False)
         else:
             self.lbl_status.setText(scan)
 
-    def _classify(self, f: saves.Found) -> tuple[bool, str]:
-        """Can the editor actually open this file?
-
-        Memory cards can be probed. The recomp's own slots cannot: they are its private save
-        format, not the PSX card payload the editor reads, so say so up front rather than letting
-        the user click and get an exception.
-        """
-        if f.is_card:
-            return True, "PS1 memory card — the Digimon World 3 entry inside it is opened."
-        if self._payload_size is None:
-            return True, ""  # editor unavailable, so cannot judge: do not block the click
-        if f.size == self._payload_size:
-            return True, f"Bare {self._payload_size:,}-byte payload, exactly what the editor reads."
-        return False, (
-            f"{f.path.name} is {f.size:,} bytes of the recomp's own save format, which the editor "
-            f"cannot read: it edits PSX card payloads ({self._payload_size:,} bytes, with a DMW3 "
-            f"tag at 0x204). Use “Open memory card…” for a .mcr card instead.")
-
     def _on_select(self, row: int) -> None:
         it = self.list_saves.item(row) if row is not None and row >= 0 else None
-        if it is None:
-            return
-        _kind, _p, editable, note = it.data(Qt.ItemDataRole.UserRole)
-        self.btn_open.setEnabled(bool(editable) and self._editor is not None)
-        if note:
-            self.lbl_status.setText(note)
+        self.btn_open.setEnabled(it is not None and self._editor is not None)
 
-    def _selected(self) -> tuple[str, pathlib.Path] | None:
+    def _selected(self) -> pathlib.Path | None:
         it = self.list_saves.currentItem()
         if not it:
             return None
-        kind, p, _editable, _note = it.data(Qt.ItemDataRole.UserRole)
-        return kind, pathlib.Path(p)
+        data = it.data(Qt.ItemDataRole.UserRole)
+        return pathlib.Path(data.split("\x00")[1]) if data else None
 
     def _reveal(self) -> None:
         sel = self._selected()
         if sel:
-            runtime.open_path(sel[1])
+            runtime.open_path(sel)
 
     def open_selected(self) -> None:
         sel = self._selected()
-        if not sel:
-            QMessageBox.information(self, "No save", "Pick a save from the list first.")
+        if sel is None:
+            QMessageBox.information(self, "No card", "Pick a memory card from the list first.")
             return
-        kind, path = sel
-        self.open_path(kind, path)
+        self.open_path("card", sel)
 
     def open_card_dialog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -394,7 +350,7 @@ class MemcardTab(QWidget):
         self.open_path("card", pathlib.Path(path))
 
     def open_path(self, kind: str, path: pathlib.Path) -> None:
-        """Load `path` into the embedded editor — the same sequence the editor's own
+        """Load `path` into the embedded editor, the same sequence the editor's own
         open_file() performs, minus the dialog."""
         if self._editor is None:
             self._load_editor()
@@ -404,28 +360,14 @@ class MemcardTab(QWidget):
                 self._editor_error or "The save editor could not be loaded.")
             return
         try:
-            if kind == "card":
-                card = self._mc.MemoryCard.load(str(path))
-                loc = card.find_dmw3_save()
-                if loc is None:
-                    raise self._SaveError(
-                        "No Digimon World 3 save on this card. Expected an entry named "
-                        "BASLUS-01436…, BESLES-03936… or BISLPS-03050…")
-                save = self._DMW3Save(card.extract_payload(loc))
-                self._editor._card, self._editor._loc = card, loc
-            else:
-                # A bare payload file. The recomp's own saveN.sav are NOT one: they are its own
-                # format and the editor rejects them, so explain instead of raising at a file the
-                # list implied was fine.
-                payload = path.read_bytes()
-                if self._payload_size is not None and len(payload) != self._payload_size:
-                    self.lbl_status.setText(
-                        f"{path.name} is {len(payload):,} bytes of the recomp's own save format. "
-                        f"The editor edits PSX card payloads ({self._payload_size:,} bytes), so "
-                        f"this file cannot be opened. Use “Open memory card…” for a .mcr.")
-                    return
-                save = self._DMW3Save(payload)
-                self._editor._card, self._editor._loc = None, None
+            card = self._mc.MemoryCard.load(str(path))
+            loc = card.find_dmw3_save()
+            if loc is None:
+                raise self._SaveError(
+                    "No Digimon World 3 save on this card. Expected an entry named "
+                    "BASLUS-01436…, BESLES-03936… or BISLPS-03050…")
+            save = self._DMW3Save(card.extract_payload(loc))
+            self._editor._card, self._editor._loc = card, loc
             self._editor._save = save
             self._editor._path = pathlib.Path(path)
             self._editor._dirty = False
@@ -435,5 +377,6 @@ class MemcardTab(QWidget):
                     fn()
             self.lbl_status.setText(f"Editing {path.name}  ·  {path.parent}")
         except Exception as exc:  # noqa: BLE001
-            QMessageBox.critical(self, "Could not open save",
-                                 f"{exc}\n\n{traceback.format_exc(limit=2)}")
+            self.lbl_status.setText(
+                f"{path.name} could not be opened as a memory card ({type(exc).__name__}: {exc}). "
+                f"Use “Open memory card…” to pick a real .mcr.")

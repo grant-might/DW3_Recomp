@@ -15,6 +15,7 @@
 #include "fmt/format.h"
 #include "bios_address_model.h"
 #include "mips_decoder.h"
+#include "r3000a_encoding.h"   /* shared R3000A reserved-encoding predicate */
 
 namespace PSXRecompV4 {
 
@@ -80,6 +81,21 @@ FunctionDiscovery::CFInfo FunctionDiscovery::classify_control_flow(uint32_t raw,
     info.reg = 0;
 
     uint8_t op = (raw >> 26) & 0x3F;
+
+    // Architecturally reserved / unavailable encodings (opcode 0x2F CACHE,
+    // SPECIAL funct 0x3C DSLL32, the rest of the MIPS II/III N/A family, and
+    // the absent-coprocessor opcodes). Real hardware raises an exception at
+    // such a word, so control leaves the instruction stream: this is a trap,
+    // not a fall-through, and it has no delay slot. Checked first because none
+    // of these encodings is a branch/jump on the R3000A anyway. Keeping it
+    // here stops a data-as-code sweep at the data instead of poisoning the
+    // whole function with an unsupported word (the strict translator now
+    // translates these words to their exception raise, so the word itself is
+    // still emitted).
+    if (PSXRecomp::classify_r3000a_encoding(raw) != PSXRecomp::R3000aEncoding::Valid) {
+        info.kind = CFKind::Reserved;
+        return info;
+    }
 
     // Conditional branches: BEQ/BNE/BLEZ/BGTZ
     if (op >= 0x04 && op <= 0x07) {
@@ -495,6 +511,16 @@ FunctionDiscovery::SingleFunctionResult FunctionDiscovery::walk_function(
                 // Return from exception. No fall-through.
                 result.exit_types.insert("rfe");
                 break;
+
+            case CFKind::Reserved:
+                // Architecturally reserved / unavailable encoding: it raises an
+                // exception, so control leaves. No delay slot and no
+                // fall-through — the walk must not continue into the data word
+                // that follows (that is the whole point: pointer tables and
+                // rodata are not code). Other paths (branch/JAL targets) still
+                // reach any real code beyond it.
+                result.exit_types.insert("reserved_trap");
+                break;
         }
     }
 
@@ -668,6 +694,9 @@ FunctionDiscovery::SingleFunctionResult FunctionDiscovery::walk_function(
                             break;
                         case CFKind::RFE:
                             bb.termination = "rfe";
+                            break;
+                        case CFKind::Reserved:
+                            bb.termination = "reserved_trap";
                             break;
                         case CFKind::Normal:
                             bb.termination = "fall_through";

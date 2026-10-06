@@ -1,0 +1,266 @@
+{
+ "source": "usitmnam.toml display order; Important-screen order verified vs player read 2026-09-02; eur_name/jp_in_eur from esitmnam.toml 2026-09-02 (EUR English table left 8 Tags + Recovery CD 3 in Japanese; Koc Trophy/Platinum Card are EUR's names for World Champ/Asuka Medal)",
+ "count": 48,
+ "ids": {
+  "0": {
+   "name": "Tree Boots",
+   "display_idx": 4,
+   "block": "A"
+  },
+  "1": {
+   "name": "Fishing Pole",
+   "display_idx": 5,
+   "block": "A"
+  },
+  "2": {
+   "name": "Agumon DDNA",
+   "display_idx": 6,
+   "block": "A"
+  },
+  "3": {
+   "name": "Red Snapper",
+   "display_idx": 7,
+   "block": "A"
+  },
+  "4": {
+   "name": "El Dorado ID",
+   "display_idx": 8,
+   "block": "A"
+  },
+  "5": {
+   "name": "Seiryu Badge",
+   "display_idx": 9,
+   "block": "A"
+  },
+  "6": {
+   "name": "Suzaku Badge",
+   "display_idx": 10,
+   "block": "A"
+  },
+  "7": {
+   "name": "Byakko Badge",
+   "display_idx": 11,
+   "block": "A"
+  },
+  "8": {
+   "name": "Genbu Badge",
+   "display_idx": 12,
+   "block": "A"
+  },
+  "9": {
+   "name": "Smelly Herb",
+   "display_idx": 13,
+   "block": "A"
+  },
+  "10": {
+   "name": "TNT Chip",
+   "display_idx": 14,
+   "block": "A"
+  },
+  "11": {
+   "name": "Agumon Suit",
+   "display_idx": 15,
+   "block": "A"
+  },
+  "12": {
+   "name": "DE Sincerity",
+   "display_idx": 16,
+   "block": "A"
+  },
+  "13": {
+   "name": "DE Knowledge",
+   "display_idx": 17,
+   "block": "A"
+  },
+  "14": {
+   "name": "Asuka Trophy",
+   "display_idx": 18,
+   "block": "A"
+  },
+  "15": {
+   "name": "Kotemon DDNA",
+   "display_idx": 19,
+   "block": "A"
+  },
+  "16": {
+   "name": "Sun Trophy",
+   "display_idx": 20,
+   "block": "A"
+  },
+  "17": {
+   "name": "Sepik Mask",
+   "display_idx": 21,
+   "block": "A"
+  },
+  "18": {
+   "name": "Blue ID Pass",
+   "display_idx": 22,
+   "block": "A"
+  },
+  "19": {
+   "name": "Red ID Pass",
+   "display_idx": 23,
+   "block": "A"
+  },
+  "20": {
+   "name": "White ID Pass",
+   "display_idx": 24,
+   "block": "A"
+  },
+  "21": {
+   "name": "Black ID Pass",
+   "display_idx": 25,
+   "block": "A"
+  },
+  "22": {
+   "name": "Seiryu Tag",
+   "display_idx": 26,
+   "block": "A",
+   "eur_name": "セイリュウÁタグ",
+   "jp_in_eur": true
+  },
+  "23": {
+   "name": "Suzaku Tag",
+   "display_idx": 27,
+   "block": "A",
+   "eur_name": "スザクÁタグ",
+   "jp_in_eur": true
+  },
+  "24": {
+   "name": "Byakko Tag",
+   "display_idx": 28,
+   "block": "A",
+   "eur_name": "ビャッコÁタグ",
+   "jp_in_eur": true
+  },
+  "25": {
+   "name": "Genbu Tag",
+   "display_idx": 29,
+   "block": "A",
+   "eur_name": "ゲンブÁタグ",
+   "jp_in_eur": true
+  },
+  "26": {
+   "name": "Qing Long Tag",
+   "display_idx": 30,
+   "block": "A",
+   "eur_name": "チンロンÁタグ",
+   "jp_in_eur": true
+  },
+  "27": {
+   "name": "Zhu Que Tag",
+   "display_idx": 31,
+   "block": "A",
+   "eur_name": "スーツェイÁタグ",
+   "jp_in_eur": true
+  },
+  "28": {
+   "name": "Bai Hu Tag",
+   "display_idx": 32,
+   "block": "A",
+   "eur_name": "バイフーÁタグ",
+   "jp_in_eur": true
+  },
+  "29": {
+   "name": "Xuan Wu Tag",
+   "display_idx": 33,
+   "block": "A",
+   "eur_name": "シェンウーÁタグ",
+   "jp_in_eur": true
+  },
+  "30": {
+   "name": "Guilmon DDNA",
+   "display_idx": 34,
+   "block": "A"
+  },
+  "31": {
+   "name": "Veemon DDNA",
+   "display_idx": 35,
+   "block": "A"
+  },
+  "32": {
+   "name": "World Champ",
+   "display_idx": 36,
+   "block": "A",
+   "eur_name": "Koc Trophy"
+  },
+  "33": {
+   "name": "Asuka Medal",
+   "display_idx": 37,
+   "block": "A",
+   "eur_name": "Platinum Card"
+  },
+  "34": {
+   "name": "Renamon DDNA",
+   "display_idx": 38,
+   "block": "A"
+  },
+  "35": {
+   "name": "Patamon DDNA",
+   "display_idx": 39,
+   "block": "A"
+  },
+  "36": {
+   "name": "Silver ID",
+   "display_idx": 40,
+   "block": "A"
+  },
+  "37": {
+   "name": "Gold ID",
+   "display_idx": 41,
+   "block": "A"
+  },
+  "38": {
+   "name": "Platinum ID",
+   "display_idx": 42,
+   "block": "A"
+  },
+  "39": {
+   "name": "Monmon DDNA",
+   "display_idx": 360,
+   "block": "M"
+  },
+  "40": {
+   "name": "Kumamon DDNA",
+   "display_idx": 395,
+   "block": "B"
+  },
+  "41": {
+   "name": "Crony ID",
+   "display_idx": 396,
+   "block": "B"
+  },
+  "42": {
+   "name": "Etemon's Mike",
+   "display_idx": 397,
+   "block": "B"
+  },
+  "43": {
+   "name": "Blue Card",
+   "display_idx": 398,
+   "block": "B"
+  },
+  "44": {
+   "name": "8lue Card",
+   "display_idx": 399,
+   "block": "B"
+  },
+  "45": {
+   "name": "Recovery CD 3",
+   "display_idx": 400,
+   "block": "B",
+   "eur_name": "リカバリーCD3",
+   "jp_in_eur": true
+  },
+  "46": {
+   "name": "Staff Pass",
+   "display_idx": 401,
+   "block": "B"
+  },
+  "47": {
+   "name": "Folder Bag",
+   "display_idx": 402,
+   "block": "B"
+  }
+ }
+}

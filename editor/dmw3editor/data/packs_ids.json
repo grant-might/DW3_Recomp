@@ -1,0 +1,181 @@
+{
+ "source": "usitmnam.toml display idx 91 + 361..394; save slot = display - 43",
+ "count": 35,
+ "ids": {
+  "0": {
+   "name": "Booster 01a",
+   "save_slot": 48,
+   "display_idx": 91
+  },
+  "1": {
+   "name": "Booster 02a",
+   "save_slot": 318,
+   "display_idx": 361
+  },
+  "2": {
+   "name": "Booster 03a",
+   "save_slot": 319,
+   "display_idx": 362
+  },
+  "3": {
+   "name": "Booster 04a",
+   "save_slot": 320,
+   "display_idx": 363
+  },
+  "4": {
+   "name": "Booster 05a",
+   "save_slot": 321,
+   "display_idx": 364
+  },
+  "5": {
+   "name": "Booster 06a",
+   "save_slot": 322,
+   "display_idx": 365
+  },
+  "6": {
+   "name": "Booster 07a",
+   "save_slot": 323,
+   "display_idx": 366
+  },
+  "7": {
+   "name": "Booster 08a",
+   "save_slot": 324,
+   "display_idx": 367
+  },
+  "8": {
+   "name": "Booster 09a",
+   "save_slot": 325,
+   "display_idx": 368
+  },
+  "9": {
+   "name": "Booster 10a",
+   "save_slot": 326,
+   "display_idx": 369
+  },
+  "10": {
+   "name": "Booster 11a",
+   "save_slot": 327,
+   "display_idx": 370
+  },
+  "11": {
+   "name": "Booster 12a",
+   "save_slot": 328,
+   "display_idx": 371
+  },
+  "12": {
+   "name": "Booster 13a",
+   "save_slot": 329,
+   "display_idx": 372
+  },
+  "13": {
+   "name": "Booster 14a",
+   "save_slot": 330,
+   "display_idx": 373
+  },
+  "14": {
+   "name": "Booster 15a",
+   "save_slot": 331,
+   "display_idx": 374
+  },
+  "15": {
+   "name": "Booster 1b",
+   "save_slot": 332,
+   "display_idx": 375
+  },
+  "16": {
+   "name": "Booster 2b",
+   "save_slot": 333,
+   "display_idx": 376
+  },
+  "17": {
+   "name": "Booster 3b",
+   "save_slot": 334,
+   "display_idx": 377
+  },
+  "18": {
+   "name": "Booster 4b",
+   "save_slot": 335,
+   "display_idx": 378
+  },
+  "19": {
+   "name": "Booster 5b",
+   "save_slot": 336,
+   "display_idx": 379
+  },
+  "20": {
+   "name": "Booster 6b",
+   "save_slot": 337,
+   "display_idx": 380
+  },
+  "21": {
+   "name": "Booster 7b",
+   "save_slot": 338,
+   "display_idx": 381
+  },
+  "22": {
+   "name": "Booster 8b",
+   "save_slot": 339,
+   "display_idx": 382
+  },
+  "23": {
+   "name": "Booster 9b",
+   "save_slot": 340,
+   "display_idx": 383
+  },
+  "24": {
+   "name": "Booster 10b",
+   "save_slot": 341,
+   "display_idx": 384
+  },
+  "25": {
+   "name": "Booster 11b",
+   "save_slot": 342,
+   "display_idx": 385
+  },
+  "26": {
+   "name": "Booster 12b",
+   "save_slot": 343,
+   "display_idx": 386
+  },
+  "27": {
+   "name": "Booster 13b",
+   "save_slot": 344,
+   "display_idx": 387
+  },
+  "28": {
+   "name": "Booster 14b",
+   "save_slot": 345,
+   "display_idx": 388
+  },
+  "29": {
+   "name": "Booster 15b",
+   "save_slot": 346,
+   "display_idx": 389
+  },
+  "30": {
+   "name": "R-Booster 01",
+   "save_slot": 347,
+   "display_idx": 390
+  },
+  "31": {
+   "name": "R-Booster 02",
+   "save_slot": 348,
+   "display_idx": 391
+  },
+  "32": {
+   "name": "R-Booster 03",
+   "save_slot": 349,
+   "display_idx": 392
+  },
+  "33": {
+   "name": "R-Booster 04",
+   "save_slot": 350,
+   "display_idx": 393
+  },
+  "34": {
+   "name": "R-Booster 05",
+   "save_slot": 351,
+   "display_idx": 394
+  }
+ }
+}

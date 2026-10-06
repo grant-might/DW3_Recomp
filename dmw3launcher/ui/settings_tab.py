@@ -1,9 +1,12 @@
 """The Launcher Settings tab.
 
-Writes the runtime's own Binaries/settings.toml — the file its settings menu uses — through a
-comment-preserving writer, so the documented comments and any key the launcher does not know
-about survive untouched. Controller bindings live in Binaries/input.ini and are never
+Writes a regional build's own `settings.toml` (the file the runtime reads and writes next to its
+exe) through a comment-preserving writer, so the documented comments and any key the launcher does
+not know about survive untouched. Controller bindings live beside it in `input.ini` and are never
 rewritten here, only revealed.
+
+Each build keeps its own settings, so the tab works on one build at a time; the region picker leads
+with USA, the same order the Play tab uses.
 """
 from __future__ import annotations
 
@@ -13,10 +16,10 @@ from typing import Iterable
 from PySide6.QtCore import QRect, QSettings, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFormLayout, QGridLayout,
-                               QGroupBox, QHBoxLayout, QLabel, QMessageBox, QPushButton, QScrollArea,
-                               QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
+                               QGroupBox, QHBoxLayout, QLabel, QMessageBox, QPushButton,
+                               QScrollArea, QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
 
-from .. import paths, runtime
+from .. import builds, paths, runtime
 from .. import settings as st
 from . import theme
 
@@ -93,7 +96,7 @@ class SettingsTab(QWidget):
     def __init__(self, cfg: dict) -> None:
         super().__init__()
         self.cfg = cfg
-        self.root: pathlib.Path | None = paths.resolve_runtime(cfg)
+        self.region: str = builds.default_region()
         self._widgets: dict[tuple[str, str], QWidget] = {}
         self._mapped: set[tuple[str, str]] = set()   # combos whose value lives in itemData
         self._ed_theme = None            # the save editor's theme module, when it is importable
@@ -108,6 +111,18 @@ class SettingsTab(QWidget):
         self.head.setWordWrap(True)
         self.head.setObjectName("hint")
         outer.addWidget(self.head)
+
+        pick = QHBoxLayout()
+        pick.setSpacing(theme.ROW_GAP)
+        pick.addWidget(QLabel("Build"))
+        self.combo_region = QComboBox()
+        for b in builds.BUILDS:
+            self.combo_region.addItem(b.label, b.region)
+        self.combo_region.setFixedWidth(FIELD_W)
+        self.combo_region.currentIndexChanged.connect(self._pick_region)
+        pick.addWidget(self.combo_region)
+        pick.addStretch(1)
+        outer.addLayout(pick)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -170,7 +185,7 @@ class SettingsTab(QWidget):
         v.addWidget(self.g_load)
 
         self.g_ctrl, ctrl_form = self._group("Controller")
-        note = QLabel("Bindings live in Binaries/input.ini and Binaries/keybinds.ini — the "
+        note = QLabel("Bindings live in the build's own input.ini and keybinds.ini, the "
                       "launcher leaves those files alone. These are the runtime's own "
                       "controller settings.")
         note.setObjectName("dim")
@@ -209,6 +224,11 @@ class SettingsTab(QWidget):
         bar.addWidget(self.btn_apply)
         outer.addLayout(bar)
 
+        index = self.combo_region.findData(self.region)
+        if index >= 0:
+            self.combo_region.blockSignals(True)
+            self.combo_region.setCurrentIndex(index)
+            self.combo_region.blockSignals(False)
         self.reload()
 
     # ------------------------------------------------------------------ appearance
@@ -346,18 +366,25 @@ class SettingsTab(QWidget):
         self._widgets[(sect, key)] = w
 
     # ------------------------------------------------------------------ data
+    def _pick_region(self) -> None:
+        self.region = self.combo_region.currentData() or builds.default_region()
+        self.reload()
+
     def reload(self) -> None:
-        self.root = paths.resolve_runtime(self.cfg)
-        if not self.root:
-            self.head.setText("No install located yet — find it on the Play tab.")
-            self.setEnabled(False)
+        p = builds.settings_toml(self.region)
+        label = builds.spec(self.region).label
+        if not builds.build_status(self.region)[0]:
+            self.head.setText(f"The {label} build is not on disk yet, build it on the Play tab "
+                              f"first, and its settings.toml ({p}) appears here.")
+            self.setEnabled(True)
+            self.btn_apply.setEnabled(False)
+            self.lbl_ctrl.setText("not set")
             return
-        self.setEnabled(True)
-        p = paths.settings_toml(self.root)
-        self.head.setText(f"These are the runtime's own settings ({p}).")
+        self.btn_apply.setEnabled(True)
+        self.head.setText(f"These are the {label} build's own settings ({p}).")
         if not p.is_file():
-            self.head.setText(f"settings.toml not found at {p}")
-            return
+            self.head.setText(f"The {label} build has no settings.toml yet ({p}). Start it once "
+                              f"and the runtime writes one; the defaults below are what it will use.")
         if not st.available():
             # Refuse to touch the file rather than rewrite it without comment support.
             self.head.setText(
@@ -366,8 +393,7 @@ class SettingsTab(QWidget):
                 f"    pip install tomlkit\n")
             self.btn_apply.setEnabled(False)
             return
-        self.btn_apply.setEnabled(True)
-        snap = st.snapshot(p)
+        snap = st.snapshot(p) if p.is_file() else {}
 
         for (sect, key), w in self._widgets.items():
             val = snap.get(sect, {}).get(key)
@@ -401,14 +427,12 @@ class SettingsTab(QWidget):
                 except (TypeError, ValueError):
                     pass
 
-        ctrl = runtime.controller_summary(self.root)
+        ctrl = runtime.controller_summary(p)
         self.lbl_ctrl.setText("\n".join(f"{k} = {v}" for k, v in ctrl.items()) or "not set")
         self.lbl_note.setText("unknown keys and comments are preserved")
 
     def apply(self) -> None:
-        if not self.root:
-            return
-        p = paths.settings_toml(self.root)
+        p = builds.settings_toml(self.region)
         updates: dict[tuple[str, str], object] = {}
         for (sect, key), w in self._widgets.items():
             if isinstance(w, QCheckBox):
@@ -430,9 +454,11 @@ class SettingsTab(QWidget):
                                                   "to use them.")
 
     def _open_raw(self) -> None:
-        if self.root:
-            runtime.open_path(paths.settings_toml(self.root))
+        p = builds.settings_toml(self.region)
+        if p.is_file():
+            runtime.open_path(p)
 
     def _open_inputs(self) -> None:
-        if self.root:
-            runtime.open_path(paths.bin_dir(self.root))
+        d = builds.build_dir(self.region)
+        if d.is_dir():
+            runtime.open_path(d)

@@ -1,0 +1,1299 @@
+{
+ "source": "TSR Digimon World 3 color sheets (metaldodomon rip) mapped to album order; sheet cell k == album number (start+k); verified vs research/05_items.json at/p stats and live anchors (Sacred spear=option0, OmnimonII=green0) 2026-09-02",
+ "count": 314,
+ "spans": [
+  [
+   "option",
+   1,
+   60
+  ],
+  [
+   "white",
+   61,
+   43
+  ],
+  [
+   "blue",
+   104,
+   43
+  ],
+  [
+   "green",
+   147,
+   43
+  ],
+  [
+   "red",
+   190,
+   43
+  ],
+  [
+   "black",
+   233,
+   43
+  ],
+  [
+   "brown",
+   276,
+   39
+  ]
+ ],
+ "ids": {
+  "0": {
+   "color": "option",
+   "cell": 0
+  },
+  "1": {
+   "color": "option",
+   "cell": 1
+  },
+  "2": {
+   "color": "option",
+   "cell": 2
+  },
+  "3": {
+   "color": "option",
+   "cell": 3
+  },
+  "4": {
+   "color": "option",
+   "cell": 4
+  },
+  "5": {
+   "color": "option",
+   "cell": 5
+  },
+  "6": {
+   "color": "option",
+   "cell": 6
+  },
+  "7": {
+   "color": "option",
+   "cell": 7
+  },
+  "8": {
+   "color": "option",
+   "cell": 8
+  },
+  "9": {
+   "color": "option",
+   "cell": 9
+  },
+  "10": {
+   "color": "option",
+   "cell": 10
+  },
+  "11": {
+   "color": "option",
+   "cell": 11
+  },
+  "12": {
+   "color": "option",
+   "cell": 12
+  },
+  "13": {
+   "color": "option",
+   "cell": 13
+  },
+  "14": {
+   "color": "option",
+   "cell": 14
+  },
+  "15": {
+   "color": "option",
+   "cell": 15
+  },
+  "16": {
+   "color": "option",
+   "cell": 16
+  },
+  "17": {
+   "color": "option",
+   "cell": 17
+  },
+  "18": {
+   "color": "option",
+   "cell": 18
+  },
+  "19": {
+   "color": "option",
+   "cell": 19
+  },
+  "20": {
+   "color": "option",
+   "cell": 20
+  },
+  "21": {
+   "color": "option",
+   "cell": 21
+  },
+  "22": {
+   "color": "option",
+   "cell": 22
+  },
+  "23": {
+   "color": "option",
+   "cell": 23
+  },
+  "24": {
+   "color": "option",
+   "cell": 24
+  },
+  "25": {
+   "color": "option",
+   "cell": 25
+  },
+  "26": {
+   "color": "option",
+   "cell": 26
+  },
+  "27": {
+   "color": "option",
+   "cell": 27
+  },
+  "28": {
+   "color": "option",
+   "cell": 28
+  },
+  "29": {
+   "color": "option",
+   "cell": 29
+  },
+  "30": {
+   "color": "option",
+   "cell": 30
+  },
+  "31": {
+   "color": "option",
+   "cell": 31
+  },
+  "32": {
+   "color": "option",
+   "cell": 32
+  },
+  "33": {
+   "color": "option",
+   "cell": 33
+  },
+  "34": {
+   "color": "option",
+   "cell": 34
+  },
+  "35": {
+   "color": "option",
+   "cell": 35
+  },
+  "36": {
+   "color": "option",
+   "cell": 36
+  },
+  "37": {
+   "color": "option",
+   "cell": 37
+  },
+  "38": {
+   "color": "option",
+   "cell": 38
+  },
+  "39": {
+   "color": "option",
+   "cell": 39
+  },
+  "40": {
+   "color": "option",
+   "cell": 40
+  },
+  "41": {
+   "color": "option",
+   "cell": 41
+  },
+  "42": {
+   "color": "option",
+   "cell": 42
+  },
+  "43": {
+   "color": "option",
+   "cell": 43
+  },
+  "44": {
+   "color": "option",
+   "cell": 44
+  },
+  "45": {
+   "color": "option",
+   "cell": 45
+  },
+  "46": {
+   "color": "option",
+   "cell": 46
+  },
+  "47": {
+   "color": "option",
+   "cell": 47
+  },
+  "48": {
+   "color": "option",
+   "cell": 48
+  },
+  "49": {
+   "color": "option",
+   "cell": 49
+  },
+  "50": {
+   "color": "option",
+   "cell": 50
+  },
+  "51": {
+   "color": "option",
+   "cell": 51
+  },
+  "52": {
+   "color": "option",
+   "cell": 52
+  },
+  "53": {
+   "color": "option",
+   "cell": 53
+  },
+  "54": {
+   "color": "option",
+   "cell": 54
+  },
+  "55": {
+   "color": "option",
+   "cell": 55
+  },
+  "56": {
+   "color": "option",
+   "cell": 56
+  },
+  "57": {
+   "color": "option",
+   "cell": 57
+  },
+  "58": {
+   "color": "option",
+   "cell": 58
+  },
+  "59": {
+   "color": "option",
+   "cell": 59
+  },
+  "60": {
+   "color": "white",
+   "cell": 0
+  },
+  "61": {
+   "color": "white",
+   "cell": 1
+  },
+  "62": {
+   "color": "white",
+   "cell": 2
+  },
+  "63": {
+   "color": "white",
+   "cell": 3
+  },
+  "64": {
+   "color": "white",
+   "cell": 4
+  },
+  "65": {
+   "color": "white",
+   "cell": 5
+  },
+  "66": {
+   "color": "white",
+   "cell": 6
+  },
+  "67": {
+   "color": "white",
+   "cell": 7
+  },
+  "68": {
+   "color": "white",
+   "cell": 8
+  },
+  "69": {
+   "color": "white",
+   "cell": 9
+  },
+  "70": {
+   "color": "white",
+   "cell": 10
+  },
+  "71": {
+   "color": "white",
+   "cell": 11
+  },
+  "72": {
+   "color": "white",
+   "cell": 12
+  },
+  "73": {
+   "color": "white",
+   "cell": 13
+  },
+  "74": {
+   "color": "white",
+   "cell": 14
+  },
+  "75": {
+   "color": "white",
+   "cell": 15
+  },
+  "76": {
+   "color": "white",
+   "cell": 16
+  },
+  "77": {
+   "color": "white",
+   "cell": 17
+  },
+  "78": {
+   "color": "white",
+   "cell": 18
+  },
+  "79": {
+   "color": "white",
+   "cell": 19
+  },
+  "80": {
+   "color": "white",
+   "cell": 20
+  },
+  "81": {
+   "color": "white",
+   "cell": 21
+  },
+  "82": {
+   "color": "white",
+   "cell": 22
+  },
+  "83": {
+   "color": "white",
+   "cell": 23
+  },
+  "84": {
+   "color": "white",
+   "cell": 24
+  },
+  "85": {
+   "color": "white",
+   "cell": 25
+  },
+  "86": {
+   "color": "white",
+   "cell": 26
+  },
+  "87": {
+   "color": "white",
+   "cell": 27
+  },
+  "88": {
+   "color": "white",
+   "cell": 28
+  },
+  "89": {
+   "color": "white",
+   "cell": 29
+  },
+  "90": {
+   "color": "white",
+   "cell": 30
+  },
+  "91": {
+   "color": "white",
+   "cell": 31
+  },
+  "92": {
+   "color": "white",
+   "cell": 32
+  },
+  "93": {
+   "color": "white",
+   "cell": 33
+  },
+  "94": {
+   "color": "white",
+   "cell": 34
+  },
+  "95": {
+   "color": "white",
+   "cell": 35
+  },
+  "96": {
+   "color": "white",
+   "cell": 36
+  },
+  "97": {
+   "color": "white",
+   "cell": 37
+  },
+  "98": {
+   "color": "white",
+   "cell": 38
+  },
+  "99": {
+   "color": "white",
+   "cell": 39
+  },
+  "100": {
+   "color": "white",
+   "cell": 40
+  },
+  "101": {
+   "color": "white",
+   "cell": 41
+  },
+  "102": {
+   "color": "white",
+   "cell": 42
+  },
+  "103": {
+   "color": "blue",
+   "cell": 0
+  },
+  "104": {
+   "color": "blue",
+   "cell": 1
+  },
+  "105": {
+   "color": "blue",
+   "cell": 2
+  },
+  "106": {
+   "color": "blue",
+   "cell": 3
+  },
+  "107": {
+   "color": "blue",
+   "cell": 4
+  },
+  "108": {
+   "color": "blue",
+   "cell": 5
+  },
+  "109": {
+   "color": "blue",
+   "cell": 6
+  },
+  "110": {
+   "color": "blue",
+   "cell": 7
+  },
+  "111": {
+   "color": "blue",
+   "cell": 8
+  },
+  "112": {
+   "color": "blue",
+   "cell": 9
+  },
+  "113": {
+   "color": "blue",
+   "cell": 10
+  },
+  "114": {
+   "color": "blue",
+   "cell": 11
+  },
+  "115": {
+   "color": "blue",
+   "cell": 12
+  },
+  "116": {
+   "color": "blue",
+   "cell": 13
+  },
+  "117": {
+   "color": "blue",
+   "cell": 14
+  },
+  "118": {
+   "color": "blue",
+   "cell": 15
+  },
+  "119": {
+   "color": "blue",
+   "cell": 16
+  },
+  "120": {
+   "color": "blue",
+   "cell": 17
+  },
+  "121": {
+   "color": "blue",
+   "cell": 18
+  },
+  "122": {
+   "color": "blue",
+   "cell": 19
+  },
+  "123": {
+   "color": "blue",
+   "cell": 20
+  },
+  "124": {
+   "color": "blue",
+   "cell": 21
+  },
+  "125": {
+   "color": "blue",
+   "cell": 22
+  },
+  "126": {
+   "color": "blue",
+   "cell": 23
+  },
+  "127": {
+   "color": "blue",
+   "cell": 24
+  },
+  "128": {
+   "color": "blue",
+   "cell": 25
+  },
+  "129": {
+   "color": "blue",
+   "cell": 26
+  },
+  "130": {
+   "color": "blue",
+   "cell": 27
+  },
+  "131": {
+   "color": "blue",
+   "cell": 28
+  },
+  "132": {
+   "color": "blue",
+   "cell": 29
+  },
+  "133": {
+   "color": "blue",
+   "cell": 30
+  },
+  "134": {
+   "color": "blue",
+   "cell": 31
+  },
+  "135": {
+   "color": "blue",
+   "cell": 32
+  },
+  "136": {
+   "color": "blue",
+   "cell": 33
+  },
+  "137": {
+   "color": "blue",
+   "cell": 34
+  },
+  "138": {
+   "color": "blue",
+   "cell": 35
+  },
+  "139": {
+   "color": "blue",
+   "cell": 36
+  },
+  "140": {
+   "color": "blue",
+   "cell": 37
+  },
+  "141": {
+   "color": "blue",
+   "cell": 38
+  },
+  "142": {
+   "color": "blue",
+   "cell": 39
+  },
+  "143": {
+   "color": "blue",
+   "cell": 40
+  },
+  "144": {
+   "color": "blue",
+   "cell": 41
+  },
+  "145": {
+   "color": "blue",
+   "cell": 42
+  },
+  "146": {
+   "color": "green",
+   "cell": 0
+  },
+  "147": {
+   "color": "green",
+   "cell": 1
+  },
+  "148": {
+   "color": "green",
+   "cell": 2
+  },
+  "149": {
+   "color": "green",
+   "cell": 3
+  },
+  "150": {
+   "color": "green",
+   "cell": 4
+  },
+  "151": {
+   "color": "green",
+   "cell": 5
+  },
+  "152": {
+   "color": "green",
+   "cell": 6
+  },
+  "153": {
+   "color": "green",
+   "cell": 7
+  },
+  "154": {
+   "color": "green",
+   "cell": 8
+  },
+  "155": {
+   "color": "green",
+   "cell": 9
+  },
+  "156": {
+   "color": "green",
+   "cell": 10
+  },
+  "157": {
+   "color": "green",
+   "cell": 11
+  },
+  "158": {
+   "color": "green",
+   "cell": 12
+  },
+  "159": {
+   "color": "green",
+   "cell": 13
+  },
+  "160": {
+   "color": "green",
+   "cell": 14
+  },
+  "161": {
+   "color": "green",
+   "cell": 15
+  },
+  "162": {
+   "color": "green",
+   "cell": 16
+  },
+  "163": {
+   "color": "green",
+   "cell": 17
+  },
+  "164": {
+   "color": "green",
+   "cell": 18
+  },
+  "165": {
+   "color": "green",
+   "cell": 19
+  },
+  "166": {
+   "color": "green",
+   "cell": 20
+  },
+  "167": {
+   "color": "green",
+   "cell": 21
+  },
+  "168": {
+   "color": "green",
+   "cell": 22
+  },
+  "169": {
+   "color": "green",
+   "cell": 23
+  },
+  "170": {
+   "color": "green",
+   "cell": 24
+  },
+  "171": {
+   "color": "green",
+   "cell": 25
+  },
+  "172": {
+   "color": "green",
+   "cell": 26
+  },
+  "173": {
+   "color": "green",
+   "cell": 27
+  },
+  "174": {
+   "color": "green",
+   "cell": 28
+  },
+  "175": {
+   "color": "green",
+   "cell": 29
+  },
+  "176": {
+   "color": "green",
+   "cell": 30
+  },
+  "177": {
+   "color": "green",
+   "cell": 31
+  },
+  "178": {
+   "color": "green",
+   "cell": 32
+  },
+  "179": {
+   "color": "green",
+   "cell": 33
+  },
+  "180": {
+   "color": "green",
+   "cell": 34
+  },
+  "181": {
+   "color": "green",
+   "cell": 35
+  },
+  "182": {
+   "color": "green",
+   "cell": 36
+  },
+  "183": {
+   "color": "green",
+   "cell": 37
+  },
+  "184": {
+   "color": "green",
+   "cell": 38
+  },
+  "185": {
+   "color": "green",
+   "cell": 39
+  },
+  "186": {
+   "color": "green",
+   "cell": 40
+  },
+  "187": {
+   "color": "green",
+   "cell": 41
+  },
+  "188": {
+   "color": "green",
+   "cell": 42
+  },
+  "189": {
+   "color": "red",
+   "cell": 0
+  },
+  "190": {
+   "color": "red",
+   "cell": 1
+  },
+  "191": {
+   "color": "red",
+   "cell": 2
+  },
+  "192": {
+   "color": "red",
+   "cell": 3
+  },
+  "193": {
+   "color": "red",
+   "cell": 4
+  },
+  "194": {
+   "color": "red",
+   "cell": 5
+  },
+  "195": {
+   "color": "red",
+   "cell": 6
+  },
+  "196": {
+   "color": "red",
+   "cell": 7
+  },
+  "197": {
+   "color": "red",
+   "cell": 8
+  },
+  "198": {
+   "color": "red",
+   "cell": 9
+  },
+  "199": {
+   "color": "red",
+   "cell": 10
+  },
+  "200": {
+   "color": "red",
+   "cell": 11
+  },
+  "201": {
+   "color": "red",
+   "cell": 12
+  },
+  "202": {
+   "color": "red",
+   "cell": 13
+  },
+  "203": {
+   "color": "red",
+   "cell": 14
+  },
+  "204": {
+   "color": "red",
+   "cell": 15
+  },
+  "205": {
+   "color": "red",
+   "cell": 16
+  },
+  "206": {
+   "color": "red",
+   "cell": 17
+  },
+  "207": {
+   "color": "red",
+   "cell": 18
+  },
+  "208": {
+   "color": "red",
+   "cell": 19
+  },
+  "209": {
+   "color": "red",
+   "cell": 20
+  },
+  "210": {
+   "color": "red",
+   "cell": 21
+  },
+  "211": {
+   "color": "red",
+   "cell": 22
+  },
+  "212": {
+   "color": "red",
+   "cell": 23
+  },
+  "213": {
+   "color": "red",
+   "cell": 24
+  },
+  "214": {
+   "color": "red",
+   "cell": 25
+  },
+  "215": {
+   "color": "red",
+   "cell": 26
+  },
+  "216": {
+   "color": "red",
+   "cell": 27
+  },
+  "217": {
+   "color": "red",
+   "cell": 28
+  },
+  "218": {
+   "color": "red",
+   "cell": 29
+  },
+  "219": {
+   "color": "red",
+   "cell": 30
+  },
+  "220": {
+   "color": "red",
+   "cell": 31
+  },
+  "221": {
+   "color": "red",
+   "cell": 32
+  },
+  "222": {
+   "color": "red",
+   "cell": 33
+  },
+  "223": {
+   "color": "red",
+   "cell": 34
+  },
+  "224": {
+   "color": "red",
+   "cell": 35
+  },
+  "225": {
+   "color": "red",
+   "cell": 36
+  },
+  "226": {
+   "color": "red",
+   "cell": 37
+  },
+  "227": {
+   "color": "red",
+   "cell": 38
+  },
+  "228": {
+   "color": "red",
+   "cell": 39
+  },
+  "229": {
+   "color": "red",
+   "cell": 40
+  },
+  "230": {
+   "color": "red",
+   "cell": 41
+  },
+  "231": {
+   "color": "red",
+   "cell": 42
+  },
+  "232": {
+   "color": "black",
+   "cell": 0
+  },
+  "233": {
+   "color": "black",
+   "cell": 1
+  },
+  "234": {
+   "color": "black",
+   "cell": 2
+  },
+  "235": {
+   "color": "black",
+   "cell": 3
+  },
+  "236": {
+   "color": "black",
+   "cell": 4
+  },
+  "237": {
+   "color": "black",
+   "cell": 5
+  },
+  "238": {
+   "color": "black",
+   "cell": 6
+  },
+  "239": {
+   "color": "black",
+   "cell": 7
+  },
+  "240": {
+   "color": "black",
+   "cell": 8
+  },
+  "241": {
+   "color": "black",
+   "cell": 9
+  },
+  "242": {
+   "color": "black",
+   "cell": 10
+  },
+  "243": {
+   "color": "black",
+   "cell": 11
+  },
+  "244": {
+   "color": "black",
+   "cell": 12
+  },
+  "245": {
+   "color": "black",
+   "cell": 13
+  },
+  "246": {
+   "color": "black",
+   "cell": 14
+  },
+  "247": {
+   "color": "black",
+   "cell": 15
+  },
+  "248": {
+   "color": "black",
+   "cell": 16
+  },
+  "249": {
+   "color": "black",
+   "cell": 17
+  },
+  "250": {
+   "color": "black",
+   "cell": 18
+  },
+  "251": {
+   "color": "black",
+   "cell": 19
+  },
+  "252": {
+   "color": "black",
+   "cell": 20
+  },
+  "253": {
+   "color": "black",
+   "cell": 21
+  },
+  "254": {
+   "color": "black",
+   "cell": 22
+  },
+  "255": {
+   "color": "black",
+   "cell": 23
+  },
+  "256": {
+   "color": "black",
+   "cell": 24
+  },
+  "257": {
+   "color": "black",
+   "cell": 25
+  },
+  "258": {
+   "color": "black",
+   "cell": 26
+  },
+  "259": {
+   "color": "black",
+   "cell": 27
+  },
+  "260": {
+   "color": "black",
+   "cell": 28
+  },
+  "261": {
+   "color": "black",
+   "cell": 29
+  },
+  "262": {
+   "color": "black",
+   "cell": 30
+  },
+  "263": {
+   "color": "black",
+   "cell": 31
+  },
+  "264": {
+   "color": "black",
+   "cell": 32
+  },
+  "265": {
+   "color": "black",
+   "cell": 33
+  },
+  "266": {
+   "color": "black",
+   "cell": 34
+  },
+  "267": {
+   "color": "black",
+   "cell": 35
+  },
+  "268": {
+   "color": "black",
+   "cell": 36
+  },
+  "269": {
+   "color": "black",
+   "cell": 37
+  },
+  "270": {
+   "color": "black",
+   "cell": 38
+  },
+  "271": {
+   "color": "black",
+   "cell": 39
+  },
+  "272": {
+   "color": "black",
+   "cell": 40
+  },
+  "273": {
+   "color": "black",
+   "cell": 41
+  },
+  "274": {
+   "color": "black",
+   "cell": 42
+  },
+  "275": {
+   "color": "brown",
+   "cell": 0
+  },
+  "276": {
+   "color": "brown",
+   "cell": 1
+  },
+  "277": {
+   "color": "brown",
+   "cell": 2
+  },
+  "278": {
+   "color": "brown",
+   "cell": 3
+  },
+  "279": {
+   "color": "brown",
+   "cell": 4
+  },
+  "280": {
+   "color": "brown",
+   "cell": 5
+  },
+  "281": {
+   "color": "brown",
+   "cell": 6
+  },
+  "282": {
+   "color": "brown",
+   "cell": 7
+  },
+  "283": {
+   "color": "brown",
+   "cell": 8
+  },
+  "284": {
+   "color": "brown",
+   "cell": 9
+  },
+  "285": {
+   "color": "brown",
+   "cell": 10
+  },
+  "286": {
+   "color": "brown",
+   "cell": 11
+  },
+  "287": {
+   "color": "brown",
+   "cell": 12
+  },
+  "288": {
+   "color": "brown",
+   "cell": 13
+  },
+  "289": {
+   "color": "brown",
+   "cell": 14
+  },
+  "290": {
+   "color": "brown",
+   "cell": 15
+  },
+  "291": {
+   "color": "brown",
+   "cell": 16
+  },
+  "292": {
+   "color": "brown",
+   "cell": 17
+  },
+  "293": {
+   "color": "brown",
+   "cell": 18
+  },
+  "294": {
+   "color": "brown",
+   "cell": 19
+  },
+  "295": {
+   "color": "brown",
+   "cell": 20
+  },
+  "296": {
+   "color": "brown",
+   "cell": 21
+  },
+  "297": {
+   "color": "brown",
+   "cell": 22
+  },
+  "298": {
+   "color": "brown",
+   "cell": 23
+  },
+  "299": {
+   "color": "brown",
+   "cell": 24
+  },
+  "300": {
+   "color": "brown",
+   "cell": 25
+  },
+  "301": {
+   "color": "brown",
+   "cell": 26
+  },
+  "302": {
+   "color": "brown",
+   "cell": 27
+  },
+  "303": {
+   "color": "brown",
+   "cell": 28
+  },
+  "304": {
+   "color": "brown",
+   "cell": 29
+  },
+  "305": {
+   "color": "brown",
+   "cell": 30
+  },
+  "306": {
+   "color": "brown",
+   "cell": 31
+  },
+  "307": {
+   "color": "brown",
+   "cell": 32
+  },
+  "308": {
+   "color": "brown",
+   "cell": 33
+  },
+  "309": {
+   "color": "brown",
+   "cell": 34
+  },
+  "310": {
+   "color": "brown",
+   "cell": 35
+  },
+  "311": {
+   "color": "brown",
+   "cell": 36
+  },
+  "312": {
+   "color": "brown",
+   "cell": 37
+  },
+  "313": {
+   "color": "brown",
+   "cell": 38
+  }
+ }
+}

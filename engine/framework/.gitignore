@@ -132,9 +132,3 @@ recompiler/build-*/
 # Project Studio GUI venv (customtkinter)
 tools/new_project_layout/.venv/
 tools/new_project_layout/project_studio_repos.json
-
-# --- kept tracked in THIS distribution -----------------------------------------
-# rabbitizer's generated/ dirs are vendored SOURCE (enum/descriptor headers), not build
-# output, so re-include them despite the `generated/` rule above.
-!recompiler/lib/rabbitizer/include/generated/
-!recompiler/lib/rabbitizer/cplusplus/include/generated/

@@ -6,11 +6,14 @@ small MIT `retcomm-rbengine` library the runtime links for rewind. Given the pla
 module:
 
   1. PRE-FLIGHTS the C/C++ toolchain and says precisely what is missing if anything is, before a
-     recompile that takes 10-15 minutes is ever started;
+     recompile that takes 10 to 20 minutes is ever started;
   2. runs the recompiler CLI over the player's disc to generate the game's C sources;
   3. compiles that generated project locally with CMake + Ninja + the player's compiler;
   4. lands the finished, self-contained build in `Builds/EUR/` or `Builds/USA/` beside the
-     launcher, where the two regional Play buttons run it.
+     launcher, where the two regional Play buttons run it;
+  5. bundles the overlay compiler (TinyCC + embedded CPython) beside that build, so the runtime
+     compiles dynamically-loaded overlay code instead of falling back to its interpreter
+     (`assemble_overlay_toolchain`).
 
 Everything is derived from `paths.launcher_root()`: no machine path is baked into this module, and
 the generated sources, the intermediate build tree and the disc image all live OUTSIDE version
@@ -47,13 +50,45 @@ def framework_dir() -> pathlib.Path:
 
 
 def bios_path() -> pathlib.Path:
-    """The bundled MIT OpenBIOS image — the one BIOS that is legal to ship, so the player only
+    """The bundled MIT OpenBIOS image, the one BIOS that is legal to ship, so the player only
     ever has to supply a disc."""
     return framework_dir() / "bios" / "openbios.bin"
 
 
 def rbengine_dir() -> pathlib.Path:
     return engine_dir() / "lib" / "retcomm-rbengine"
+
+
+# ---------------------------------------------------------------- the overlay compiler it bundles
+
+# The runtime compiles dynamically-loaded overlay code with its `tcc` tier, but only when it finds
+# a self-contained toolchain beside its own exe. These are the two redistributable inputs that
+# bundle is assembled from, kept under the engine package so they travel with the launcher. Their
+# SHA-256s are recorded in the generated THIRD_PARTY_NOTICES.txt.
+OVERLAY_TCC_ZIP = "tcc-0.9.27-win64-bin.zip"           # TinyCC 0.9.27, LGPL-2.1
+OVERLAY_PYTHON_ZIP = "python-3.12.10-embed-amd64.zip"  # embedded CPython 3.12, PSF-2.0
+
+
+def overlay_inputs_dir() -> pathlib.Path:
+    return engine_dir() / "overlay_toolchain_inputs"
+
+
+def overlay_packager() -> pathlib.Path:
+    """The engine's own packager, which also writes the licence + source-offer notice."""
+    return engine_dir() / "tools" / "package_overlay_toolchain.py"
+
+
+def overlay_licenses_dir() -> pathlib.Path:
+    return engine_dir() / "packaging" / "licenses"
+
+
+def overlay_dir(folder: str) -> pathlib.Path:
+    return builds.builds_dir() / folder / "overlay_toolchain"
+
+
+def overlay_ready(folder: str) -> bool:
+    """True when that build carries a usable bundled toolchain (what the runtime probes for)."""
+    return (overlay_dir(folder) / "python" / "python.exe").is_file()
 
 
 def engine_present() -> bool:
@@ -301,7 +336,7 @@ def find_msvc() -> tuple[str | None, str]:
 
 
 def find_compiler() -> tuple[str | None, str, str, str | None]:
-    """(compiler path, kind, label, vcvars) — MSVC first, then clang, then gcc."""
+    """(compiler path, kind, label, vcvars), MSVC first, then clang, then gcc."""
     if sys.platform == "win32":
         vcvars, label = find_msvc()
         if vcvars:
@@ -532,12 +567,75 @@ def expected_exe_name(title: str) -> str:
     return _sanitize_identifier(f"{title} Recompiled")
 
 
+def _python_interpreter() -> str | None:
+    """The interpreter to run the engine's stdlib-only packager with.
+
+    `sys.executable` is the launcher's own interpreter, which is right for a source checkout but is
+    the frozen app itself under PyInstaller, so only accept it when it really is a `python*`.
+    """
+    exe = sys.executable or ""
+    if exe and pathlib.Path(exe).name.lower().startswith("python"):
+        return exe
+    for name in ("python", "python3", "py"):
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def assemble_overlay_toolchain(out_dir: pathlib.Path, project_dir: pathlib.Path, log) -> bool:
+    """Bundle the overlay compiler (TinyCC + embedded CPython) beside a finished build.
+
+    The runtime probes `<exe_dir>/overlay_toolchain/python/python.exe` at startup. When it is
+    there, dynamically-loaded overlay code is compiled natively instead of being left on the
+    dirty-RAM interpreter, which stalls the frame timer for about a second on a first visit. The
+    engine's own packager assembles it, so the TinyCC LGPL-2.1 licence text and the written
+    source offer are written with it.
+
+    Best effort by design: a build with no overlay toolchain still runs, only slower, so a failure
+    is reported and never fails the recompile that produced the build.
+    """
+    packager = overlay_packager()
+    tcc_zip = overlay_inputs_dir() / OVERLAY_TCC_ZIP
+    py_zip = overlay_inputs_dir() / OVERLAY_PYTHON_ZIP
+    game_exe = engine_dir() / "libexec" / "psxrecomp-game.exe"
+    # The include dir must be the one the GAME was built against: its generated
+    # overlay_codegen_hash.h is what the exe's compiled-in hash is checked against.
+    cand = [project_dir / "psxrecomp" / "runtime" / "include",
+            framework_dir() / "runtime" / "include"]
+    inc = next((p for p in cand if (p / "overlay_codegen_hash.h").is_file()), None) \
+        or next((p for p in cand if p.is_dir()), None)
+    python = _python_interpreter()
+    missing = [str(p) for p in (packager, tcc_zip, py_zip, game_exe) if not p.is_file()]
+    if python is None:
+        missing.append("a Python interpreter to run the packager")
+    if inc is None:
+        missing.append("the runtime include dir")
+    if missing:
+        log("   note: no overlay toolchain bundled (missing " + ", ".join(missing) + ")")
+        log("   overlay gaps will fall back to the interpreter, which stalls about a second on a "
+            "first visit")
+        return False
+    log("   bundling the overlay compiler (TinyCC + CPython) beside the build")
+    argv = [python, str(packager), "--exe-dir", str(out_dir),
+            "--tcc-zip", str(tcc_zip), "--python-zip", str(py_zip),
+            "--recompiler", str(game_exe), "--runtime-include", str(inc),
+            "--licenses-dir", str(overlay_licenses_dir()), "--force"]
+    code = _run_stream(argv, engine_dir(), log, timeout=1200)
+    ok = code == 0 and overlay_ready(out_dir.name)
+    if not ok:
+        log(f"   note: the overlay toolchain could not be assembled (packager exit {code}); "
+            f"overlay gaps will use the interpreter")
+    return ok
+
+
 def assemble_into(folder: str, exe_name: str | None, project_dir: pathlib.Path,
                   cmake_build: pathlib.Path, log) -> pathlib.Path | None:
     """Copy the finished, self-contained runtime into `Builds/<folder>/` beside the launcher.
 
     The runtime resolves game.toml, bios/ and its input files from its working directory, so the
-    destination carries the exe, its game.toml and the bundled BIOS. Everything runtime-generated
+    destination carries the exe, its game.toml, the bundled BIOS and - via
+    `assemble_overlay_toolchain` - the bundled overlay compiler. Everything runtime-generated
     (input.ini, cards, caches) the game writes itself on first run.
     """
     out = builds.builds_dir() / folder
@@ -556,6 +654,7 @@ def assemble_into(folder: str, exe_name: str | None, project_dir: pathlib.Path,
     for f in (framework_dir() / "bios").glob("*"):
         if f.is_file():
             shutil.copy2(f, bios_out / f.name)
+    assemble_overlay_toolchain(out, project_dir, log)
     log(f"== placed {exe_dst.name} in {out}")
     return exe_dst
 
@@ -579,8 +678,8 @@ def build(region: str, image: pathlib.Path, log) -> BuildResult:
     """Recompile `image` into a native build, start to finish. Nothing is refused for its region.
 
     Europe and USA are first-class (they land in `Builds/EUR` / `Builds/USA`, where the two Play
-    buttons find them). Any other disc is still attempted — the recompiler is the authority on
-    whether it can be built — and, if it builds, lands in `Builds/OTHER` with an honest note that
+    buttons find them). Any other disc is still attempted, the recompiler is the authority on
+    whether it can be built, and, if it builds, lands in `Builds/OTHER` with an honest note that
     the two regional Play buttons do not cover it.
 
     `log` receives one line at a time; the caller runs this off the UI thread.
@@ -613,7 +712,7 @@ def build(region: str, image: pathlib.Path, log) -> BuildResult:
     log("   stage 1/3: generating the game's C sources (several minutes)")
     if not generate(image, project, title, log):
         return BuildResult(False, region, None, "The recompiler failed; see the log above.")
-    log("   stage 2/3: compiling — this is the long one")
+    log("   stage 2/3: compiling, this is the long one")
     if not compile_project(project, cmake_build, tc, root, log):
         return BuildResult(False, region, None, "The compile failed; see the log above.")
     log("   stage 3/3: placing the build beside the launcher")
@@ -628,7 +727,7 @@ def build(region: str, image: pathlib.Path, log) -> BuildResult:
         log(f"== {label} build ready: {exe} ==")
         return BuildResult(True, region, exe, f"{label} build ready.")
     log(f"== build ready at {exe} ==")
-    log("   note: this disc is not Europe or USA, so the two Play buttons do not list it — "
+    log("   note: this disc is not Europe or USA, so the two Play buttons do not list it, "
         "run the exe from its folder, or move it under Builds/ where you want it.")
     return BuildResult(True, region, exe,
                        f"Built a {label} disc, but it is not on a Play button.")

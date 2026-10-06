@@ -1,6 +1,6 @@
 # Drop the launcher art here
 
-Filenames and exact sizes are in **`../docs/ASSETS.md`**. Nothing is required — the launcher
+Filenames and exact sizes are in **`../docs/ASSETS.md`**. Nothing is required, the launcher
 draws its own fallbacks for every slot, so you can add files one at a time.
 
 Expected (design size, author at 2x):

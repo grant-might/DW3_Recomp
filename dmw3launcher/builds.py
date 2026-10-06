@@ -2,22 +2,22 @@
 
 Nothing here is absolute: Builds/ and Discs/ sit beside the launcher itself
 (paths.launcher_root()), so the whole install can be moved or copied to another machine. Each
-regional build is self-contained — its exe, its game.toml, its bios/ and its input files all live
+regional build is self-contained, its exe, its game.toml, its bios/ and its input files all live
 in one folder:
 
-    Builds/EUR — Digimon World 2003, PAL,    id SLES-03936   (exe Digimon_World_2003_Recompiled.exe)
-    Builds/USA — Digimon World 3,   NTSC-U,  id SLUS-01436   (exe Digimon_World_3_Recompiled.exe)
+    Builds/EUR, Digimon World 2003, PAL,    id SLES-03936   (exe Digimon_World_2003_Recompiled.exe)
+    Builds/USA, Digimon World 3,   NTSC-U,  id SLUS-01436   (exe Digimon_World_3_Recompiled.exe)
 
 `BUILDS` lists the USA build first: every place that walks the tuple (the Play tab's buttons, its
 labels and the disc router) then shows USA before Europe, in one consistent order.
 
-The launcher does not ship these builds — the player makes them from their own disc with the
+The launcher does not ship these builds, the player makes them from their own disc with the
 bundled recompiler (see builder.py). This module only describes where a finished build lives, how
 a build's own `game.toml` is pointed at a disc image, and how it is launched.
 
 The runtime resolves game.toml, bios/, input.ini and card1.mcd from its WORKING DIRECTORY, so
 `launch` starts the exe with cwd set to the build folder. The one file the launcher rewrites is
-that build's own game.toml, and only its `disc = ` line — through tomlkit, so comments, key order
+that build's own game.toml, and only its `disc = ` line, through tomlkit, so comments, key order
 and every other value survive the write.
 """
 from __future__ import annotations
@@ -110,9 +110,25 @@ def card_dirs() -> list[pathlib.Path]:
     return [build_dir(b.region) for b in BUILDS]
 
 
-def input_files(region: str) -> dict[str, pathlib.Path]:
-    d = build_dir(region)
-    return {"input.ini": d / "input.ini", "keybinds.ini": d / "keybinds.ini"}
+def settings_toml(region: str) -> pathlib.Path:
+    """A build's own settings.toml. The runtime reads and writes it next to its exe."""
+    return build_dir(region) / "settings.toml"
+
+
+def mods_dir(region: str) -> pathlib.Path:
+    """A build's mods folder. The runtime resolves `mods/` from its working directory."""
+    return build_dir(region) / "mods"
+
+
+def ready_regions() -> list[str]:
+    """Regions whose build is on disk, in the house order (USA first)."""
+    return [b.region for b in BUILDS if build_status(b.region)[0]]
+
+
+def default_region() -> str:
+    """The build the Settings / Mods tabs work on: the first ready one, USA first."""
+    ready = ready_regions()
+    return ready[0] if ready else BUILDS[0].region
 
 
 def run_log_path(region: str) -> pathlib.Path:
@@ -209,7 +225,7 @@ def launch(region: str, extra_env: dict[str, str] | None = None,
     """Start a regional build from its own folder, with the dev-input merge switched on.
 
     cwd is load-bearing: the runtime resolves game.toml, bios/, input.ini and card1.mcd from the
-    working directory. When `log_path` is given the runtime's own stdout/stderr are teed there —
+    working directory. When `log_path` is given the runtime's own stdout/stderr are teed there -
     the exe is a GUI-subsystem binary, so without a redirect its `psxrecomp: ...` progress lines
     (main() entered, disc region, executing from PC=0x...) go nowhere a player could read them.
     """

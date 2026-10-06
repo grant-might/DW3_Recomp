@@ -1,0 +1,182 @@
+{
+ "Agumon": {
+  "header": "Greymon",
+  "slots": [
+   "MetalGreymon",
+   "WarGreymon",
+   "Dinohumon",
+   "ExVeemon",
+   "Growlmon",
+   "Kyubimon",
+   "Stingmon",
+   "SkullGreymon",
+   "MetalMamemon",
+   "Kyukimon",
+   "WarGrowlmon",
+   "Paildramon",
+   "Taomon",
+   "Kabuterimon",
+   "BKWarGreymon",
+   "Hookmon",
+   "GuardiAngemon",
+   "Gallantmon",
+   "MetalGarurumon",
+   "Angemon",
+   "Imperialdramon",
+   "Sakuyamon",
+   "Armormon",
+   "Grizzmon",
+   "MagnaAngemon",
+   "Digitamamon",
+   "MegaGargomon",
+   "Omnimon",
+   "ImperialdramonFM",
+   "GranKuwagamon"
+  ]
+ },
+ "Veemon": {
+  "header": "ExVeemon",
+  "slots": [
+   "Stingmon",
+   "Paildramon",
+   "Kabuterimon",
+   "Greymon",
+   "Growlmon",
+   "Kyubimon",
+   "Angemon",
+   "Devimon",
+   "MetalMamemon",
+   "Imperialdramon",
+   "Dinohumon",
+   "Hookmon",
+   "Grizzmon",
+   "Digitamamon",
+   "ImperialdramonFM",
+   "MetalGreymon",
+   "SkullGreymon",
+   "WarGreymon",
+   "MetalGarurumon",
+   "MegaGargomon",
+   "Omnimon",
+   "ImperialdramonPM",
+   "WarGrowlmon",
+   "Myotismon",
+   "Gallantmon",
+   "MaloMyotismon",
+   "Beelzemon"
+  ]
+ },
+ "Guilmon": {
+  "header": "Growlmon",
+  "slots": [
+   "WarGrowlmon",
+   "Gallantmon",
+   "Grizzmon",
+   "Greymon",
+   "ExVeemon",
+   "Angemon",
+   "Stingmon",
+   "Angewomon",
+   "MetalMamemon",
+   "Digitamamon"
+  ]
+ },
+ "Monmon": {
+  "header": "Hookmon",
+  "slots": [
+   "Armormon",
+   "Cannondramon",
+   "Greymon",
+   "ExVeemon",
+   "Angemon",
+   "MetalMamemon",
+   "Digitamamon",
+   "MetalGreymon",
+   "SkullGreymon",
+   "MagnaAngemon",
+   "MetalGarurumon",
+   "Dinohumon",
+   "Stingmon",
+   "WarGreymon",
+   "Devimon",
+   "Angewomon",
+   "Seraphimon",
+   "BKWarGreymon",
+   "MegaGargomon",
+   "Kyukimon",
+   "Paildramon",
+   "Kabuterimon",
+   "Omnimon",
+   "Kyubimon",
+   "Myotismon",
+   "Rosemon"
+  ]
+ },
+ "Kumamon": {
+  "header": "Grizzmon",
+  "slots": [
+   "GrapLeomon",
+   "Marsmon",
+   "Growlmon",
+   "Kyubimon",
+   "Devimon",
+   "Stingmon",
+   "MetalMamemon",
+   "Digitamamon"
+  ]
+ },
+ "Kotemon": {
+  "header": "Dinohumon",
+  "slots": [
+   "Kyukimon",
+   "GuardiAngemon",
+   "Greymon",
+   "Kyubimon",
+   "Stingmon",
+   "MetalMamemon"
+  ]
+ },
+ "Patamon": {
+  "header": "Angemon",
+  "slots": [
+   "MagnaAngemon",
+   "Seraphimon",
+   "Hookmon",
+   "Greymon",
+   "Stingmon",
+   "Angewomon",
+   "Digitamamon"
+  ]
+ },
+ "Renamon": {
+  "header": "Kyubimon",
+  "slots": [
+   "Taomon",
+   "Sakuyamon",
+   "ExVeemon",
+   "Angemon",
+   "Devimon",
+   "Stingmon",
+   "Angewomon",
+   "MetalMamemon",
+   "Digitamamon",
+   "MagnaAngemon",
+   "Myotismon",
+   "Growlmon",
+   "Paildramon",
+   "Kabuterimon",
+   "MetalGarurumon",
+   "Rosemon",
+   "Grizzmon",
+   "Seraphimon",
+   "MaloMyotismon",
+   "WarGrowlmon",
+   "Imperialdramon",
+   "Dinohumon",
+   "Greymon",
+   "GrapLeomon",
+   "MegaGargomon",
+   "Phoenixmon"
+  ]
+ }
+}

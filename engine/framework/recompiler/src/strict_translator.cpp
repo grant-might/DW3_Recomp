@@ -9,6 +9,7 @@
 #include "strict_translator.h"
 #include "pgxp_hook_emitter.h"   /* shared PGXP hook grammar */
 #include "gte_register_classification.h"
+#include "r3000a_encoding.h"     /* normative R3000A reserved-encoding predicate */
 
 #include <cstdint>
 #include <cstdlib>
@@ -61,6 +62,49 @@ TranslateResult unsupported(const PSXRecomp::DecodedInstruction& d, const std::s
     return r;
 }
 
+// ---------------------------------------------------------------------------
+// Architectural Reserved Instruction (RI) exception raise.
+//
+// The R3000A implements MIPS I only. Opcode 0x2F (CACHE) and SPECIAL funct
+// 0x3C (DSLL32) are MIPS III encodings that do NOT exist on it; psx-spx (CPU
+// Opcode Encoding -> "Illegal Opcodes") states the rule directly: "All opcodes
+// that are marked as N/A in the Primary and Secondary opcode tables are
+// causing a Reserved Instruction Exception (excode=0Ah)." 0x2F is N/A in the
+// primary table and 0x3C is N/A in the secondary table, so the architecturally
+// faithful translation of such a word is the RI raise the hardware performs --
+// NOT a no-op (which would be a stub) and NOT a refusal to translate the whole
+// function.
+//
+// Refusing the function is what produced OpenBIOS's four skipped functions:
+// function discovery sweeps data-as-code (the kernel .data pointer table and
+// the embedded rodata/ASCII behind osDbgPrintf) into a function body, and the
+// first data word whose top six bits happen to read 0x2F (any 0xBFxxxxxx ROM
+// pointer) or whose low six bits read 0x3C aborted the entire function. The
+// emission shape here matches the salvaged code_generator.cpp reserved-opcode
+// path exactly (same COP0 EPC/Cause/SR/vector semantics) and is ABI-neutral:
+// it sets cpu->pc and returns, so the CPS dispatch trampoline re-dispatches it
+// like any other guest control transfer. If the word is data that is never
+// executed, nothing observable happens; if the guest really reaches it, the
+// kernel handler sees exactly the exception real hardware would deliver.
+//
+// Deliberately NOT a slice terminator: like SYSCALL/BREAK, a trap has no delay
+// slot, so marking it one would make the walker fetch the next word as a delay
+// slot and refuse. The emitted `return;` halts the slice function, leaving any
+// following (dead) C unreachable.
+std::string emit_exception_raise(uint32_t address, uint32_t raw,
+                                 const std::string& what, uint32_t exc_code,
+                                 uint32_t ce) {
+    return fmt::format(
+        "{{ /* {} word 0x{:08X} at 0x{:08X}: architectural exception (ExcCode 0x{:02X}) */\n"
+        "    uint32_t psx_exc_sr = cpu->cop0[12];\n"
+        "    cpu->cop0[14] = 0x{:08X}u;  /* EPC = faulting PC, BD=0 */\n"
+        "    cpu->cop0[13] = (cpu->cop0[13] & ~0xB000007Cu) | ({}u << 2) | ({}u << 28);  /* Cause: ExcCode + CE */\n"
+        "    cpu->cop0[12] = (psx_exc_sr & ~0x3Fu) | ((psx_exc_sr & 0x0Fu) << 2);  /* SR push (IE/KU) */\n"
+        "    cpu->pc = (psx_exc_sr & 0x00400000u) ? 0xBFC00180u : 0x80000080u;  /* BEV selects vector */\n"
+        "    return; }}",
+        what, raw, address, exc_code, address, exc_code, ce);
+}
+
 } // namespace
 
 TranslateResult StrictTranslator::translate(const PSXRecomp::DecodedInstruction& d) {
@@ -99,6 +143,54 @@ TranslateResult StrictTranslator::translate_impl(const PSXRecomp::DecodedInstruc
     }
 
     const uint32_t opcode = (d.raw >> 26) & 0x3F;
+
+    // -------------------------------------------------------------------------
+    // Architecturally reserved / unusable encodings (psx-spx "Illegal Opcodes").
+    //
+    // The R3000A is MIPS I: every primary/secondary opcode the psx-spx tables
+    // mark N/A raises a Reserved Instruction exception (ExcCode 0x0A) on real
+    // hardware, and addressing a coprocessor the PSX does not have (COP1/COP3,
+    // LWC0..3/SWC0..3) raises Coprocessor Unusable (ExcCode 0x0B). There is no
+    // "no-op" reading of such a word, so a faithful translator emits the raise.
+    // The encodings that actually occur in BIOS data are opcode 0x2F (CACHE,
+    // MIPS III) and SPECIAL funct 0x3C (DSLL32, MIPS III).
+    //
+    // This is NOT a catch-all: the predicate enumerates the exact unassigned
+    // encodings (r3000a_encoding.h) and can only match a word that would
+    // otherwise fall through to the `unsupported` returns below, because no
+    // defined R3000A encoding shares those opcode/funct values. It exists
+    // because discovery sweeps data-as-code -- OpenBIOS's kernel .data pointer
+    // table (every 0xBFxxxxxx word reads as opcode 0x2F) and the rodata blob
+    // behind osDbgPrintf (funct 0x3C) used to abort their entire functions over
+    // one data word. Keeping the function and emitting the raise is exactly
+    // what hardware would do if the guest ever reached such a byte, and is
+    // harmless dead code when the word is data that is never executed.
+    // -------------------------------------------------------------------------
+    switch (PSXRecomp::classify_r3000a_encoding(d.raw)) {
+        case PSXRecomp::R3000aEncoding::ReservedInstruction:
+            r.supported = true;
+            r.c_code = emit_exception_raise(
+                d.address, d.raw,
+                "reserved MIPS II/III encoding (N/A on R3000A)", 0x0Au, 0u);
+            r.comment = fmt::format(
+                "reserved 0x{:08X} (MIPS II/III encoding, N/A on R3000A: RI exception)",
+                d.raw);
+            return r;
+        case PSXRecomp::R3000aEncoding::CoprocessorUnusable: {
+            // Primary opcode bits [1:0] carry the coprocessor number (COPn).
+            const uint32_t cop = (d.raw >> 26) & 0x03u;
+            r.supported = true;
+            r.c_code = emit_exception_raise(
+                d.address, d.raw,
+                "access to an absent coprocessor", 0x0Bu, cop);
+            r.comment = fmt::format(
+                "0x{:08X} (coprocessor {} not present on PSX: CpU exception)",
+                d.raw, cop);
+            return r;
+        }
+        case PSXRecomp::R3000aEncoding::Valid:
+            break;
+    }
 
     // SPECIAL — funct field selects op
     if (opcode == 0x00) {

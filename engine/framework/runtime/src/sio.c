@@ -49,14 +49,12 @@ static void sio_debug_poll_maybe(void) {
 
 /* Pad state: 0=pressed, 1=released (PS1 convention). Indexed by LOGICAL pad
  * 0 .. PSX_MAX_PLAYERS-1 (not physical SIO slot). */
-static uint16_t pad_buttons[PSX_MAX_PLAYERS] = { 0xFFFF, 0xFFFF};
+static uint16_t pad_buttons[PSX_MAX_PLAYERS] = { 0xFFFF, 0xFFFF };
 
 /* Per-logical-pad type + analog stick state. analog: 0=digital pad (poll id
  * 0x41), 1=DualShock/analog (poll id 0x73). Sticks are 0..255, 0x80 centred. */
 static PSX_BSS uint8_t pad_analog[PSX_MAX_PLAYERS];
-static uint8_t pad_stick[PSX_MAX_PLAYERS][4] = {
-    { 0x80, 0x80, 0x80, 0x80 }, { 0x80, 0x80, 0x80, 0x80 }
-}; /* lx,ly,rx,ry */
+static uint8_t pad_stick[PSX_MAX_PLAYERS][4] = { { 0x80, 0x80, 0x80, 0x80 }, { 0x80, 0x80, 0x80, 0x80 } }; /* lx,ly,rx,ry */
 
 /* DualShock command 0x4D maps the six writable bytes in a 0x42 poll onto the
  * two motors: 0x00 = small/high-frequency, 0x01 = large/low-frequency,
@@ -137,9 +135,7 @@ static PSX_BSS uint8_t pad_in_config[PSX_MAX_PLAYERS];
  * DualShock config path and read the 0x00 config-response bytes as buttons ->
  * phantom "all pressed" input. Default 1 keeps analog/hybrid pads unchanged;
  * main.cpp sets 0 for PAD_MODE_DIGITAL. */
-static uint8_t pad_supports_config[PSX_MAX_PLAYERS] = {
-    1, 1
-};
+static uint8_t pad_supports_config[PSX_MAX_PLAYERS] = { 1, 1 };
 
 /* Coherent-DualShock model (Tomba phantom-input fix). A real controller never
  * changes its reported type (0x41 digital <-> 0x73 analog) in the middle of a
@@ -152,9 +148,7 @@ static uint8_t pad_supports_config[PSX_MAX_PLAYERS] = {
  * host REQUESTS a type via pad_type_req[] and the change is applied atomically
  * only when the bus is idle (PAD_IDLE) and the pad is NOT in config mode. A
  * request raised during config is held until config exits. -1 = no request. */
-static int8_t pad_type_req[PSX_MAX_PLAYERS] = {
-    -1, -1
-};
+static int8_t pad_type_req[PSX_MAX_PLAYERS] = { -1, -1 };
 
 /* ---- Logical pad ↔ physical SIO port mapping ----
  *

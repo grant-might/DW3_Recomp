@@ -170,6 +170,9 @@ private:
         Syscall,        // SYSCALL
         Break,          // BREAK
         RFE,            // return from exception
+        Reserved,       // encoding the R3000A cannot execute (reserved/unusable);
+                        // raises an architectural exception, so control leaves and
+                        // there is no delay slot and no fall-through
     };
 
     struct CFInfo {

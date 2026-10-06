@@ -122,9 +122,9 @@ class MainWindow(QMainWindow):
         # ready beside the launcher (the Play tab makes them from the player's own disc).
         _ready = [s.label for s in builds.BUILDS if builds.build_status(s.region)[0]]
         self.statusBar().showMessage(
-            f"{paths.APP_NAME} {VERSION} — builds: "
+            f"{paths.APP_NAME} {VERSION}, builds: "
             + (", ".join(_ready) if _ready
-               else "none yet — build one from your own disc on the Play tab"))
+               else "none yet, build one from your own disc on the Play tab"))
 
         # The embedded save editor themes the whole application, so the launcher's own chrome
         # has to follow it. Registering here means a theme picked INSIDE the editor recolours

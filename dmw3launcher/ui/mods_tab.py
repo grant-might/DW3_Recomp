@@ -1,9 +1,12 @@
 """The Mods tab.
 
-A mod is a folder or file dropped into <install>/mods/. Enabling/disabling is a move between
-mods/ and mods/.disabled/, which keeps the game tree itself pristine and makes a mod's effect
-reversible without reinstalling the disc. The rules the tab enforces are written out in
+A mod is a folder or file dropped into a build's own `mods/` folder. Enabling/disabling is a move
+between `mods/` and `mods/.disabled/`, which keeps the built game tree itself pristine and makes a
+mod's effect reversible without rebuilding. The rules the tab enforces are written out in
 docs/MODS.md and shipped alongside.
+
+Each regional build is its own install with its own `mods/` folder, so the tab works on one build at
+a time; the region picker leads with USA, the same order the Play tab uses.
 """
 from __future__ import annotations
 
@@ -11,20 +14,21 @@ import pathlib
 import shutil
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QGroupBox, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
-                               QMessageBox, QPushButton, QTextBrowser, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QGroupBox, QHBoxLayout, QLabel, QListWidget,
+                               QListWidgetItem, QMessageBox, QPushButton, QTextBrowser,
+                               QVBoxLayout, QWidget)
 
-from .. import paths, runtime
+from .. import builds, paths, runtime
 from . import theme
 
 RULES_SUMMARY = (
-    "• A mod lives in one folder under mods/ and must not write outside the game install.\n"
-    "• Mods may replace or add files under the game tree; they must never touch "
-    "DMW3Game/SAVEDATA (that is the player's data, and the launcher's Memory Card tab owns it).\n"
+    "• A mod lives in one folder under the build's mods/ and must not write outside the build.\n"
+    "• Mods may replace or add files under the build tree; they must never touch the memory "
+    "cards (card1.mcd / card2.mcd), which are the player's data and belong to the Memory Card tab.\n"
     "• Ship the original file alongside a replacement as <name>.orig-stock so the mod can be "
-    "reverted — the project already uses that convention.\n"
-    "• A mod must not require a network connection at run time and must not modify "
-    "Binaries/*.exe.\n"
+    "reverted, the project already uses that convention.\n"
+    "• A mod must not require a network connection at run time and must not modify the "
+    "recompiled exe.\n"
     "• Saves made with a mod active may not load without it. Say so in the mod's README.\n"
 )
 
@@ -33,7 +37,7 @@ class ModsTab(QWidget):
     def __init__(self, cfg: dict) -> None:
         super().__init__()
         self.cfg = cfg
-        self.root: pathlib.Path | None = paths.resolve_runtime(cfg)
+        self.region: str = builds.default_region()
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(theme.PAGE_MARGIN, theme.CARD_GAP,
@@ -44,6 +48,17 @@ class ModsTab(QWidget):
         self.head.setWordWrap(True)
         self.head.setObjectName("hint")
         lay.addWidget(self.head)
+
+        pick = QHBoxLayout()
+        pick.setSpacing(theme.ROW_GAP)
+        pick.addWidget(QLabel("Build"))
+        self.combo_region = QComboBox()
+        for b in builds.BUILDS:
+            self.combo_region.addItem(b.label, b.region)
+        self.combo_region.currentIndexChanged.connect(self._pick_region)
+        pick.addWidget(self.combo_region)
+        pick.addStretch(1)
+        lay.addLayout(pick)
 
         box = QGroupBox("Installed mods")
         bl = QVBoxLayout(box)
@@ -89,20 +104,36 @@ class ModsTab(QWidget):
         lay.addWidget(gbox)
 
         self.guide.setPlainText(RULES_SUMMARY)
+        index = self.combo_region.findData(self.region)
+        if index >= 0:
+            self.combo_region.blockSignals(True)
+            self.combo_region.setCurrentIndex(index)
+            self.combo_region.blockSignals(False)
         self.refresh()
 
     # ------------------------------------------------------------------ helpers
+    def _pick_region(self) -> None:
+        self.region = self.combo_region.currentData() or builds.default_region()
+        self.refresh()
+
     def _dirs(self) -> tuple[pathlib.Path, pathlib.Path]:
-        on = paths.mods_dir(self.root) if self.root else paths.launcher_root() / "mods"
+        on = builds.mods_dir(self.region)
         off = on / ".disabled"
         return on, off
 
     def refresh(self) -> None:
-        self.root = paths.resolve_runtime(self.cfg)
         self.list_mods.clear()
-        if not self.root:
-            self.head.setText("No install located yet — find it on the Play tab.")
+        if not builds.build_status(self.region)[0]:
+            label = builds.spec(self.region).label
+            self.head.setText(f"The {label} build is not on disk yet, build it on the Play tab, "
+                              f"then mods can be dropped into its mods/ folder.")
+            self.btn_toggle.setEnabled(False)
+            self.btn_folder.setEnabled(False)
+            self.btn_mkmod.setEnabled(False)
             return
+        self.btn_toggle.setEnabled(True)
+        self.btn_folder.setEnabled(True)
+        self.btn_mkmod.setEnabled(True)
         on, off = self._dirs()
         on.mkdir(parents=True, exist_ok=True)
         self.head.setText(f"Mods live in {on}")
@@ -138,16 +169,17 @@ class ModsTab(QWidget):
         self.refresh()
 
     def _open_mods(self) -> None:
-        if self.root:
-            on, _ = self._dirs()
-            on.mkdir(parents=True, exist_ok=True)
-            runtime.open_path(on)
+        if not builds.build_status(self.region)[0]:
+            return
+        on, _ = self._dirs()
+        on.mkdir(parents=True, exist_ok=True)
+        runtime.open_path(on)
 
     def _open_guide(self) -> None:
         runtime.open_path(paths.docs_dir() / "MODS.md")
 
     def _skeleton(self) -> None:
-        if not self.root:
+        if not builds.build_status(self.region)[0]:
             return
         on, _ = self._dirs()
         base = on / "my-mod"
@@ -158,8 +190,8 @@ class ModsTab(QWidget):
         base.mkdir(parents=True, exist_ok=True)
         (base / "README.md").write_text(
             f"# {base.name}\n\nWhat this mod changes, and how to uninstall it.\n\n"
-            f"## Files it replaces\n\n- `path/inside/install/modified.file` "
+            f"## Files it replaces\n\n- `path/inside/build/modified.file` "
             f"(original kept as `modified.file.orig-stock`)\n\n"
-            f"## Does it affect saves?\n\nNo / Yes — explain.\n", encoding="utf-8")
+            f"## Does it affect saves?\n\nNo / Yes, explain.\n", encoding="utf-8")
         self.refresh()
         runtime.open_path(base)

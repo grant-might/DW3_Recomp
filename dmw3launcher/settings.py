@@ -98,7 +98,7 @@ def read_value(doc, section: str, key: str, default: Any = None) -> Any:
 def set_values(path: pathlib.Path, updates: dict[tuple[str, str], Any]) -> None:
     """Apply `{(section, key): value}` and write back, keeping every comment.
 
-    Unknown keys, unknown sections and all comments survive untouched — the file stays
+    Unknown keys, unknown sections and all comments survive untouched, the file stays
     hand-editable and the game's own settings menu keeps working on it.
     """
     doc = load(path)

@@ -14,13 +14,43 @@ parses. The per-file facts shown next to it - lines, size, and stub count - are 
 from __future__ import annotations
 
 import dataclasses
+import os
 import pathlib
 import re
 
-# The real 100% tree, the only decompilation this launcher opens.
-ROOT = pathlib.Path(
-    r"C:\Users\space\Downloads\Videogame decomp\complete\Digimon World 3 [DECOMP]\dw3_decomp-main"
+from . import paths
+
+# The decompilation tree this launcher opens. It is not part of the public repository (it is a
+# research tree the player supplies), so it is discovered relatively first: a `decomp/` folder
+# beside the launcher, or the DW3_DECOMP_ROOT override. The developer's own checkout is only a
+# last-resort fallback, never how a shipped copy finds it.
+DECOMP_ROOT_ENV = "DW3_DECOMP_ROOT"
+_ROOT_CANDIDATES = (
+    lambda: os.environ.get(DECOMP_ROOT_ENV),
+    lambda: paths.launcher_root() / "decomp",
+    lambda: r"C:\Users\space\Downloads\Videogame decomp\complete\Digimon World 3 [DECOMP]\dw3_decomp-main",
+    lambda: r"D:\AGENT\NEWEST DIGIMON WORLD 3 COMPLETE PROJECT\Digimon World 3 [DECOMP] 99.62%\dw3_decomp-main",
 )
+
+
+def _looks_like_tree(p: pathlib.Path) -> bool:
+    """A decompilation tree carries the sources and the README whose table is the progress."""
+    return (p / "src").is_dir() and (p / "README.md").is_file()
+
+
+def _find_root() -> pathlib.Path:
+    cands: list[pathlib.Path] = []
+    for get in _ROOT_CANDIDATES:
+        raw = get()
+        if raw:
+            cands.append(pathlib.Path(raw))
+    for c in cands:
+        if _looks_like_tree(c):
+            return c
+    return cands[1]              # the relative decomp/ folder: absent until a player drops one in
+
+
+ROOT = _find_root()
 
 # Vendored third-party tooling (decomp-permuter, m2c, maspsx, psyq_headers): not the decompilation,
 # so it stays out of the tree and out of the totals. The page says so.

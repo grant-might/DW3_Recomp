@@ -1,7 +1,9 @@
 r"""Regression checks for the launcher's non-UI logic. Ad-hoc verification, not a suite.
 
-Worth keeping because it already caught a real bug: `disc.verify` used to complain about a
-missing DiscTool before it complained about the player's .iso, which is the less useful order.
+Worth keeping because it already caught a real bug: `disc.verify` used to complain about a missing
+third-party disc tool before it complained about the player's own .iso, which is the less useful
+order. That tool is gone now (the builder replaced the old disc check), so the same section proves
+its removal instead.
 
 Run it after touching settings.py / disc.py / saves.py / runtime.py / paths.py / theme.py:
 
@@ -28,11 +30,23 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:  # noqa: BLE001
         pass
 
-from dmw3launcher import disc, paths, runtime, saves      # noqa: E402
-from dmw3launcher import settings as st                   # noqa: E402
+from dmw3launcher import builds, disc, paths, runtime, saves      # noqa: E402
+from dmw3launcher import settings as st                           # noqa: E402
 from dmw3launcher.ui import theme                         # noqa: E402
 
 results: list[tuple[bool, str]] = []
+
+# Temp dirs the gate makes. Every section cleans its own in a finally, but a dir created part-way
+# through a section cannot be cleaned if that section raises, and this gate is run many times a
+# day, so each run would leave one behind. Registered here, swept once at the end, so a run never
+# leaks even on its failure path.
+_TMP_REGISTRY: list[pathlib.Path] = []
+
+
+def _mkdtemp(prefix: str) -> pathlib.Path:
+    d = pathlib.Path(tempfile.mkdtemp(prefix=prefix))
+    _TMP_REGISTRY.append(d)
+    return d
 
 
 def check(ok: bool, label: str, detail: str = "") -> None:
@@ -40,66 +54,106 @@ def check(ok: bool, label: str, detail: str = "") -> None:
     print(f"[{'PASS' if ok else 'FAIL'}] {label}" + (f"  -- {detail}" if detail else ""))
 
 
-# --- A. writing settings.toml must never damage it -----------------------------
-root = paths.resolve_runtime()
-check(root is not None, "A0 runtime located", str(root))
-if root:
-    real = paths.settings_toml(root)
-    if real.is_file():
-        tmpdir = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-dmw3-"))
-        work = tmpdir / "settings.toml"
-        shutil.copy(real, work)
-        before = work.read_text(encoding="utf-8-sig")
-        comments_before = [l for l in before.splitlines() if l.lstrip().startswith("#")]
-        snap_before = st.snapshot(work)
-        untouched = {
-            ("launcher", "skip_launcher"): snap_before.get("launcher", {}).get("skip_launcher"),
-            ("localization", "load_sectors_per_frame"):
-                snap_before.get("localization", {}).get("load_sectors_per_frame"),
-            ("controller", "p2_device"): snap_before.get("controller", {}).get("p2_device"),
-        }
-        st.set_values(work, {("video", "window_width"): 1600,
-                             ("video", "antialiasing"): False})
-        after = work.read_text(encoding="utf-8-sig")
-        comments_after = [l for l in after.splitlines() if l.lstrip().startswith("#")]
-        snap_after = st.snapshot(work)
+# --- A. writing a build's settings.toml must never damage it --------------------
+# The Settings tab rewrites a build's own settings.toml (the file the runtime keeps next to its
+# exe). The writer is exercised against a synthetic file that carries comments and keys the
+# launcher does not manage, so the check is portable and depends on no machine's install.
+_tmpA = _mkdtemp("hermes-verify-dmw3-")
+try:
+    real = _tmpA / "settings.toml"
+    real.write_text(
+        "# the runtime's own note\n"
+        "[video]\n"
+        'renderer = "opengl"\n'
+        "# and this one too\n"
+        "window_width = 1280\n"
+        "antialiasing = true\n\n"
+        "[audio]\n"
+        "spu_hq = true\n\n"
+        "[localization]\n"
+        'load_sectors_per_frame = "96"\n\n'
+        "[controller]\n"
+        'p2_device = "none"\n\n'
+        "[launcher]\n"
+        "skip_launcher = true\n", encoding="utf-8")
+    work = real
+    before = work.read_text(encoding="utf-8-sig")
+    comments_before = [l for l in before.splitlines() if l.lstrip().startswith("#")]
+    snap_before = st.snapshot(work)
+    untouched = {
+        ("launcher", "skip_launcher"): snap_before.get("launcher", {}).get("skip_launcher"),
+        ("localization", "load_sectors_per_frame"):
+            snap_before.get("localization", {}).get("load_sectors_per_frame"),
+        ("controller", "p2_device"): snap_before.get("controller", {}).get("p2_device"),
+    }
+    st.set_values(work, {("video", "window_width"): 1600,
+                         ("video", "antialiasing"): False})
+    after = work.read_text(encoding="utf-8-sig")
+    comments_after = [l for l in after.splitlines() if l.lstrip().startswith("#")]
+    snap_after = st.snapshot(work)
 
-        check(comments_after == comments_before, "A1 every comment line survives the write",
-              f"{len(comments_before)} before, {len(comments_after)} after")
-        check(snap_after.get("video", {}).get("window_width") == 1600,
-              "A2 the intended int was written")
-        check(snap_after.get("video", {}).get("antialiasing") is False,
-              "A3 the intended bool was written")
-        check(all(snap_after.get(s, {}).get(k) == v for (s, k), v in untouched.items()),
-              "A4 keys the launcher does not manage are untouched")
-        check(snap_after.get("video", {}).get("renderer") == "opengl",
-              "A5 an unrelated video key kept its value")
-        check(set(snap_before) == set(snap_after), "A6 section set unchanged",
-              f"{sorted(snap_before)} -> {sorted(snap_after)}")
-        shutil.rmtree(tmpdir, ignore_errors=True)
-    else:
-        check(True, "A settings.toml absent - writer checks skipped",
-              str(real))
+    check(bool(snap_before), "A0 a settings.toml was written and parsed back",
+          f"{len(snap_before)} sections")
+    check(comments_after == comments_before, "A1 every comment line survives the write",
+          f"{len(comments_before)} before, {len(comments_after)} after")
+    check(snap_after.get("video", {}).get("window_width") == 1600,
+          "A2 the intended int was written")
+    check(snap_after.get("video", {}).get("antialiasing") is False,
+          "A3 the intended bool was written")
+    check(all(snap_after.get(s, {}).get(k) == v for (s, k), v in untouched.items()),
+          "A4 keys the launcher does not manage are untouched")
+    check(snap_after.get("video", {}).get("renderer") == "opengl",
+          "A5 an unrelated video key kept its value")
+    check(set(snap_before) == set(snap_after), "A6 section set unchanged",
+          f"{sorted(snap_before)} -> {sorted(snap_after)}")
+finally:
+    shutil.rmtree(_tmpA, ignore_errors=True)
 
-# --- B. save discovery against the real install --------------------------------
-if root:
-    slots = [f for f in saves.discover(root) if not f.is_card]
-    check(len(slots) >= 4, "B1 slot files discovered", f"{len(slots)} slots")
-    check(all(f.size == 10060 for f in slots), "B2 slot payload size is 10060 B",
-          str(sorted({f.size for f in slots})))
+# --- B. memory-card discovery, relative to the launcher -------------------------
+# Cards come from the builds' own folders, cards/ beside the launcher and the per-user dir. The
+# search dirs are patched to one temp folder so the count is deterministic on any machine.
+_tmpB = _mkdtemp("hermes-verify-dmw3-")
+_orig_search = saves.search_dirs
+saves.search_dirs = lambda extra=None: [_tmpB]      # type: ignore[assignment]
+try:
+    (_tmpB / "card1.mcd").write_bytes(b"\x00" * 131072)
+    (_tmpB / "card2.mcd").write_bytes(b"\x00" * 131072)
+    (_tmpB / "notes.txt").write_text("not a card", encoding="utf-8")
+    found = saves.discover()
+    cards = [f for f in found if f.is_card]
+    check(len(cards) == 2, "B1 memory cards discovered from a build folder", f"{len(cards)} card(s)")
+    check(all(f.size == 131072 for f in cards), "B2 a card is a full 128 KiB PS1 card",
+          str(sorted({f.size for f in cards})))
+    check(all(f.kind == "card" for f in found), "B3 only cards are listed (no .sav slots)",
+          str(sorted({f.kind for f in found})))
+finally:
+    saves.search_dirs = _orig_search      # type: ignore[assignment]
+    shutil.rmtree(_tmpB, ignore_errors=True)
 
-# --- C. region classification (the honest-USA-refusal path) ---------------------
-check(disc.region_from_output("ES EL DISCO CORRECTO ... SLES-03936") == disc.REGION_EU,
-      "C1 EU disc classified EU")
-check(disc.region_from_output("su disco arranca con SLUS-01436") == disc.REGION_US,
-      "C2 USA disc classified US")
-check(disc.region_from_output("no la edicion europea, hace falta SLES-03936") == disc.REGION_EU,
-      "C3 DiscTool's EU-refusal text still yields a region")
-check(disc.region_from_output("nonsense") == disc.REGION_UNKNOWN, "C4 garbage yields UNKNOWN")
+# --- C. region classification from the disc's own boot serial -------------------
+# The serial in the image's first sectors is the only trustworthy signal, and the same one the
+# builder uses; nothing is refused for its region, so a serialless image is accepted as UNKNOWN.
+_tmpC = _mkdtemp("hermes-verify-dmw3-")
+try:
+    _binC = _tmpC / "game.bin"
+    _binC.write_bytes(b"\x00" * 64 + b"SLES_039.36" + b"\x00" * 64)
+    _c = disc.verify(_binC)
+    check(_c.ok and _c.region == disc.REGION_EU,
+          "C1 a PAL serial is accepted and classified EU", _c.message[:60])
+    _binC.write_bytes(b"\x00" * 64 + b"SLUS-01436" + b"\x00" * 64)
+    _c = disc.verify(_binC)
+    check(_c.ok and _c.region == disc.REGION_US,
+          "C2 a USA serial is accepted and classified US", _c.message[:60])
+    _binC.write_bytes(b"\x00" * 200)
+    _c = disc.verify(_binC)
+    check(_c.ok and _c.region == disc.REGION_UNKNOWN,
+          "C3 an image with no serial is not refused, only unclassified", _c.message[:60])
+    check(disc.region_of_serial("nonsense") == disc.REGION_UNKNOWN, "C4 garbage yields UNKNOWN")
+finally:
+    shutil.rmtree(_tmpC, ignore_errors=True)
 
-# --- D. the player's own file is judged before the tool ------------------------
+# --- D. the player's own file is judged before anything expensive -----------------
 T = pathlib.Path(tempfile.gettempdir())
-NO_TOOL = T / "hermes-verify-no-such-DiscTool.exe"
 iso, nocue, goodcue, weird = (T / "hermes-verify-fake.iso", T / "hermes-verify-nobin.cue",
                               T / "hermes-verify-good.cue", T / "hermes-verify-game.txt")
 iso.write_bytes(b"\0" * 32)
@@ -107,22 +161,27 @@ nocue.write_text('FILE "nothing.txt" BINARY\n', encoding="utf-8")
 goodcue.write_text('FILE "game.bin" BINARY\n  TRACK 01 MODE2/2352\n', encoding="utf-8")
 weird.write_text("nope", encoding="utf-8")
 try:
-    chk = disc.verify(NO_TOOL, iso)
+    chk = disc.verify(iso)
     check((not chk.ok) and "raw sectors" in chk.message,
           "D1 a .iso is refused with the raw-sector reason", chk.message[:52])
-    chk = disc.verify(NO_TOOL, nocue)
+    chk = disc.verify(nocue)
     check((not chk.ok) and "does not point at a .bin" in chk.message,
           "D2 a .cue with no .bin is refused", chk.message[:52])
-    chk = disc.verify(NO_TOOL, goodcue)
-    check((not chk.ok) and "DiscTool.exe not found" in chk.message,
-          "D3 a good .cue passes the file checks and fails only on the missing tool",
-          chk.message[:52])
-    chk = disc.verify(NO_TOOL, weird)
+    chk = disc.verify(goodcue)
+    check((not chk.ok) and "no such file is next to it" in chk.message,
+          "D3 a .cue whose .bin is missing is refused", chk.message[:52])
+    chk = disc.verify(weird)
     check((not chk.ok) and "Unsupported file type" in chk.message,
           "D4 an unrelated file type is refused", chk.message[:52])
-    chk = disc.verify(NO_TOOL, T / "hermes-verify-nope.cue")
+    chk = disc.verify(T / "hermes-verify-nope.cue")
     check((not chk.ok) and "not found" in chk.message,
           "D5 a missing image is reported as missing", chk.message[:52])
+    goodbin = T / "hermes-verify-game.bin"
+    goodbin.write_bytes(b"\x00" * 64 + b"SLUS-01436" + b"\x00" * 64)
+    chk = disc.verify(goodbin)
+    check(chk.ok and chk.region == disc.REGION_US,
+          "D6 a raw .bin with a serial passes and names its region", chk.message[:52])
+    goodbin.unlink(missing_ok=True)
 finally:
     for p in (iso, nocue, goodcue, weird):
         p.unlink(missing_ok=True)
@@ -138,29 +197,33 @@ check(bool(colour_toks), "E0 colour values were found to check", f"{len(colour_t
 check(not bad, "E1 no malformed colour token in the stylesheet", str(bad[:5]))
 check("primary" in sheet and "danger" in sheet, "E2 styled button roles present")
 
-# --- F. a bogus install must fail loudly ---------------------------------------
-tmp = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-dmw3-"))
+# --- F. a build that is not there must fail loudly ------------------------------
+tmp = _mkdtemp("hermes-verify-dmw3-")
+_orig_exeF = builds.exe_path
+builds.exe_path = lambda region: tmp / "not-built.exe"      # type: ignore[assignment]
 try:
     raised = False
     try:
-        runtime.launch(tmp)
+        builds.launch(builds.REGION_US)
     except Exception:
         raised = True
-    check(raised, "F1 launching a non-install raises instead of failing silently")
+    check(raised, "F1 launching a build that is not on disk raises instead of failing silently")
 finally:
+    builds.exe_path = _orig_exeF      # type: ignore[assignment]
     shutil.rmtree(tmp, ignore_errors=True)
 
 # --- G. config round-trip (on a patched path, real config untouched) ------------
-tmpcfg = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-dmw3-")) / "launcher.json"
+tmpcfg = _mkdtemp("hermes-verify-dmw3-") / "launcher.json"
 orig = paths.config_path
 paths.config_path = lambda: tmpcfg  # type: ignore[assignment]
 try:
     cfg = paths.load_config()
-    cfg["runtime_root"] = str(root) if root else "x"
+    cfg["editor_root"] = str(paths.editor_dir())
     paths.save_config(cfg)
     reloaded = paths.load_config()
-    check(reloaded.get("runtime_root") == cfg["runtime_root"], "G1 config round-trips")
-    check(paths.resolve_runtime(reloaded) == root, "G2 runtime re-resolves from config")
+    check(reloaded.get("editor_root") == cfg["editor_root"], "G1 config round-trips")
+    check(paths.resolve_editor(reloaded) == paths.editor_dir(),
+          "G2 the editor re-resolves from a config override")
 finally:
     paths.config_path = orig  # type: ignore[assignment]
     shutil.rmtree(tmpcfg.parent, ignore_errors=True)
@@ -212,7 +275,7 @@ check(all(_resolves(f) for f in REQUIRED_ART),
 
 # Art ABSENT. Point the loader at an empty directory rather than renaming the real assets
 # folder: same code path, and a check can never leave the player's art moved.
-_empty = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-dmw3-"))
+_empty = _mkdtemp("hermes-verify-dmw3-")
 _orig_assets_dir = paths.assets_dir
 paths.assets_dir = lambda: _empty  # type: ignore[assignment]
 try:
@@ -242,8 +305,7 @@ finally:
     paths.assets_dir = _orig_assets_dir  # type: ignore[assignment]
     shutil.rmtree(_empty, ignore_errors=True)
 
-# --- I. the Memory Card tab: the editor must actually embed, and the tab must never
-#        advertise a file the editor cannot read ---------------------------------
+# --- I. the Memory Card tab: the editor must embed from the bundled editor/ folder ------------
 from PySide6.QtCore import Qt                          # noqa: E402
 
 try:
@@ -253,27 +315,30 @@ try:
           _mc_tab._editor_error or "")
     check(_mc_tab._payload_size == 32768, "I2 editor payload size discovered",
           str(_mc_tab._payload_size))
+    check(_mc_tab.editor_root == paths.editor_dir(),
+          "I3 the editor is loaded from the bundled editor/ folder, not an absolute dev path",
+          str(_mc_tab.editor_root))
 
     _rows = []
     for _i in range(_mc_tab.list_saves.count()):
         _it = _mc_tab.list_saves.item(_i)
-        _kind, _p, _editable, _note = _it.data(Qt.ItemDataRole.UserRole)
-        _rows.append((_kind, pathlib.Path(_p), _editable, _note))
-    _slots = [r for r in _rows if r[0] == "slot"]
-    _cards = [r for r in _rows if r[0] == "card"]
-    check(not any(r[2] for r in _slots),
-          "I3 recomp .sav slots are not advertised as editable",
-          f"{len(_slots)} slot(s) listed")
-    check(all(r[2] for r in _cards),
-          "I4 memory cards are advertised as editable", f"{len(_cards)} card(s) listed")
+        _rows.append(_it.data(Qt.ItemDataRole.UserRole))
+    check(all(str(_r).split("\x00")[0] == "card" for _r in _rows),
+          "I4 only memory cards are listed (no private .sav slots)",
+          f"{len(_rows)} row(s)")
 
-    # Opening a locked slot must explain itself on the status line, not raise: a raised error
-    # became a modal dialog, so under test it looked like a hang rather than a bug.
-    if _slots:
-        _mc_tab.open_path("slot", _slots[0][1])
-        check("cannot be opened" in _mc_tab.lbl_status.text(),
-              "I5 opening a recomp slot explains instead of raising",
+    # Opening something that is not a card must explain itself on the status line, not raise: a
+    # raised error becomes a modal dialog, which under test looks like a hang.
+    _junkdir = _mkdtemp("hermes-verify-dmw3-")
+    _junk = _junkdir / "junk.mcd"
+    _junk.write_bytes(b"not a memory card")
+    try:
+        _mc_tab.open_path("card", _junk)
+        check("could not be opened" in _mc_tab.lbl_status.text(),
+              "I5 opening a non-card explains instead of raising",
               _mc_tab.lbl_status.text()[:80])
+    finally:
+        shutil.rmtree(_junkdir, ignore_errors=True)
 
     # The Appearance chooser lives in Settings now (section N, N8); the Memory Card tab must not
     # carry a second one. The embedded editor used to expose its own "APPEARANCE > Themes" page,
@@ -290,7 +355,7 @@ try:
               "dropdown lives in Settings, and the editor's page is gone from this embed)",
               f"{len(_nav)} nav entries, stack {_mc_tab._editor.stack.count()}")
 except Exception as _exc:  # noqa: BLE001
-    check(False, "I1-I5 memory card tab checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "I1-I6 memory card tab checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- J. one theme, one app: the embedded editor themes the QApplication, and the launcher must
 #        follow it WITHOUT its own sheet reaching back into the editor ----------------------
@@ -429,73 +494,62 @@ try:
 except Exception as _exc:  # noqa: BLE001
     check(False, "K1-K4 layout invariant checks raised", f"{type(_exc).__name__}: {_exc}")
 
-# --- L. English only: DiscTool speaks Spanish, the UI must not ---------------------------------
+# --- L. English only: the launcher ships no Spanish and no third-party disc tool ---------------
+# The old Play path could hand a Spanish console tool's report to the player. That tool is gone with
+# the port, and this section proves the residue really is gone and that whatever text the launcher
+# does show is its own English.
 try:
-    from dmw3launcher import tooltext as _tt
-    _usa_report = ("DiscTool ver     SLUS_014.36.bin\r\n"
-                   "volumen      : DMW3\r\n"
-                   "sistema      : PLAYSTATION\r\n"
-                   "ejecutable   : SLUS_014.36\r\n"
-                   "sectores     : 330000 (el disco dice 330000)\r\n"
-                   "fallo: Es Digimon World 3/2003, pero no la edicion europea. Su disco arranca "
-                   "con SLUS-01436 y este port esta hecho sobre SLES-03936. Hace falta la "
-                   "version europea (SLES-03936).\r\n")
-    _why = _tt.english(disc._first_meaningful(_usa_report))
-    check("European edition" in _why and "SLES-03936" in _why
-          and "SLUS-01436" in _why and not _tt.still_spanish(_why),
-          "L1 a USA disc's refusal reads as English and keeps both region codes", _why[:96])
-    check(not _tt.still_spanish(_tt.english(_usa_report)),
-          "L2 nothing Spanish survives the tool's whole report",
-          ", ".join(_tt.still_spanish(_tt.english(_usa_report))))
+    check(not (ROOT / "dmw3launcher" / "tooltext.py").exists()
+          and not hasattr(disc, "region_from_output") and not hasattr(disc, "extract"),
+          "L1 the DiscTool Spanish translation module and its callers are gone")
 
-    _ps = _tt.english("No es un disco de PlayStation (pone \"GAME\" donde deberia poner "
-                      "PLAYSTATION).")
-    check("GAME" in _ps and "PLAYSTATION" in _ps and not _tt.still_spanish(_ps),
-          "L3 a non-PlayStation disc keeps its quoted value, in English", _ps)
+    _src = "\n".join((ROOT / p).read_text(encoding="utf-8")
+                     for p in ("dmw3launcher/disc.py", "dmw3launcher/paths.py",
+                               "dmw3launcher/ui/play_tab.py"))
+    check("DiscTool" not in _src and "ES EL DISCO CORRECTO" not in _src,
+          "L2 no DiscTool reference survives in the disc path")
 
-    _lbl = _tt.english("FALTA   AAA/DAT/X.BIN")
-    check("MISSING" in _lbl and not _tt.still_spanish(_lbl),
-          "L4 report labels are translated", _lbl)
+    # The two word tables the tool needed carried Spanish everywhere; assert a few unmistakable
+    # strings from that catalogue are nowhere in the launcher's own source.
+    _es = re.compile(r"\b(veredicto|volumen|ejecutable|sectores|fichero|lamina|no puedo abrir)\b",
+                     re.I)
+    _hits = []
+    for _p in sorted((ROOT / "dmw3launcher").rglob("*.py")):
+        _found = _es.findall(_p.read_text(encoding="utf-8", errors="replace"))
+        if _found:
+            _hits.append(f"{_p.name}:{_found[0]}")
+    check(not _hits, "L3 no Spanish catalogue strings remain in the launcher", str(_hits[:5]))
 
-    _short = _tt.english("La imagen es demasiado corta: no llega ni al descriptor del disco. "
-                         "Puede que la copia se cortara a medias.")
-    check("too short" in _short and not _tt.still_spanish(_short),
-          "L5 a truncated image is explained in English", _short)
+    check(disc.DiscCheck(True, disc.REGION_US, "one\ntwo\n\nthree").lines == ["one", "two", "three"],
+          "L4 DiscCheck.lines is one entry per non-empty line")
+    check(disc.DiscCheck(True, "eu", "").lines == [], "L5 an empty readout shows nothing")
 
-    _inc = _tt.english("El disco es el correcto, pero la imagen esta incompleta: tiene 100 "
-                       "sectores y deberia tener 200. Vuelve a copiarla.")
-    check("100" in _inc and "200" in _inc and "incomplete" in _inc and not _tt.still_spanish(_inc),
-          "L6 an incomplete image keeps its sector counts, in English", _inc)
+    # Every refusal the launcher can print is its own English sentence.
+    _msgs = [disc.verify(pathlib.Path("nope.iso")).message,
+             disc.verify(pathlib.Path("nope.xyz")).message,
+             disc.verify(pathlib.Path("no/such/file.bin")).message]
+    _left = [m for m in _msgs if _es.search(m)]
+    check(not _left, "L6 every disc refusal reads as English", " | ".join(_msgs)[:90])
 
-    _usage = _tt.english("DiscTool sacar   <imagen.bin|.cue> <destino>")
-    check(_usage.startswith("DiscTool extract") and not _tt.still_spanish(_usage),
-          "L7 its usage lines are translated too", _usage)
+    _playL = (ROOT / "dmw3launcher/ui/play_tab.py").read_text(encoding="utf-8")
+    check("chk.lines" in _playL and "chk.raw" not in _playL,
+          "L7 the Play tab shows the English lines(), never a raw report")
 
-    # The real report from a broken .cue, verbatim: the reason lives on the `veredicto :` line,
-    # and the sentence after that label is the whole message.
-    _real = ('volumen      : \n'
-             'sistema      : \n'
-             'ejecutable   : (ninguno)\n'
-             'sectores     : 0 (el disco dice 0)\n'
-             'AAA oculto   : no\n'
-             'veredicto    : No puedo abrir "Digimon World 2003 (Europe)".bin".\n')
-    _r = disc._first_meaningful(_real)
-    check(_r.startswith("No puedo abrir") and not _r.startswith("volumen"),
-          "L8 the refusal is taken from DiscTool's veredicto line, not a context label", _r[:70])
-    check(_tt.english(_r).startswith('Cannot open "') and not _tt.still_spanish(_tt.english(_r)),
-          "L9 ...and it reads as English", _tt.english(_r)[:70])
-
-    # Region must come from the disc's own boot code: the refusal names both regions.
-    check(disc.region_from_output(_usa_report) == disc.REGION_US,
-          "L10 a USA refusal that also mentions SLES-03936 is still US",
-          disc.region_from_output(_usa_report))
-    check(disc.region_from_output("ejecutable   : SLES_039.36") == disc.REGION_EU,
-          "L11 the reported boot executable decides the region")
-    check(disc.region_from_output("ejecutable   : (ninguno)") == disc.REGION_UNKNOWN,
-          "L12 no boot executable does not invent a region",
-          disc.region_from_output("ejecutable   : (ninguno)"))
+    import inspect as _inspectL                                           # noqa: PLC0415
+    check(not hasattr(paths, "disc_tool")
+          and len(_inspectL.signature(disc.verify).parameters) == 1,
+          "L8 the launcher no longer locates or calls a third-party disc tool")
+    _okL = disc.DiscCheck(True, disc.REGION_US, "ok")
+    _binL = _mkdtemp("hermes-verify-dmw3-") / "g.bin"
+    _binL.write_bytes(b"\x00" * 64 + b"SLUS_01436" + b"\x00" * 64)
+    try:
+        _cL = disc.verify(_binL)
+        check(_cL.ok and "SLUS" in _cL.message and "US" in _cL.message and _okL.lines == ["ok"],
+              "L9 an accepted disc's readout names its serial and region", _cL.message[:80])
+    finally:
+        shutil.rmtree(_binL.parent, ignore_errors=True)
 except Exception as _exc:  # noqa: BLE001
-    check(False, "L1-L12 DiscTool translation checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "L1-L9 English-only checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- M. the user's own art: the logo and the tab word-images -----------------------------------
 try:
@@ -593,7 +647,7 @@ try:
 
     # With no art at all the tabs must fall back to their plain labels, not go blank.
     _orig_assets = paths.assets_dir
-    _noart = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-noart-"))
+    _noart = _mkdtemp("hermes-verify-noart-")
     paths.assets_dir = lambda: _noart      # type: ignore[assignment]
     try:
         _win2._apply_tab_art()
@@ -759,9 +813,10 @@ except Exception as _exc:  # noqa: BLE001
     check(False, "N1-N12 shell/settings checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- O. the Settings page's WRITE path, through the widgets -----------------------------------
-# The riskiest thing this launcher does is rewrite the player's commented settings.toml, so exercise
-# the real widgets against a COPY of the real file: choose a preset, Apply, and check the file comes
-# back with a number, every comment, and every other key intact.
+# The riskiest thing this launcher does is rewrite a build's commented settings.toml, so exercise
+# the real widgets against a synthetic build folder: choose a preset, Apply, and check the file
+# comes back with a number, every comment, and every other key intact. The build tree is a temp
+# directory, so the check is portable and never touches a real install.
 try:
     from PySide6.QtWidgets import QMessageBox as _QMB
     from dmw3launcher.ui.settings_tab import SettingsTab as _STab
@@ -769,62 +824,69 @@ try:
     _real = _QMB.information
     for _n in ("information", "warning", "critical", "question"):
         setattr(_QMB, _n, staticmethod(lambda *a, **k: None))   # modal boxes block offscreen
-    _inst: pathlib.Path | None = None
+    _inst = _mkdtemp("hermes-verify-stwrite-")
+    _orig_bd = builds.builds_dir
+    builds.builds_dir = lambda: _inst                            # type: ignore[assignment]
     try:
-        _real_toml = root and paths.settings_toml(root)
-        if _real_toml and _real_toml.is_file():
-            _inst = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-stwrite-"))
-            (_inst / "Binaries").mkdir(parents=True)
-            (_inst / "Engine" / "Config").mkdir(parents=True)
-            (_inst / "Binaries" / "DigimonWorld2003.exe").write_bytes(b"stub")
-            (_inst / "Engine" / "Config" / "game.toml").write_text("[game]\n", encoding="utf-8")
-            _copy = _inst / "Binaries" / "settings.toml"
-            shutil.copy2(_real_toml, _copy)
-            _src_text = _copy.read_text(encoding="utf-8")
-            _before = st.snapshot(_copy)
+        _bdir = _inst / "USA"
+        _bdir.mkdir(parents=True)
+        (_bdir / "Digimon_World_3_Recompiled.exe").write_bytes(b"MZ")
+        _copy = _bdir / "settings.toml"
+        _copy.write_text(
+            "# the runtime's own note\n"
+            "[video]\n"
+            'renderer = "opengl"\n'
+            "window_width = 1280\n"
+            "antialiasing = true\n\n"
+            "[audio]\n"
+            "spu_hq = true\n\n"
+            "[game]\n"
+            'custom_thing = "keep me"\n', encoding="utf-8")
+        _src_text = _copy.read_text(encoding="utf-8")
+        _before = st.snapshot(_copy)
 
-            _tab = _STab({"runtime_root": str(_inst)})
-            _size = _tab._widgets[("video", "window_width")]
-            check(_size.currentData() == 1280,
-                  "O1 the page loads the file's width into the preset",
-                  f"{_size.currentText()!r} -> {_size.currentData()!r}")
-            _i = _size.findData(1920)
-            _size.setCurrentIndex(_i)
-            _tab.apply()
-            _after = st.snapshot(_copy)
-            check(int(_after["video"]["window_width"]) == 1920,
-                  "O2 Apply writes the chosen width", repr(_after["video"]["window_width"]))
-            check(not isinstance(_after["video"]["window_width"], str),
-                  "O3 written as a number, not the dropdown's label",
-                  type(_after["video"]["window_width"]).__name__)
-            check(sum(1 for l in _src_text.splitlines() if l.lstrip().startswith("#"))
-                  == sum(1 for l in _copy.read_text(encoding="utf-8").splitlines()
-                         if l.lstrip().startswith("#")),
-                  "O4 every comment in the player's file survives")
-            check(_after["video"].get("renderer") == _before["video"].get("renderer")
-                  and _after["audio"] == _before["audio"],
-                  "O5 keys the launcher does not manage are untouched")
+        _tab = _STab({})
+        check(_tab.region == builds.REGION_US,
+              "O0 the page targets the first ready build (USA first)", _tab.region)
+        _size = _tab._widgets[("video", "window_width")]
+        check(_size.currentData() == 1280,
+              "O1 the page loads the file's width into the preset",
+              f"{_size.currentText()!r} -> {_size.currentData()!r}")
+        _i = _size.findData(1920)
+        _size.setCurrentIndex(_i)
+        _tab.apply()
+        _after = st.snapshot(_copy)
+        check(int(_after["video"]["window_width"]) == 1920,
+              "O2 Apply writes the chosen width", repr(_after["video"]["window_width"]))
+        check(not isinstance(_after["video"]["window_width"], str),
+              "O3 written as a number, not the dropdown's label",
+              type(_after["video"]["window_width"]).__name__)
+        check(sum(1 for l in _src_text.splitlines() if l.lstrip().startswith("#"))
+              == sum(1 for l in _copy.read_text(encoding="utf-8").splitlines()
+                     if l.lstrip().startswith("#")),
+              "O4 every comment in the file survives")
+        check(_after["video"].get("renderer") == _before["video"].get("renderer")
+              and _after["game"] == _before["game"],
+              "O5 keys the launcher does not manage are untouched",
+              f"game={_after.get('game')}")
 
-            st.set_values(_copy, {("video", "window_width"): 1024})
-            for _ in range(3):
-                _tab.reload()
-            check(_size.currentData() == 1024, "O6 an off-preset width still reads back",
-                  f"{_size.currentText()!r} -> {_size.currentData()!r}")
-            check(sum(1 for _j in range(_size.count())
-                      if "custom" in _size.itemText(_j)) == 1,
-                  "O7 repeated refreshes leave exactly one custom entry")
-            _tab.apply()
-            check(int(st.snapshot(_copy)["video"]["window_width"]) == 1024,
-                  "O8 and it writes back as the number, not the label")
-        else:
-            check(True, "O1-O8 settings write checks skipped (no real settings.toml)")
+        st.set_values(_copy, {("video", "window_width"): 1024})
+        for _ in range(3):
+            _tab.reload()
+        check(_size.currentData() == 1024, "O6 an off-preset width still reads back",
+              f"{_size.currentText()!r} -> {_size.currentData()!r}")
+        check(sum(1 for _j in range(_size.count())
+                  if "custom" in _size.itemText(_j)) == 1,
+              "O7 repeated refreshes leave exactly one custom entry")
+        _tab.apply()
+        check(int(st.snapshot(_copy)["video"]["window_width"]) == 1024,
+              "O8 and it writes back as the number, not the label")
     finally:
+        builds.builds_dir = _orig_bd                             # type: ignore[assignment]
         _QMB.information = _real
-        # in a finally so a failing check cannot leave the temp install behind
-        if _inst is not None:
-            shutil.rmtree(_inst, ignore_errors=True)
+        shutil.rmtree(_inst, ignore_errors=True)
 except Exception as _exc:  # noqa: BLE001
-    check(False, "O1-O8 settings write checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "O0-O8 settings write checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- P. the app background: no art means the live theme colour --------------------------------
 try:
@@ -1005,7 +1067,7 @@ try:
               "Q10 no stubs remain in src/ (the complete tree has nothing left to match)")
 
         _pub = _dc.published()
-        # The panel opens on USA — the one build order the whole UI follows now — so its numbers
+        # The panel opens on USA: the one build order the whole UI follows now: so its numbers
         # come from the USA bucket and the USA segment is the one checked. (Europe here publishes
         # different totals, so this also proves the pane is not silently showing the wrong region.)
         _us = _pub.get("regions", {}).get("USA", {})
@@ -1170,7 +1232,6 @@ except Exception as _exc:  # noqa: BLE001
 # to look plausible. Synthetic inputs, a temp tree, and ROOT restored either way.
 try:
     import shutil as _shutilR                                              # noqa: PLC0415
-    import tempfile as _tempfileR                                          # noqa: PLC0415
 
     from dmw3launcher import decomp as _dcR                                # noqa: PLC0415
 
@@ -1194,7 +1255,7 @@ try:
     check(_dcR.search("(unclosed", regex=True) == [],
           "R3 an invalid regex returns no hits instead of raising (it used to raise)")
 
-    _rroot = pathlib.Path(_tempfileR.mkdtemp(prefix="hermes-verify-dmw3-layer-"))
+    _rroot = _mkdtemp("hermes-verify-dmw3-layer-")
     _real_root = _dcR.ROOT
     try:
         (_rroot / "src").mkdir()
@@ -1437,42 +1498,86 @@ try:
 except Exception as _exc:  # noqa: BLE001
     check(False, "T1-T4 identity checks raised", f"{type(_exc).__name__}: {_exc}")
 
-# --- U: DiscTool's report reaches the player in English -------------------------------
-# Fixtures are the tool's real output, captured verbatim from DiscTool.exe: the European disc it
-# accepts, and the USA disc it refuses.
+# --- U: the tabs find everything relative to the launcher (fresh-clone behaviour) --------------
+# The Memory Card, Mods and Settings tabs used to resolve a third-party port install via absolute
+# developer paths. On any other machine that found nothing. These checks pin the replacement: every
+# folder those tabs use is derived from the launcher, so a fresh clone points at the bundled
+# editor/ and its own Builds/ folder and nothing else.
 try:
-    from dmw3launcher import tooltext as _ttU, disc as _discU                     # noqa: PLC0415
+    _rootU = paths.launcher_root()
+    _tabsU = {"Builds": builds.builds_dir(), "Discs": builds.discs_dir(),
+              "cards": paths.cards_dir(), "editor": paths.editor_dir()}
+    _absU = [f"{name} -> {p}" for name, p in _tabsU.items()
+             if p.parent != _rootU and _rootU not in p.parents]
+    check(not _absU, "U1 every folder a tab uses sits under the launcher root", str(_absU))
 
-    _euU = ("volumen      : DMW3\nsistema      : PLAYSTATION\nejecutable   : SLES_039.36\n"
-            "sectores     : 294280 (el disco dice 294280)\nAAA oculto   : si\n"
-            "veredicto    : ES EL DISCO CORRECTO")
-    _usU = ("volumen      : DMW3\nsistema      : PLAYSTATION\nejecutable   : SLUS_014.36\n"
-            "sectores     : 275309 (el disco dice 275309)\nAAA oculto   : si\n"
-            "veredicto    : Es Digimon World 3/2003, pero no la edicion europea. Su disco arranca "
-            "con SLUS_014.36 y este port esta hecho sobre SLES_039.36. Hace falta la version "
-            "europea (SLES-03936).")
-    _leftU = _ttU.still_spanish(_ttU.english(_euU)) + _ttU.still_spanish(_ttU.english(_usU))
-    check(not _leftU, "U1 both real DiscTool reports translate with no Spanish left",
-          ", ".join(_leftU) or "clean")
-    _eu_lines = _discU.DiscCheck(True, _discU.REGION_EU, "ok", _euU).lines
-    _wantU = [l.strip() for l in _ttU.english(_euU).splitlines() if l.strip()]
-    check(_eu_lines == _wantU and len(_eu_lines) == 6,
-          "U2 DiscCheck.lines is the whole report in English, one entry per line",
-          " | ".join(_eu_lines))
-    check("verdict" in _eu_lines[-1].lower() and "correct disc" in _eu_lines[-1].lower(),
-          "U3 the success verdict reads as English", _eu_lines[-1])
-    _us_lines = _discU.DiscCheck(False, _discU.REGION_US, "no", _usU).lines
-    check(not _ttU.still_spanish("\n".join(_eu_lines + _us_lines)),
-          "U4 nothing Spanish survives on the path the log walks")
-    check("SLUS_014.36" in "\n".join(_us_lines) and "European version" in "\n".join(_us_lines),
-          "U5 the refusal keeps its facts in English", _us_lines[-1][:88])
-    check(_discU.DiscCheck(True, "eu", "ok").lines == [] and _ttU.english("") == "",
-          "U6 an empty report shows nothing instead of raising")
-    _playU = (paths.launcher_root() / "dmw3launcher/ui/play_tab.py").read_text(encoding="utf-8")
-    check("chk.raw" not in _playU and "chk.lines" in _playU,
-          "U7 the Play tab shows lines(), never the untranslated report")
+    _cardsU = builds.card_dirs() + [builds.settings_toml(builds.REGION_US)]
+    check(all(_rootU in p.parents or p.parent == _rootU for p in _cardsU),
+          "U2 build cards and settings resolve inside the tree, not to a machine path",
+          str([str(p) for p in _cardsU[:3]]))
+
+    _edU = paths.find_editor()
+    check(_edU == paths.editor_dir(),
+          "U3 the editor resolves to the bundled editor/ folder", str(_edU))
+    check(1 <= len(paths._LEGACY_EDITOR_DIRS) and all(
+        not (pathlib.Path(p) == _rootU or _rootU in pathlib.Path(p).parents)
+        for p in paths._LEGACY_EDITOR_DIRS),
+          "U4 the dev checkouts survive only as a fallback, and are never inside the tree",
+          str(paths._LEGACY_EDITOR_DIRS))
+
+    # A fresh config (no overrides) must build all three tabs without touching anything outside.
+    _fresh = {"version": 1, "editor_root": None}
+    from dmw3launcher.ui.memcard_tab import MemcardTab as _MTU                     # noqa: PLC0415
+    from dmw3launcher.ui.mods_tab import ModsTab as _ModU                          # noqa: PLC0415
+    from dmw3launcher.ui.settings_tab import SettingsTab as _SetU                  # noqa: PLC0415
+    _mtU, _modU, _setU = _MTU(_fresh), _ModU(_fresh), _SetU(_fresh)
+    check(_mtU.editor_root == paths.editor_dir() and _mtU._editor is not None,
+          "U5 the Memory Card tab loads from editor/ with a fresh config",
+          str(_mtU.editor_root))
+    check([_modU.combo_region.itemData(i) for i in range(_modU.combo_region.count())]
+          == [b.region for b in builds.BUILDS],
+          "U6 the Mods tab lists USA before Europe")
+    check([_setU.combo_region.itemData(i) for i in range(_setU.combo_region.count())]
+          == [b.region for b in builds.BUILDS],
+          "U7 the Settings tab lists USA before Europe")
 except Exception as _exc:  # noqa: BLE001
-    check(False, "U1-U7 disc-report language checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "U1-U7 fresh-clone tab discovery checks raised", f"{type(_exc).__name__}: {_exc}")
+
+# --- Y. the editor is portable: it ships in editor/ and is found without any dev path ----------
+# The proof the shipping layout needs: with the developer checkouts made unavailable, discovery
+# still resolves the bundled editor/ folder and the Memory Card tab still imports it from there.
+try:
+    _fake_legacy = _mkdtemp("hermes-verify-legacy-")
+    (_fake_legacy / "dmw3editor" / "core").mkdir(parents=True)
+    (_fake_legacy / "dmw3editor" / "core" / "save.py").write_text("# decoy\n", encoding="utf-8")
+    _orig_legacy = paths._LEGACY_EDITOR_DIRS
+    try:
+        # A legacy checkout that WOULD match, and the bundled copy present: bundled must win.
+        paths._LEGACY_EDITOR_DIRS = (str(_fake_legacy),)      # type: ignore[assignment]
+        check(paths.find_editor() == paths.editor_dir(),
+              "Y1 the bundled editor/ wins over a matching developer checkout",
+              str(paths.find_editor()))
+
+        # Now make the absolute candidates unavailable, as they would be on another machine.
+        paths._LEGACY_EDITOR_DIRS = ()                        # type: ignore[assignment]
+        check(paths.find_editor() == paths.editor_dir(),
+              "Y2 with no developer checkout, the editor is still found in editor/",
+              str(paths.find_editor()))
+        check(paths.resolve_editor({"version": 1, "editor_root": None}) == paths.editor_dir(),
+              "Y3 resolve_editor falls back to editor/ with no machine path available")
+
+        # ...and it is a real, importable editor: the package the tab imports is inside it.
+        _edp = paths.editor_dir()
+        check((_edp / "dmw3editor" / "core" / "save.py").is_file()
+              and (_edp / "dmw3editor" / "ui" / "main_window.py").is_file()
+              and (_edp / "LICENSE.md").is_file() and (_edp / "logo.png").is_file(),
+              "Y4 the shipped editor/ folder carries the package, its LICENSE and its logo",
+              str(_edp))
+    finally:
+        paths._LEGACY_EDITOR_DIRS = _orig_legacy              # type: ignore[assignment]
+        shutil.rmtree(_fake_legacy, ignore_errors=True)
+except Exception as _exc:  # noqa: BLE001
+    check(False, "Y1-Y4 editor-portability checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- V. the two native builds: buttons, folders, the disc rewrite, the router -------------------
 # The Play tab no longer installs a port. It runs our own regional recompilations, each from its own
@@ -1528,7 +1633,7 @@ try:
           f"{_vb.exe_path(_vb.REGION_EU).name}/{_vb.exe_path(_vb.REGION_US).name}")
 
     # V7-V9 the disc line is rewritten through tomlkit, on a synthetic file that HAS comments
-    _vd = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-builds-"))
+    _vd = _mkdtemp("hermes-verify-builds-")
     _vt = _vd / "game.toml"
     _vt.write_text('# keep me\n[game]\nname = "x"\ndisc = "old.bin"\n\n'
                    '[runtime]\n# and me\nbios_hle = false\n', encoding="utf-8")
@@ -1549,7 +1654,7 @@ try:
         shutil.rmtree(_vd, ignore_errors=True)
 
     # V10-V15 the router: serial prefix -> region, on synthetic bytes and the real reader
-    _vr = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-router-"))
+    _vr = _mkdtemp("hermes-verify-router-")
 
     def _vbin(prefix: bytes) -> pathlib.Path:
         p = _vr / (prefix.decode() + "bin")
@@ -1596,7 +1701,7 @@ try:
             _vcap.update(argv=argv, cwd=cwd, env=env, stdout=stdout, stderr=stderr)
             self.pid = 0
 
-    _vld = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-launch-"))
+    _vld = _mkdtemp("hermes-verify-launch-")
     (_vld / "fake.exe").write_bytes(b"MZ")
     _vorig_popen = _vb.subprocess.Popen
     _vorig_exe, _vorig_dir, _vorig_log = _vb.exe_path, _vb.build_dir, _vb.run_log_path
@@ -1654,7 +1759,7 @@ try:
           "W2 a full toolchain report is Ready with nothing missing", _wfull.summary())
 
     # The probe must never pick devkitPro's cygwin cmake over a native one.
-    _wtc = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-tc-"))
+    _wtc = _mkdtemp("hermes-verify-tc-")
     (_wtc / "devkitpro").mkdir()
     (_wtc / "native").mkdir()
     _wdk = _wtc / "devkitpro" / "cmake.exe"
@@ -1691,7 +1796,7 @@ try:
     # PRE-FLIGHT GATES THE BUILD. With a disc selected but no compiler, Build is disabled and
     # start_build() refuses instead of launching a long job. This is the whole point of the check.
     from dmw3launcher.ui.play_tab import PlayTab as _WTab                        # noqa: PLC0415
-    _wsyn = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-build-")) / "USA disc.bin"
+    _wsyn = _mkdtemp("hermes-verify-build-") / "USA disc.bin"
     _wsyn.write_bytes(b"\x00" * 64 + b"SLUS_014.36" + b"\x00" * 64)
     _wtab = _WTab(paths.load_config(),
                   toolchain=_bd.ToolChain(cmake="cmake", ninja="ninja"))
@@ -1803,7 +1908,7 @@ try:
     # W25 a dependency FetchContent leaves inside its archive's top-level folder must be
     # unwrapped, or CMake finds no CMakeLists.txt and the configure dies ("SDL3 3.4+ was not
     # found"). Synthetic tree, real helper.
-    _wfd = pathlib.Path(tempfile.mkdtemp(prefix="hermes-verify-deps-"))
+    _wfd = _mkdtemp("hermes-verify-deps-")
     try:
         _src = _wfd / "_deps" / "demo-src" / "Demo-1.0"
         _src.mkdir(parents=True)
@@ -1818,8 +1923,67 @@ try:
               f"flattened={_flat}")
     finally:
         shutil.rmtree(_wfd, ignore_errors=True)
+
+    # W26 the refreshed bundle carries everything the overlay compiler is assembled from. The
+    # runtime only compiles dynamically-loaded overlay code when it finds
+    # `overlay_toolchain/python/python.exe` beside its exe, and the engine's packager is what
+    # produces that directory from these inputs - so a missing input is a silently slower game,
+    # which is the worst kind of pass.
+    import hashlib as _hl                                                        # noqa: PLC0415
+    _ov_packager = _bd.overlay_packager()
+    _ov_script = _eng / "tools" / "compile_overlays.py"
+    _ov_licence = _bd.overlay_licenses_dir() / "LGPL-2.1.txt"
+    _ov_missing = [str(p.relative_to(_eng)) for p in (_ov_packager, _ov_script, _ov_licence)
+                   if not p.is_file()]
+    check(not _ov_missing,
+          "W26 the bundle ships the overlay toolchain packager, its overlay-compile script and "
+          "the TinyCC licence", str(_ov_missing))
+
+    # W27 ...and the two redistributable inputs are the exact upstream artefacts the engine's
+    # THIRD_PARTY_ATTRIBUTION.md pins, and the licence file is really LGPL-2.1 text. These are
+    # third-party binaries pulled at packaging time and never built here, so a SHA-256 pin is the
+    # only thing that can tell the documented artefact from a swapped one.
+    _ov_lic = (_ov_licence.read_text(encoding="utf-8", errors="replace")
+               if _ov_licence.is_file() else "")
+    check("GNU LESSER GENERAL PUBLIC LICENSE" in _ov_lic and "Version 2.1" in _ov_lic,
+          "W27 the bundled TinyCC licence is really LGPL-2.1, not an empty placeholder",
+          f"{len(_ov_lic)} chars")
+    _ov_want = {"tcc-0.9.27-win64-bin.zip":
+                "34a721949a2583fdff725312da092fa0f5f1f284b702e6f811c6954714faabb2",
+                "python-3.12.10-embed-amd64.zip":
+                "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3"}
+    _ov_bad = []
+    for _name, _want in _ov_want.items():
+        _p = _bd.overlay_inputs_dir() / _name
+        _got = _hl.sha256(_p.read_bytes()).hexdigest() if _p.is_file() else "(absent)"
+        if _got != _want:
+            _ov_bad.append(f"{_name}={_got[:12]}")
+    check(not _ov_bad,
+          "W28 the bundled TinyCC and CPython inputs match their documented upstream SHA-256",
+          str(_ov_bad))
+
+    # W29 assembling the overlay toolchain is best effort and says so: with the inputs absent it
+    # reports the honest note and returns False instead of raising, because a build with no
+    # overlay compiler still plays - it just stalls about a second on a first overlay visit.
+    _ovtmp = _mkdtemp("hermes-verify-overlay-")
+    _ovout = _ovtmp / "Builds"
+    _ovout.mkdir()
+    _ovproj = _ovtmp / "project"
+    _ovproj.mkdir()
+    _ovlines: list[str] = []
+    _orig_inputs = _bd.overlay_inputs_dir
+    _bd.overlay_inputs_dir = lambda: _ovtmp / "no-such-inputs"     # type: ignore[assignment]
+    try:
+        _ovok = _bd.assemble_overlay_toolchain(_ovout, _ovproj, _ovlines.append)
+    except Exception as _ovexc:  # noqa: BLE001
+        _ovok = f"raised: {type(_ovexc).__name__}: {_ovexc}"
+    finally:
+        _bd.overlay_inputs_dir = _orig_inputs                      # type: ignore[assignment]
+    check(_ovok is False and any("no overlay toolchain bundled" in _ln for _ln in _ovlines),
+          "W29 a build whose toolchain inputs are missing is reported honestly, never raises",
+          f"ok={_ovok} lines={_ovlines[:1]}")
 except Exception as _exc:  # noqa: BLE001
-    check(False, "W1-W22 builder checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "W1-W29 builder checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- X. the public tree ships no game code, and the ignore rules say so ------------------------
 # The legal guardrail: recompiled output, extracted executables and disc images must live OUTSIDE
@@ -1843,7 +2007,7 @@ try:
     if _git("rev-parse", "--is-inside-work-tree").stdout.strip() == "true":
         _gign = [p for p in ("Builds/USA/x.exe", "Discs/a.bin", "build/tmp/gen/a_full.c",
                              "dist/x", "loose.bin", "loose.cue", "loose.iso", "loose.chd",
-                             ".venv/x", "__pycache__/x.pyc")
+                             "cards/x.mcr", ".venv/x", "__pycache__/x.pyc")
                  if _git("check-ignore", "-q", p).returncode != 0]
         check(not _gign, "X3 git really ignores every build/, Discs/ and generated path",
               str(_gign))
@@ -1874,6 +2038,11 @@ try:
         check(True, "X3-X6 skipped: the tree is not a git checkout")
 except Exception as _exc:  # noqa: BLE001
     check(False, "X1-X6 git-hygiene checks raised", f"{type(_exc).__name__}: {_exc}")
+
+# Sweep every temp dir the gate made. Each section also cleans its own; this is the net that
+# catches a dir whose section raised before it could, so a run never leaves anything in TEMP.
+for _d in _TMP_REGISTRY:
+    shutil.rmtree(_d, ignore_errors=True)
 
 failed = [lbl for ok, lbl in results if not ok]
 print("\n" + "=" * 60)

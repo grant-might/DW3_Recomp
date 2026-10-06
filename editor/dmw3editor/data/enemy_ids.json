@@ -1,0 +1,786 @@
+{
+ "source": "github.com/markisha64/ddw3 rust/types/src/enemy_id.rs (decompilation, repr(u16))",
+ "count": 195,
+ "ids": {
+  "0": {
+   "raw": "Null",
+   "name": "Null"
+  },
+  "4": {
+   "raw": "Betamon",
+   "name": "Betamon"
+  },
+  "7": {
+   "raw": "Airdramon",
+   "name": "Airdramon"
+  },
+  "8": {
+   "raw": "Tyrannomon",
+   "name": "Tyrannomon"
+  },
+  "9": {
+   "raw": "Meramon",
+   "name": "Meramon"
+  },
+  "10": {
+   "raw": "Seadramon",
+   "name": "Seadramon"
+  },
+  "11": {
+   "raw": "Numemon",
+   "name": "Numemon"
+  },
+  "13": {
+   "raw": "Mamemon",
+   "name": "Mamemon"
+  },
+  "14": {
+   "raw": "Monzaemon",
+   "name": "Monzaemon"
+  },
+  "23": {
+   "raw": "Frigimon",
+   "name": "Frigimon"
+  },
+  "24": {
+   "raw": "Whamon",
+   "name": "Whamon"
+  },
+  "25": {
+   "raw": "Vegiemon",
+   "name": "Vegiemon"
+  },
+  "28": {
+   "raw": "Vademon",
+   "name": "Vademon"
+  },
+  "32": {
+   "raw": "Kunemon",
+   "name": "Kunemon"
+  },
+  "34": {
+   "raw": "Ogremon",
+   "name": "Ogremon"
+  },
+  "35": {
+   "raw": "Shellmon",
+   "name": "Shellmon"
+  },
+  "37": {
+   "raw": "Bakemon",
+   "name": "Bakemon"
+  },
+  "38": {
+   "raw": "Drimogemon",
+   "name": "Drimogemon"
+  },
+  "39": {
+   "raw": "Sukamon",
+   "name": "Sukamon"
+  },
+  "40": {
+   "raw": "Andromon",
+   "name": "Andromon"
+  },
+  "41": {
+   "raw": "Giromon",
+   "name": "Giromon"
+  },
+  "42": {
+   "raw": "Etemon",
+   "name": "Etemon"
+  },
+  "49": {
+   "raw": "Coelamon",
+   "name": "Coelamon"
+  },
+  "50": {
+   "raw": "Kokatorimon",
+   "name": "Kokatorimon"
+  },
+  "51": {
+   "raw": "Kuwagamon",
+   "name": "Kuwagamon"
+  },
+  "52": {
+   "raw": "Mojyamon",
+   "name": "Mojyamon"
+  },
+  "53": {
+   "raw": "Nanimon",
+   "name": "Nanimon"
+  },
+  "54": {
+   "raw": "Megadramon",
+   "name": "Megadramon"
+  },
+  "60": {
+   "raw": "HKabuterimon",
+   "name": "H Kabuterimon"
+  },
+  "61": {
+   "raw": "MegaSeadramon",
+   "name": "Mega Seadramon"
+  },
+  "65": {
+   "raw": "MetalEtemon",
+   "name": "Metal Etemon"
+  },
+  "67": {
+   "raw": "Yanmamon",
+   "name": "Yanmamon"
+  },
+  "69": {
+   "raw": "Flarerizamon",
+   "name": "Flarerizamon"
+  },
+  "70": {
+   "raw": "WaruMonzaemon",
+   "name": "Waru Monzaemon"
+  },
+  "76": {
+   "raw": "Tankmon",
+   "name": "Tankmon"
+  },
+  "77": {
+   "raw": "RedVegiemon",
+   "name": "Red Vegiemon"
+  },
+  "80": {
+   "raw": "Goburimon",
+   "name": "Goburimon"
+  },
+  "89": {
+   "raw": "Fugamon",
+   "name": "Fugamon"
+  },
+  "94": {
+   "raw": "Icemon",
+   "name": "Icemon"
+  },
+  "104": {
+   "raw": "BlueMeramon",
+   "name": "Blue Meramon"
+  },
+  "108": {
+   "raw": "Rockmon",
+   "name": "Rockmon"
+  },
+  "110": {
+   "raw": "Gekomon",
+   "name": "Gekomon"
+  },
+  "115": {
+   "raw": "Machinedramon",
+   "name": "Machinedramon"
+  },
+  "119": {
+   "raw": "ShogunGekomon",
+   "name": "Shogun Gekomon"
+  },
+  "121": {
+   "raw": "Cherrymon",
+   "name": "Cherrymon"
+  },
+  "122": {
+   "raw": "Hagurumon",
+   "name": "Hagurumon"
+  },
+  "124": {
+   "raw": "MasterTyrannomon",
+   "name": "Master Tyrannomon"
+  },
+  "126": {
+   "raw": "Brachiomon",
+   "name": "Brachiomon"
+  },
+  "132": {
+   "raw": "Gizamon",
+   "name": "Gizamon"
+  },
+  "133": {
+   "raw": "Gizamon2",
+   "name": "Gizamon 2"
+  },
+  "134": {
+   "raw": "Cyclonemon",
+   "name": "Cyclonemon"
+  },
+  "135": {
+   "raw": "Devidramon",
+   "name": "Devidramon"
+  },
+  "136": {
+   "raw": "Tuskmon",
+   "name": "Tuskmon"
+  },
+  "137": {
+   "raw": "Flymon",
+   "name": "Flymon"
+  },
+  "138": {
+   "raw": "Deltamon",
+   "name": "Deltamon"
+  },
+  "139": {
+   "raw": "Raremon",
+   "name": "Raremon"
+  },
+  "140": {
+   "raw": "MetalTyrannomon",
+   "name": "Metal Tyrannomon"
+  },
+  "141": {
+   "raw": "Datamon",
+   "name": "Datamon"
+  },
+  "143": {
+   "raw": "Clockmon",
+   "name": "Clockmon"
+  },
+  "165": {
+   "raw": "Ebidramon",
+   "name": "Ebidramon"
+  },
+  "166": {
+   "raw": "Dokugumon",
+   "name": "Dokugumon"
+  },
+  "170": {
+   "raw": "Vilemon",
+   "name": "Vilemon"
+  },
+  "171": {
+   "raw": "Roachmon",
+   "name": "Roachmon"
+  },
+  "172": {
+   "raw": "Minotarumon",
+   "name": "Minotarumon"
+  },
+  "173": {
+   "raw": "Musyamon",
+   "name": "Musyamon"
+  },
+  "175": {
+   "raw": "Kurisarimon",
+   "name": "Kurisarimon"
+  },
+  "176": {
+   "raw": "Thundermon",
+   "name": "Thundermon"
+  },
+  "177": {
+   "raw": "LadyDevimon",
+   "name": "Lady Devimon"
+  },
+  "178": {
+   "raw": "Knightmon",
+   "name": "Knightmon"
+  },
+  "189": {
+   "raw": "SkullMeramon",
+   "name": "Skull Meramon"
+  },
+  "190": {
+   "raw": "Boltmon",
+   "name": "Boltmon"
+  },
+  "193": {
+   "raw": "Gryphonmon",
+   "name": "Gryphonmon"
+  },
+  "197": {
+   "raw": "Crabmon",
+   "name": "Crabmon"
+  },
+  "198": {
+   "raw": "Kiwimon",
+   "name": "Kiwimon"
+  },
+  "200": {
+   "raw": "Blossomon",
+   "name": "Blossomon"
+  },
+  "202": {
+   "raw": "Scorpiomon",
+   "name": "Scorpiomon"
+  },
+  "203": {
+   "raw": "Triceramon",
+   "name": "Triceramon"
+  },
+  "204": {
+   "raw": "MetalSeadramon",
+   "name": "Metal Seadramon"
+  },
+  "206": {
+   "raw": "Tapirmon",
+   "name": "Tapirmon"
+  },
+  "207": {
+   "raw": "Apemon",
+   "name": "Apemon"
+  },
+  "208": {
+   "raw": "Tortomon",
+   "name": "Tortomon"
+  },
+  "210": {
+   "raw": "Dolphmon",
+   "name": "Dolphmon"
+  },
+  "212": {
+   "raw": "Mammothmon",
+   "name": "Mammothmon"
+  },
+  "215": {
+   "raw": "SkullMammothmon",
+   "name": "Skull Mammothmon"
+  },
+  "217": {
+   "raw": "DemiDevimon",
+   "name": "Demi Devimon"
+  },
+  "220": {
+   "raw": "Gesomon",
+   "name": "Gesomon"
+  },
+  "221": {
+   "raw": "Octomon",
+   "name": "Octomon"
+  },
+  "222": {
+   "raw": "Woodmon",
+   "name": "Woodmon"
+  },
+  "223": {
+   "raw": "Phantomon",
+   "name": "Phantomon"
+  },
+  "224": {
+   "raw": "MarineDevimon",
+   "name": "Marine Devimon"
+  },
+  "225": {
+   "raw": "Dragomon",
+   "name": "Dragomon"
+  },
+  "226": {
+   "raw": "Okuwamon",
+   "name": "Okuwamon"
+  },
+  "227": {
+   "raw": "Garbagemon",
+   "name": "Garbagemon"
+  },
+  "228": {
+   "raw": "Piedmon",
+   "name": "Piedmon"
+  },
+  "229": {
+   "raw": "Pukumon",
+   "name": "Pukumon"
+  },
+  "231": {
+   "raw": "Puppetmon",
+   "name": "Puppetmon"
+  },
+  "236": {
+   "raw": "VenomMyotismon",
+   "name": "Venom Myotismon"
+  },
+  "237": {
+   "raw": "Kimeramon",
+   "name": "Kimeramon"
+  },
+  "238": {
+   "raw": "Snimon",
+   "name": "Snimon"
+  },
+  "241": {
+   "raw": "Divermon",
+   "name": "Divermon"
+  },
+  "244": {
+   "raw": "SkullSatamon",
+   "name": "Skull Satamon"
+  },
+  "245": {
+   "raw": "Infermon",
+   "name": "Infermon"
+  },
+  "247": {
+   "raw": "Creepymon",
+   "name": "Creepymon"
+  },
+  "250": {
+   "raw": "KingEtemon",
+   "name": "King Etemon"
+  },
+  "251": {
+   "raw": "Apokarimon",
+   "name": "Apokarimon"
+  },
+  "269": {
+   "raw": "Valkyrimon",
+   "name": "Valkyrimon"
+  },
+  "270": {
+   "raw": "Vikemon",
+   "name": "Vikemon"
+  },
+  "272": {
+   "raw": "Shadramon",
+   "name": "Shadramon"
+  },
+  "273": {
+   "raw": "Quetzalmon",
+   "name": "Quetzalmon"
+  },
+  "277": {
+   "raw": "Baronmon",
+   "name": "Baronmon"
+  },
+  "281": {
+   "raw": "Tylomon",
+   "name": "Tylomon"
+  },
+  "302": {
+   "raw": "Gargoylemon",
+   "name": "Gargoylemon"
+  },
+  "312": {
+   "raw": "Ghoulmon",
+   "name": "Ghoulmon"
+  },
+  "327": {
+   "raw": "Lynxmon",
+   "name": "Lynxmon"
+  },
+  "334": {
+   "raw": "Maildramon",
+   "name": "Maildramon"
+  },
+  "337": {
+   "raw": "Zanbamon",
+   "name": "Zanbamon"
+  },
+  "356": {
+   "raw": "HiAndromon",
+   "name": "Hi Andromon"
+  },
+  "358": {
+   "raw": "Pharaohmon",
+   "name": "Pharaohmon"
+  },
+  "360": {
+   "raw": "Antylamon",
+   "name": "Antylamon"
+  },
+  "364": {
+   "raw": "Mummymon",
+   "name": "Mummymon"
+  },
+  "365": {
+   "raw": "Arukenimon",
+   "name": "Arukenimon"
+  },
+  "382": {
+   "raw": "Armageddemon",
+   "name": "Armageddemon"
+  },
+  "395": {
+   "raw": "Kuwagamon2",
+   "name": "Kuwagamon 2"
+  },
+  "396": {
+   "raw": "Yanmamon2",
+   "name": "Yanmamon 2"
+  },
+  "397": {
+   "raw": "Dokugumon2",
+   "name": "Dokugumon 2"
+  },
+  "398": {
+   "raw": "Goburimon2",
+   "name": "Goburimon 2"
+  },
+  "399": {
+   "raw": "Minotarumon2",
+   "name": "Minotarumon 2"
+  },
+  "400": {
+   "raw": "Flymon2",
+   "name": "Flymon 2"
+  },
+  "401": {
+   "raw": "Woodmon2",
+   "name": "Woodmon 2"
+  },
+  "402": {
+   "raw": "Triceramon2",
+   "name": "Triceramon 2"
+  },
+  "403": {
+   "raw": "Airdramon2",
+   "name": "Airdramon 2"
+  },
+  "404": {
+   "raw": "Phantomon2",
+   "name": "Phantomon 2"
+  },
+  "405": {
+   "raw": "Kokatorimon2",
+   "name": "Kokatorimon 2"
+  },
+  "406": {
+   "raw": "Tortomon2",
+   "name": "Tortomon 2"
+  },
+  "407": {
+   "raw": "ShogunGekomon2",
+   "name": "Shogun Gekomon 2"
+  },
+  "408": {
+   "raw": "Seadramon2",
+   "name": "Seadramon 2"
+  },
+  "409": {
+   "raw": "Mammothmon2",
+   "name": "Mammothmon 2"
+  },
+  "410": {
+   "raw": "Vademon2",
+   "name": "Vademon 2"
+  },
+  "411": {
+   "raw": "Maildramon2",
+   "name": "Maildramon 2"
+  },
+  "412": {
+   "raw": "Guardromon",
+   "name": "Guardromon"
+  },
+  "413": {
+   "raw": "Numemon2",
+   "name": "Numemon 2"
+  },
+  "414": {
+   "raw": "Numemon3",
+   "name": "Numemon 3"
+  },
+  "415": {
+   "raw": "Numemon4",
+   "name": "Numemon 4"
+  },
+  "416": {
+   "raw": "Numemon5",
+   "name": "Numemon 5"
+  },
+  "417": {
+   "raw": "Numemon6",
+   "name": "Numemon 6"
+  },
+  "418": {
+   "raw": "Raremon2",
+   "name": "Raremon 2"
+  },
+  "419": {
+   "raw": "Cyclonemon2",
+   "name": "Cyclonemon 2"
+  },
+  "420": {
+   "raw": "Tankmon2",
+   "name": "Tankmon 2"
+  },
+  "421": {
+   "raw": "Musyamon2",
+   "name": "Musyamon 2"
+  },
+  "422": {
+   "raw": "Kurisarimon2",
+   "name": "Kurisarimon 2"
+  },
+  "423": {
+   "raw": "Snimon2",
+   "name": "Snimon 2"
+  },
+  "424": {
+   "raw": "Blossomon2",
+   "name": "Blossomon 2"
+  },
+  "425": {
+   "raw": "Cherrymon2",
+   "name": "Cherrymon 2"
+  },
+  "426": {
+   "raw": "Whamon2",
+   "name": "Whamon 2"
+  },
+  "427": {
+   "raw": "MegaSeadramon2",
+   "name": "Mega Seadramon 2"
+  },
+  "428": {
+   "raw": "Ebidramon2",
+   "name": "Ebidramon 2"
+  },
+  "429": {
+   "raw": "Vilemon2",
+   "name": "Vilemon 2"
+  },
+  "430": {
+   "raw": "Drimogemon2",
+   "name": "Drimogemon 2"
+  },
+  "431": {
+   "raw": "Vikemon2",
+   "name": "Vikemon 2"
+  },
+  "432": {
+   "raw": "MetalSeadramon2",
+   "name": "Metal Seadramon 2"
+  },
+  "433": {
+   "raw": "Scorpiomon2",
+   "name": "Scorpiomon 2"
+  },
+  "434": {
+   "raw": "Antylamon2",
+   "name": "Antylamon 2"
+  },
+  "435": {
+   "raw": "Guardromon2",
+   "name": "Guardromon 2"
+  },
+  "436": {
+   "raw": "Bulbmon",
+   "name": "Bulbmon"
+  },
+  "437": {
+   "raw": "Persiamon",
+   "name": "Persiamon"
+  },
+  "438": {
+   "raw": "Raidenmon",
+   "name": "Raidenmon"
+  },
+  "439": {
+   "raw": "Fujinmon",
+   "name": "Fujinmon"
+  },
+  "440": {
+   "raw": "Suijinmon",
+   "name": "Suijinmon"
+  },
+  "441": {
+   "raw": "Raijinmon",
+   "name": "Raijinmon"
+  },
+  "442": {
+   "raw": "Galacticmon",
+   "name": "Galacticmon"
+  },
+  "443": {
+   "raw": "BKMegaGargomon",
+   "name": "BK Mega Gargomon"
+  },
+  "444": {
+   "raw": "BKImperialdramon",
+   "name": "BK Imperialdramon"
+  },
+  "445": {
+   "raw": "BKWarGrowlmon",
+   "name": "BK War Growlmon"
+  },
+  "446": {
+   "raw": "BKKingNumemon",
+   "name": "BK King Numemon"
+  },
+  "447": {
+   "raw": "BKSeraphimon",
+   "name": "BK Seraphimon"
+  },
+  "448": {
+   "raw": "BKWayGreymon",
+   "name": "BK Way Greymon"
+  },
+  "449": {
+   "raw": "MetalGreymon",
+   "name": "Metal Greymon"
+  },
+  "450": {
+   "raw": "Paildramon",
+   "name": "Paildramon"
+  },
+  "451": {
+   "raw": "WarGrowlmon",
+   "name": "War Growlmon"
+  },
+  "452": {
+   "raw": "MagnaAngemon",
+   "name": "Magna Angemon"
+  },
+  "453": {
+   "raw": "Taomon",
+   "name": "Taomon"
+  },
+  "454": {
+   "raw": "Kyukimon",
+   "name": "Kyukimon"
+  },
+  "455": {
+   "raw": "Armormon",
+   "name": "Armormon"
+  },
+  "456": {
+   "raw": "GrapLeomon",
+   "name": "Grap Leomon"
+  },
+  "457": {
+   "raw": "Cardmon",
+   "name": "Cardmon"
+  },
+  "458": {
+   "raw": "Cardmon2",
+   "name": "Cardmon 2"
+  },
+  "459": {
+   "raw": "Cardmon3",
+   "name": "Cardmon 3"
+  },
+  "460": {
+   "raw": "Cardmon4",
+   "name": "Cardmon 4"
+  },
+  "461": {
+   "raw": "Cardmon5",
+   "name": "Cardmon 5"
+  },
+  "462": {
+   "raw": "Cardmon6",
+   "name": "Cardmon 6"
+  },
+  "463": {
+   "raw": "Cardmon7",
+   "name": "Cardmon 7"
+  },
+  "464": {
+   "raw": "Cardmon8",
+   "name": "Cardmon 8"
+  },
+  "465": {
+   "raw": "Vemmon",
+   "name": "Vemmon"
+  },
+  "466": {
+   "raw": "Galacticmon2",
+   "name": "Galacticmon 2"
+  },
+  "467": {
+   "raw": "Galacticmon3",
+   "name": "Galacticmon 3"
+  }
+ }
+}
