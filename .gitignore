@@ -66,3 +66,8 @@ Thumbs.db
 # broad `*.bin` rule above.
 !engine/framework/bios/openbios.bin
 !engine/framework/bios/*.LICENSE
+
+# --- documentation screenshots -----------------------------------------------------
+# The README embeds its screenshots from GitHub's attachment store, so these PNGs are
+# kept out of version control. They stay on disk so the owner can re-upload them.
+docs/images/
