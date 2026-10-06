@@ -193,10 +193,9 @@ def verify(tool: pathlib.Path, image: pathlib.Path) -> DiscCheck:
     # DiscTool is chatty about WHY it refused. Keep its own words, but in English — the tool
     # speaks Spanish and this UI does not. The untranslated text stays in .raw for bug reports.
     why = tooltext.english(_first_meaningful(out)) or f"DiscTool exited {res.returncode}."
-    if region == REGION_US:
-        why = (why + "\n\nThis runtime is compiled from the European disc only, so a USA disc "
-                     "cannot be installed into it. Playing USA natively needs a second "
-                     "recompilation of the SLUS binary.")
+    # No region is refused here. DiscTool validates against a PAL reference disc, so its verdict is
+    # a completeness readout, never a gate: a USA image is reported and nothing more, and the Play
+    # tab builds it like any other.
     return DiscCheck(False, region, why, out)
 
 

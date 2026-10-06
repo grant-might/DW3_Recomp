@@ -1750,7 +1750,8 @@ try:
         _wtxt = (_ef / _wrel).read_text(encoding="utf-8", errors="replace")
         check("_IONBF" in _wtxt,
               f"W19 {_wrel} (5/5) sets an unbuffered std stream under MSVC (_IONBF)")
-    check(re.search(r"#ifdef\s+_MSC_VER[\s\S]{0,400}?_IONBF", _wmain) is not None,
+    check(re.search(r"#if(?:def)?\s+(?:defined\s*\(\s*)?_MSC_VER[\s\S]{0,400}?_IONBF",
+                    _wmain) is not None,
           "W19b ...and in main.cpp the _IONBF choice is guarded by _MSC_VER, not applied blindly")
 
     # the licenses the tree must ship

@@ -69,10 +69,10 @@ def work_root() -> pathlib.Path:
 # ---------------------------------------------------------------- a CLI-safe path
 
 # The bundled recompiler builds its helper command lines with a shell and does NOT survive a space
-# (or a bracket) anywhere in a path it touches: with the tree at
-# `D:\AGENT\Digimon World 3 Launcher [public]`, `psxrecomp-bios` is handed `D:\AGENT\Digimon` and
-# dies with "config file not found". The fix is to hand the CLI - and only the CLI - the SAME
-# directory under its 8.3 short name (`D:\AGENT\DI23A3~1`), which has no space and no bracket.
+# (or a bracket) anywhere in a path it touches: given a folder like "Digimon World 3 Launcher
+# [public]", the BIOS helper is handed everything up to the first space ("...\Digimon") and dies
+# with "config file not found". The fix is to hand the CLI - and only the CLI - the SAME directory
+# under its 8.3 short name (a "DI23A3~1"-style alias), which carries neither character.
 _UNSAFE = " \t[](){}!&^<>|\"'"
 
 
@@ -186,11 +186,11 @@ class ToolChain:
         return "Ready: " + ", ".join(p for p in parts if p)
 
     def hint(self) -> str:
-        return ("Install what is missing and try again:\n"
-                "  • a C/C++ compiler: 'Visual Studio Build Tools' with the\n"
+        return ("Install what is missing and try again. The launcher needs all three.\n"
+                "  • a C/C++ compiler - 'Visual Studio Build Tools' with the\n"
                 "    'Desktop development with C++' workload, or LLVM/clang;\n"
-                "  • CMake (https://cmake.org/download/);\n"
-                "  • Ninja (ships with the VS Build Tools, or https://ninja-build.org/).")
+                "  • CMake (cmake.org);\n"
+                "  • Ninja (ships with the VS Build Tools, or ninja-build.org).")
 
 
 def _cmake_version(path: str | None) -> str:
@@ -237,7 +237,6 @@ def find_cmake() -> str | None:
         base = os.environ.get(env)
         if base:
             cands.append(str(pathlib.Path(base) / "CMake" / "bin" / "cmake.exe"))
-    cands.append(r"C:\Program Files\CMake\bin\cmake.exe")
     w = _which("cmake")
     if w:
         cands.append(w)
