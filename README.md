@@ -15,12 +15,12 @@ Nothing is refused for its region.
 The Play tab is the builder. Point it at your own disc image and it names the region from the
 disc's own serial, then recompiles it into `Builds/USA` or `Builds/EUR`.
 
-![The Memory Card tab, listing the cards it found](https://github.com/user-attachments/assets/75d322ad-5aed-408e-8e27-61f2f8330d4a)
+![The Memory Card tab, listing the cards it found](https://github.com/user-attachments/assets/3737e81b-66d2-4812-9cf5-aab402840a37)
 
 The Memory Card tab lists every card it finds, including each build's own `card1.mcd` and
 `card2.mcd`, and opens one in the embedded save editor.
 
-![The Decompilation tab browsing the decompilation tree](https://github.com/user-attachments/assets/3737e81b-66d2-4812-9cf5-aab402840a37)
+![The Decompilation tab browsing the decompilation tree](https://github.com/user-attachments/assets/75d322ad-5aed-408e-8e27-61f2f8330d4a)
 
 The Decompilation tab is a read-only browser over the decompilation tree, with the project's
 published progress shown above it.
