@@ -77,9 +77,9 @@ beelzemon-purple, `#17371f` on gargomon-green.
 Drop a `background.png` in and it is used instead, drawn full-bleed at 28% opacity and
 centre-cropped. If you ever do make one, author it to 1280 × 800 (2×: 2560 × 1600) and keep the
 middle **1024 × 640** clear of anything that matters, since the rest is what gets cropped away. The
-middle **1024 x 640** clear of anything that matters, since the rest is what gets cropped away. The
 generated placeholder is kept locally as `background.png.placeholder.bak` for comparison; like the
 other backups it is gitignored and does not ship.
+
 ### `header_bar.png`: removed at your request, and the header is blank without it
 
 The header is now a **flat panel in the theme's panel tone** with the logo and the two buttons on it
