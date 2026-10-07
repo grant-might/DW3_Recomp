@@ -3,7 +3,7 @@
 Each theme is a named palette. ``apply(app, name)`` installs Fusion, the
 matching QPalette, and a stylesheet built from that palette. Widgets opt into
 variants via Qt dynamic properties (``role="primary"``, ``role="nav"`` ...),
-styled by the selectors below, identical rules for every theme, colors swap.
+styled by the selectors below — identical rules for every theme, colors swap.
 
 Layers: background < surface < elevated; text: foreground / muted / faint.
 Borders are hairline; radius is 6-10px; focus is an accent ring.
@@ -514,7 +514,7 @@ QCheckBox::indicator:checked {{
 }}
 QCheckBox::indicator:checked:hover {{ background: {p["ACCENT"]}; }}
 
-/* compact tick checkboxes (table cells: Earned column etc.), transparent
+/* compact tick checkboxes (table cells: Earned column etc.) — transparent
    background so no "placeholder box" shows behind the indicator */
 QCheckBox[role="tick"] {{
     background: transparent;

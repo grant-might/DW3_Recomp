@@ -22,10 +22,27 @@ DATA_DIR = pkg_dir() / "data"
 PAYLOAD_SIZE = 32768
 TITLE_FRAME_END = 0x0200
 
-RECORD_BASE = 0x0200
-MAGIC_OFFSET = 0x0204
+# ---- the DMW3 card file (decomp: include/stgmcard.h, memcard.c) -----------
+# The save file is 4 blocks (32768 bytes):
+#   0x0000..0x0200  PS1 title frame: 'SC' + 3 icon frames (128 bytes each)
+#   0x0200..0x0300  info section: MemCardFile (0xD4) + 0x2C zero padding
+#   0x0300..0x2A00  data section 0 (one GameSave; stride 0x2700)
+#   0x2A00..0x5100  data section 1
+#   0x5100..0x7800  data section 2
+#   0x7800..0x8000  trailing 0x800 bytes (not written by the game; unidentified)
+RECORD_BASE = 0x0200            # MemCardFile, payload-absolute
+MAGIC_OFFSET = 0x0204           # s32 "DMW3"
 MAGIC = b"DMW3"
-VERSION_OFFSET = 0x0202
+VERSION_OFFSET = 0x0202         # u8: 3 = USA, 4 = EUR (MEMCARD_SAVE_VERSION)
+H_CHECKSUM = 0x0200             # u8: XOR8 over [0x0204, 0x02D4)
+H_LAST = 0x0201                 # u8: the slot last saved to (0..2)
+H_VERSION = VERSION_OFFSET      # u8
+H_UNK3 = 0x0203                 # u8: unidentified (0 on both region cards)
+H_MAGIC = MAGIC_OFFSET          # s32
+INFO_SECTION_SIZE = 0x100       # MEMCARD.infoSize (system.c initMemCard)
+DATA_SECTION_OFFSETS = (0x0300, 0x2A00, 0x5100)  # data sections (dataSize stride)
+DATA_SECTION_SIZE = 0x2700      # MEMCARD.dataSize
+GAME_SAVE_SIZE_BY_VERSION = {3: 0x26BC, 4: 0x26C4}  # GAME_SAVE_SIZE per region
 
 # Card collection: 314 byte-per-card counts (0-9) at payload 0x06A3.
 # CONFIRMED 2026-09-02: the user's card has exactly 314 consecutive 0x09 bytes
@@ -131,12 +148,12 @@ DIGI_MAX_STAT = 999
 #   data slots: 43 slots at record+0x74 + 20*k (k=0..42); each slot is:
 #     +0..+3   slot prefix (constant per record region)
 #     +4..+15  per-form extra data (0 for earned-but-never-used forms)
-#     +16..17  FORM MARKER u16: constant per evolved form across cards
+#     +16..17  FORM MARKER u16 — constant per evolved form across cards
 #     +18..19  DV level u16 (0 = not earned)
 # Level 0 marks a slot as not-yet-kept, BUT the level field alone does NOT
 # decide whether the game shows the form: probe 2 (all 43 slots of all 8
 # digimon tagged 1..43) left unearned forms hidden. The form marker at
-# +16..17 is what registers a form in a slot: probe CONFIRMED 2026-09-02 by
+# +16..17 is what registers a form in a slot — probe CONFIRMED 2026-09-02 by
 # the user: writing Seraphimon's marker + level 42 into an empty Agumon slot
 # made "Seraphimon 42" appear on the in-game DV screen (same for Rosemon 7).
 D_DV_HEADER = 0x72        # u16: header/primary digivolution level
@@ -190,7 +207,7 @@ DV_FORM_MARKER_NAMES = {  # reverse of DV_FORM_MARKERS (marker -> form name)
     v: k for k, v in DV_FORM_MARKERS.items()
 }
 
-# PARTY/partner-ID space: REGION-INDEPENDENT (corrected 2026-10-05).
+# PARTY/partner-ID space — REGION-INDEPENDENT (corrected 2026-10-05).
 # The save record's partner fields hold the decomp's Partner.unlocked value:
 # partner_index + 3, where 0 = empty/locked. CONFIRMED against the
 # decompilation of BOTH releases (the code is shared, not #if-gated):
@@ -199,7 +216,7 @@ DV_FORM_MARKER_NAMES = {  # reverse of DV_FORM_MARKERS (marker -> form name)
 #   stgmcard.c:200/293/305  the save-list UI indexes its partner
 #                    sprites/animations by (partners[i] - 3)
 # So a live party member is id 3..10 == Kotemon..Patamon on the USA AND the
-# EUR card alike. The USA/EUR save+load path is identical here: only the
+# EUR card alike. The USA/EUR save+load path is identical here — only the
 # MEMCARD_SAVE_VERSION byte (3 vs 4) differs between the regions.
 # EVIDENCE: both live cards (Builds/USA/card1.mcd, Builds/EUR/card1.mcd) hold
 # the same raw partners[3] = [4, 8, 10] -> Kumamon, Guilmon, Patamon. The
@@ -217,6 +234,23 @@ def party_min_for_region(region: str) -> int:
     decomp shows USA and EUR store Partner.unlocked = index + 3 identically.
     """
     return PARTY_MIN_BY_REGION.get(region, PARTY_MIN_BY_REGION["USA"])
+
+
+def party_index_for_id(digimon_id: int, region: str) -> int:
+    """Data-section partner INDEX for a summary party id (region-aware).
+
+    The info summary stores Partner.unlocked (id = index + party_min) but the
+    data section stores the index itself, so the two differ by the region's
+    party minimum. MEASURED: the game-written ``unlocked`` fields on both live
+    cards are Kumamon=4, Guilmon=8, Patamon=10 -- index + 3 on the USA card AND
+    the EUR card alike, matching game3.c:766 setParty (unlocked = index + 3).
+    """
+    return digimon_id - party_min_for_region(region)
+
+
+def party_id_for_index(index: int, region: str) -> int:
+    """Summary party id (Partner.unlocked) for a data-section partner index."""
+    return index + party_min_for_region(region)
 
 KEY_ITEM_COUNT = (
     KEY_ITEMS_BLOCK_A[1] - KEY_ITEMS_BLOCK_A[0]
@@ -246,26 +280,53 @@ def key_item_offset(key_index: int) -> int:
         return b_start + key_index
     raise SaveError(f"key item index out of range: {key_index}")
 
-# The three in-game save slots.
+# The three per-save summaries (decomp: MemCardFile saves[3]).
 SLOT_OFFSETS = (0x0208, 0x024C, 0x0290)
 SLOT_SIZE = 0x44
 
-# Field offsets relative to a slot's start.
-F_NAME = 0x00          # 8 bytes; layout not fully decoded
-F_PARTNER = 0x18       # u32 DigimonId
-F_UNKNOWN_1C = 0x1C    # u32
-F_MONEY = 0x20         # u32
-F_HOURS = 0x28         # u16
-F_MINUTES = 0x2A       # u16
-F_SECONDS = 0x2C       # u16
-F_PARTY_IDS = (0x30, 0x34, 0x38)    # u32 each
-F_PARTY_LEVELS = (0x3C, 0x3E, 0x40)  # u16 each
+# Field offsets relative to a slot's start (decomp: MemCardSave, 0x44 bytes).
+F_NAME = 0x00            # u8[0x18]: C string; [0] == 0 marks a free slot
+F_NAME_SIZE = 0x18
+F_AREA = 0x18            # s32: index into the area-name text (STAREA, 0xAA)
+F_SHOP = 0x1C            # s32: index into the shop-name text (SHPNAM, 0x95)
+F_MONEY = 0x20           # s32: Bits
+F_TIME_FRAMES = 0x24     # s32: play-time frames (PlayTime.frames)
+F_HOURS = 0x28           # s16
+F_MINUTES = 0x2A         # s16
+F_SECONDS = 0x2C         # s16
+F_TIME_MAXED = 0x2E      # s16: PlayTime.maxed
+F_PARTY_IDS = (0x30, 0x34, 0x38)     # s32 each: Partner.unlocked (index + 3)
+F_PARTY_LEVELS = (0x3C, 0x3E, 0x40)  # s16 each
+F_UNK42 = 0x42           # s16: unidentified
+
+# DEPRECATED aliases kept for the shipped API and its tests. 0x18 was long read
+# as a Digimon "partner"; the decomp (stgmcard.c:167) proves it is the save's
+# AREA index. The real party ids are F_PARTY_IDS — there is no single partner
+# field in a MemCardSave.
+F_PARTNER = F_AREA
+F_UNKNOWN_1C = F_SHOP
 
 MONEY_MAX = 9_999_999
 LEVEL_MAX = 99
 LEVEL_MIN = 1
 HOURS_MAX = 999
 PARTY_SIZE = 3
+
+# ---- the AUTHORITATIVE running party lives in the DATA SECTION ------------
+# The game does not run the party from the info-summary partners[3]; it copies
+# the whole GameSave out of the data section on load:
+#   stgmcard.c:1027  *(GameSave *)&GAME = *(GameSave *)STGMCard_funcs.dataBuf;
+#   game_state.h:297  /* 0x0070 */ s32 party[3]; /* partner indices */
+# so GameState.party holds partner INDICES (0..7), whereas the summary holds
+# Partner.unlocked = index + 3 (stgmcard.c:1106; game_state.h:193). A party
+# swap must therefore write BOTH, converting id <-> index with the region's
+# party minimum. Writing only the summary changes what the card list shows but
+# leaves the loaded party untouched -- the reported "swap did not take effect".
+GS_PARTY = 0x0070                      # GameState.party[3] within a data section
+DIGI_STAT_BASE_REL = DIGI_STAT_BASE - DATA_SECTION_OFFSETS[0]  # 0x0748 (Partner[0]-0x14)
+# Partner.unlocked (game_state.h:193 /* 0x004 */ s32 unlocked; partner id + 3,
+# 0 while locked), relative to the DIGI_STAT_BASE convention above.
+D_UNLOCK = 0x18                        # == Partner+0x04
 
 # Regions unidentified; writing there is refused.
 FORBIDDEN_REGIONS = ((0x2900, 0x5000), (0x5000, 0x7700))
@@ -521,13 +582,31 @@ class Slot:
     def _u16(self, rel: int) -> int:
         return struct.unpack_from("<H", self.raw, rel)[0]
 
+    def _s16(self, rel: int) -> int:
+        return struct.unpack_from("<h", self.raw, rel)[0]
+
+    @property
+    def area_id(self) -> int:
+        """The save's AREA index (decomp stgmcard.c:167, the name text 0xAA)."""
+        return self._u32(F_AREA)
+
+    @property
+    def shop_id(self) -> int:
+        """The save's SHOP index (decomp stgmcard.c:168, the name text 0x95)."""
+        return self._u32(F_SHOP)
+
     @property
     def partner_id(self) -> int:
-        return self._u32(F_PARTNER)
+        """DEPRECATED: this offset is the AREA index, not a Digimon.
+
+        Kept because the legacy ``set_partner`` API and its tests use it; new
+        code should use :attr:`area_id` and :attr:`party`.
+        """
+        return self.area_id
 
     @property
     def partner_name(self) -> str:
-        # Party-space id (3..10 = Kotemon..Patamon); same on both regions.
+        """DEPRECATED: :attr:`area_id` decoded as a party-space id."""
         return TABLES.party_name(self.partner_id, self.region)
 
     @property
@@ -542,6 +621,21 @@ class Slot:
     def play_time_text(self) -> str:
         h, m, s = self.play_time
         return f"{h}:{m:02d}:{s:02d}"
+
+    @property
+    def play_frames(self) -> int:
+        """PlayTime.frames — the game's 8.8 play counter (stgmcard.h)."""
+        return self._u32(F_TIME_FRAMES)
+
+    @property
+    def play_time_maxed(self) -> int:
+        """PlayTime.maxed (0 on both region cards)."""
+        return self._s16(F_TIME_MAXED)
+
+    @property
+    def unk42(self) -> int:
+        """MemCardSave.unk42 at slot +0x42; unidentified (0 on both cards)."""
+        return self._s16(F_UNK42)
 
     @property
     def party(self) -> list[tuple[int, int]]:
@@ -561,7 +655,8 @@ class Slot:
 
     @property
     def name_bytes(self) -> bytes:
-        return self.raw[F_NAME:F_NAME + 8]
+        """The full 0x18-byte name field (decomp: MemCardSave.name[0x18])."""
+        return self.raw[F_NAME:F_NAME + F_NAME_SIZE]
 
     @property
     def name_ascii(self) -> str:
@@ -592,7 +687,18 @@ class DMW3Save:
 
     @property
     def version(self) -> int:
-        return struct.unpack_from("<H", self._buf, VERSION_OFFSET)[0]
+        """MEMCARD_SAVE_VERSION byte at 0x0202 (3 = USA, 4 = EUR)."""
+        return self._buf[VERSION_OFFSET]
+
+    @property
+    def last_saved_slot(self) -> int:
+        """The slot the game last saved to (MemCardFile.last at 0x0201)."""
+        return self._buf[H_LAST]
+
+    @property
+    def unk3(self) -> int:
+        """MemCardFile.unk3 at 0x0203 (0 on both region cards)."""
+        return self._buf[H_UNK3]
 
     @property
     def region_guess(self) -> str:
@@ -605,7 +711,7 @@ class DMW3Save:
 
         Used by the ROM-region selector for cards whose version field is
         missing/unusual or to re-interpret an existing card. The payload
-        itself is untouched, every page re-reads this via region_guess.
+        itself is untouched — every page re-reads this via region_guess.
         """
         if region not in ("USA", "EUR"):
             raise SaveError(f"unsupported region override {region!r}")
@@ -640,6 +746,11 @@ class DMW3Save:
                     f"0x{start:04X}-0x{end:04X} is not understood"
                 )
 
+    def _is_forbidden(self, offset: int, size: int = 1) -> bool:
+        """True when [offset, offset+size) overlaps a refused region."""
+        end = offset + size
+        return any(start < end and offset < stop for start, stop in FORBIDDEN_REGIONS)
+
     def _write(self, offset: int, data: bytes) -> None:
         self._guard(offset)
         self._buf[offset:offset + len(data)] = data
@@ -668,8 +779,23 @@ class DMW3Save:
     def set_party_member(
         self, slot_index: int, position: int, digimon_id: int, level: int
     ) -> None:
+        """Swap a party member and set its level in BOTH stored copies.
+
+        The party exists twice: the info-summary ``partners[3]`` (ids, what the
+        load screen shows) and the data-section ``GameState.party[3]`` (partner
+        INDICES, what the game actually loads -- stgmcard.c:1027). Writing only
+        the summary changes the card list but leaves the running party alone, so
+        this writes the summary AND the authoritative data section, converting
+        the id to an index region-aware and unlocking the partner so the game
+        accepts it (game3.c:830 getPartyPartner returns ``unlocked - 3``).
+
+        The data-section write is skipped when that section is inside
+        FORBIDDEN_REGIONS (in-game slots 2 and 3 today), where only the summary
+        can be reached; see ``party_data_written``.
+        """
         base = self._slot_base(slot_index)
-        pmin = party_min_for_region(self.region_guess)
+        region = self.region_guess
+        pmin = party_min_for_region(region)
         if not 0 <= position < PARTY_SIZE:
             raise SaveError(f"party position must be 0..2, got {position}")
         if digimon_id == 0:
@@ -677,15 +803,63 @@ class DMW3Save:
         if not pmin <= digimon_id < pmin + 8:
             raise SaveError(
                 f"party slot accepts ONLY the 8 base rookies "
-                f"({self.region_guess} party-space ids "
+                f"({region} party-space ids "
                 f"{pmin}..{pmin + 7} = Kotemon..Patamon), got {digimon_id}. "
                 f"Evolved forms are battle-DV mechanics and are never stored "
                 f"in the party fields."
             )
         if not LEVEL_MIN <= level <= LEVEL_MAX:
             raise SaveError(f"level must be {LEVEL_MIN}..{LEVEL_MAX}, got {level}")
+        # (1) info summary -- the id the load screen and card list display.
         self._write(base + F_PARTY_IDS[position], struct.pack("<I", digimon_id))
         self._write(base + F_PARTY_LEVELS[position], struct.pack("<H", level))
+        # (2) data section -- the copy the game loads as the running party.
+        self._write_party_data(slot_index, position, digimon_id, level)
+
+    def _write_party_data(
+        self, slot_index: int, position: int, digimon_id: int, level: int
+    ) -> bool:
+        """Write the data-section party copy (indices). False = section refused.
+
+        ``GameState.party[position]`` gets the partner INDEX, the partner's
+        ``unlocked`` id is set so it is accepted, and its ``STAT_LEVEL`` is set
+        so the level applies in game. Returns False (no bytes written) when the
+        slot's data section is inside FORBIDDEN_REGIONS.
+        """
+        idx = party_index_for_id(digimon_id, self.region_guess)
+        ds = DATA_SECTION_OFFSETS[slot_index]
+        party_off = ds + GS_PARTY + 4 * position
+        partner_off = ds + DIGI_STAT_BASE_REL + idx * DIGI_STAT_STRIDE
+        targets = (
+            (party_off, 4),
+            (partner_off + D_UNLOCK, 4),
+            (partner_off + D_LEVEL, 2),
+        )
+        if any(self._is_forbidden(off, size) for off, size in targets):
+            return False
+        self._write(party_off, struct.pack("<i", idx))
+        self._write(partner_off + D_UNLOCK, struct.pack("<I", digimon_id))
+        self._write(partner_off + D_LEVEL, struct.pack("<H", level))
+        return True
+
+    def party_data_written(self, slot_index: int) -> bool:
+        """Whether this slot's data section is outside FORBIDDEN_REGIONS."""
+        self._slot_base(slot_index)                 # validate 0..2
+        ds = DATA_SECTION_OFFSETS[slot_index]
+        return not self._is_forbidden(ds + GS_PARTY, PARTY_SIZE * 4)
+
+    def party_indices(self, slot_index: int) -> list[int]:
+        """The AUTHORITATIVE party the game loads: partner indices, -1 = none.
+
+        Decomp stgmcard.c:1027 (whole GameSave copied into GAME on load) and
+        game_state.h:297 (``GameState.party[3]`` holds partner indices).
+        """
+        self._slot_base(slot_index)                 # validate 0..2
+        ds = DATA_SECTION_OFFSETS[slot_index]
+        return [
+            struct.unpack_from("<i", self._buf, ds + GS_PARTY + 4 * i)[0]
+            for i in range(PARTY_SIZE)
+        ]
 
     def set_partner(self, slot_index: int, digimon_id: int) -> None:
         base = self._slot_base(slot_index)
@@ -892,7 +1066,7 @@ class DMW3Save:
         Returns {'header': int, 'slots': [int x43], 'markers': [int x43]}.
         'header' is the primary digivolution's level (u16 @ +0x72). 'slots'
         are the 43 data-slot levels (u16 @ slot+18). 'markers' are the 43
-        per-form identity u16s at slot+16..17, each evolved form has a
+        per-form identity u16s at slot+16..17 — each evolved form has a
         constant card-independent marker (measured 2026-09-02 from the EUR
         maxed card); marker 0 = the game has not registered that form in the
         slot, so marker is the true 'earned' signal, not the level (probe 2
@@ -925,7 +1099,7 @@ class DMW3Save:
         their techs). The header (row-1) form's techs live in slot 0's content
         field. Slot 42's display record would occupy a 43rd slot; natural cards
         (USA ri5 Sakuyamon@42) show it spilling past the record end at the
-        phantom offset, 4 of the 12 bytes land in the next record's leading
+        phantom offset — 4 of the 12 bytes land in the next record's leading
         zero padding, which every record has (verified on EUR/USA).
         """
         if slot < D_DV_COUNT - 1:
@@ -968,7 +1142,7 @@ class DMW3Save:
         content field. Force-earned slots previously carried zero content, so
         rows showed no moves at any DV level. Rebuilding each slot's record
         from marker + DV level (profile learn thresholds) gives every row the
-        moves it would have at that level, the same bytes the game writes for
+        moves it would have at that level — the same bytes the game writes for
         a naturally played form.
         """
         base = self._digi_dv_base(roster_index)
@@ -1076,6 +1250,6 @@ class DMW3Save:
                 continue
             lines.append(
                 f"{label}: {s.party_text} | {s.money:,} Bits | "
-                f"{s.play_time_text} | partner {s.partner_name}"
+                f"{s.play_time_text} | area #{s.area_id} shop #{s.shop_id}"
             )
         return "\n".join(lines)

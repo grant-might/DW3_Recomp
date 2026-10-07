@@ -5,7 +5,7 @@ WHY THIS EXISTS
 The item inventory, card collection, and per-Digimon stat/XP blocks were not
 found by exhaustive static search (see docs/OPEN_LEADS.md): two unrelated
 player saves produce thousands of statistically indistinguishable candidates.
-The only reliable way to locate them is a CONTROLLED DIFF, two saves of the
+The only reliable way to locate them is a CONTROLLED DIFF — two saves of the
 SAME playthrough that differ by exactly ONE in-game action (e.g. "use one
 Potion", "give 1 item to a Digimon"). The bytes that change then are the field.
 
@@ -15,7 +15,7 @@ verified fields and reports everything else as an "unknown region" a human can
 inspect in-game.
 
 A test changes exactly the money field and asserts the diff reports ONLY the
-money region + checksum, proving the tool can cleanly isolate a one-action
+money region + checksum — proving the tool can cleanly isolate a one-action
 delta when the user supplies real before/after saves.
 """
 
@@ -29,8 +29,10 @@ try:
     from .save import (
         SLOT_OFFSETS,
         SLOT_SIZE,
-    F_PARTNER,
+    F_AREA,
+    F_SHOP,
     F_MONEY,
+    F_TIME_FRAMES,
     F_HOURS,
     F_MINUTES,
     F_SECONDS,
@@ -47,8 +49,10 @@ except ImportError:  # run as a standalone script: `python diff.py a.gme b.gme`
     from dmw3editor.core.save import (  # noqa: E402
         SLOT_OFFSETS,
         SLOT_SIZE,
-        F_PARTNER,
+        F_AREA,
+        F_SHOP,
         F_MONEY,
+        F_TIME_FRAMES,
         F_HOURS,
         F_MINUTES,
         F_SECONDS,
@@ -63,10 +67,13 @@ RECORD_SIZE = SLOT_SIZE * 3
 # Known, verified field ranges (payload-absolute), DERIVED from the save model
 # constants so this can never silently drift from the model. (start, end_excl, label)
 _KNOWN: List[Tuple[int, int, str]] = [
-    # The payload header is GLOBAL: one checksum/version/tag at 0x0200, before
-    # slot 0. There is NOT a per-slot header.
-    (PAYLOAD_BASE + 0x0000, PAYLOAD_BASE + 0x0002, "payload.checksum (u16)"),
-    (PAYLOAD_BASE + 0x0002, PAYLOAD_BASE + 0x0004, "payload.version (u16)"),
+    # The info-section header is GLOBAL: one checksum, the last-saved slot, the
+    # version and the "DMW3" tag at 0x0200, before slot 0. There is NOT a
+    # per-slot header. Every header field is a single byte except the tag.
+    (PAYLOAD_BASE + 0x0000, PAYLOAD_BASE + 0x0001, "payload.checksum (u8)"),
+    (PAYLOAD_BASE + 0x0001, PAYLOAD_BASE + 0x0002, "payload.last_saved (u8)"),
+    (PAYLOAD_BASE + 0x0002, PAYLOAD_BASE + 0x0003, "payload.version (u8)"),
+    (PAYLOAD_BASE + 0x0003, PAYLOAD_BASE + 0x0004, "payload.unk3 (u8)"),
     (PAYLOAD_BASE + 0x0004, PAYLOAD_BASE + 0x000C, "payload.tag 'DMW3'"),
 ]
 
@@ -76,8 +83,10 @@ def _add(base: int, rel: int, size: int, label: str) -> None:
 
 
 for _i, _slot in enumerate(SLOT_OFFSETS):
-    _add(_slot, F_PARTNER, 4, f"slot{_i + 1}.partner (u32)")
+    _add(_slot, F_AREA, 4, f"slot{_i + 1}.area (s32)")
+    _add(_slot, F_SHOP, 4, f"slot{_i + 1}.shop (s32)")
     _add(_slot, F_MONEY, 4, f"slot{_i + 1}.money (u32)")
+    _add(_slot, F_TIME_FRAMES, 4, f"slot{_i + 1}.play_frames (s32)")
     _add(_slot, F_HOURS, 2, f"slot{_i + 1}.play_hours (u16)")
     _add(_slot, F_MINUTES, 2, f"slot{_i + 1}.play_minutes (u16)")
     _add(_slot, F_SECONDS, 2, f"slot{_i + 1}.play_seconds (u16)")

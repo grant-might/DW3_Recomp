@@ -1,4 +1,4 @@
-"""Theme picker page, switch the whole app's palette live.
+"""Theme picker page — switch the whole app's palette live.
 
 Each theme is a selectable card: name, a one-line description, and three
 swatches (main background, surface card, accent). Clicking a card applies the
@@ -108,7 +108,7 @@ class ThemesTab(QWidget):
         root.setSpacing(12)
 
         note = QLabel(
-            "Pick a color theme, it applies across the whole editor "
+            "Pick a color theme — it applies across the whole editor "
             "immediately and is remembered for next launch."
         )
         note.setWordWrap(True)

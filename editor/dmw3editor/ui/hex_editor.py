@@ -96,7 +96,7 @@ class HexEditorPage(QWidget):
         nxt.clicked.connect(lambda: self._set_page(self._page + 1))
         nav.addWidget(nxt)
         nav.addStretch(1)
-        self.unlock_hint = QLabel("Developer mode is OFF, read-only.")
+        self.unlock_hint = QLabel("Developer mode is OFF — read-only.")
         self.unlock_hint.setProperty("role", "hint")
         nav.addWidget(self.unlock_hint)
         root.addLayout(nav)
@@ -119,7 +119,7 @@ class HexEditorPage(QWidget):
 
         hint = QLabel(
             "Read-only regions (title frame, unverified regions) are greyed "
-            "out. Editing a byte stages it in memory, Save the card to write "
+            "out. Editing a byte stages it in memory — Save the card to write "
             "it out and recompute both checksums. Typing a value also moves "
             "the cursor to the next byte."
         )
@@ -144,9 +144,9 @@ class HexEditorPage(QWidget):
     def _refresh_lock(self) -> None:
         on = self._dev_mode
         self.unlock_hint.setText(
-            "Developer mode ON, editing enabled."
+            "Developer mode ON — editing enabled."
             if on
-            else "Developer mode is OFF, read-only."
+            else "Developer mode is OFF — read-only."
         )
         self.lock_note.setText(
             ""
@@ -199,7 +199,7 @@ class HexEditorPage(QWidget):
                     cell.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable | Qt.ItemIsSelectable)
                 self.table.setItem(row, 1 + col, cell)
         self.page_lbl.setText(
-            f"Page {self._page + 1} / {pc}  ·  {base:04X}-"
+            f"Page {self._page + 1} / {pc}  ·  {base:04X}–"
             f"{min(base + BYTES_PER_PAGE, PAYLOAD_SIZE) - 1:04X}"
         )
         self._busy = False

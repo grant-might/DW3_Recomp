@@ -1,4 +1,4 @@
-"""Field Locator tab, the honest path to discovering UNVERIFIED save fields.
+"""Field Locator tab — the honest path to discovering UNVERIFIED save fields.
 
 Some fields (item inventory, card collection, per-Digimon stat/XP blocks) were
 NOT found by static analysis of two unrelated player saves: with two different
@@ -11,7 +11,7 @@ The only reliable method is a CONTROLLED DIFF:
   3. Save to memory card B.
   4. Load both here. The bytes that differ ARE the field for that action.
 
-This tab never guesses and never writes, it only reports. Confirm the field in
+This tab never guesses and never writes — it only reports. Confirm the field in
 game, then it can be added to the verified model.
 """
 
@@ -53,8 +53,8 @@ class FieldLocator(QWidget):
         pl = QHBoxLayout(pick)
         self.before_btn = QPushButton("1. Unchanged save…")
         self.after_btn = QPushButton("2. Changed save…")
-        self.before_lbl = QLabel("-")
-        self.after_lbl = QLabel("-")
+        self.before_lbl = QLabel("—")
+        self.after_lbl = QLabel("—")
         self.before_lbl.setObjectName("muted")
         self.after_lbl.setObjectName("muted")
         self.diff_btn = QPushButton("Compute diff")

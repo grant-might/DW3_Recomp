@@ -14,13 +14,18 @@ from typing import Iterator
 
 PAYLOAD_SIZE = 32768
 
-# CONFIRMED (docs/CORRECTION_V3.md): the payload holds ONE logical save record
-# at 0x0200, plus up to two REDUNDANT COPIES / earlier revisions at 0x2900 and
-# 0x5000 that exist only on some cards (present on USA, absent on EUR).
-# The ASCII "DMW3" tag occurs exactly ONCE, at 0x0204, in the primary record.
+# SUPERSEDED (2026-10-06). This module encodes the withdrawn "one record at
+# 0x0200 plus redundant copies at 0x2900/0x5000" hypothesis. The matching
+# decompilation disproves it: the payload is a MemCardFile info section at
+# 0x0200 and THREE independent GameSave data sections at 0x0300 / 0x2A00 /
+# 0x5100, each with its own checksum + version header (see
+# dmw3editor/core/save.py, dmw3editor/core/checksum.py and
+# docs/MEMCARD_FORMAT.md). Nothing in the application imports this module; it is
+# kept only for its legacy tests.
+# The ASCII "DMW3" tag still occurs exactly ONCE, at 0x0204, in the info header.
 RECORD_BASE = 0x0200
 RECORD_SIZE = 0x2700
-BACKUP_BASES = (0x2900, 0x5000)
+BACKUP_BASES = (0x2900, 0x5000)  # legacy framing; true sections: 0x0300, 0x2A00, 0x5100
 ALL_BASES = (RECORD_BASE,) + BACKUP_BASES
 
 RECORD_TAG_OFFSET = 0x04
@@ -136,7 +141,7 @@ class DMW3Save:
 
     @property
     def primary(self) -> SaveRecord:
-        """The live save record, this is what the editor edits."""
+        """The live save record — this is what the editor edits."""
         return SaveRecord(
             0, RECORD_BASE,
             self.payload[RECORD_BASE:RECORD_BASE + RECORD_SIZE],

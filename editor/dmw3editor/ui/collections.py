@@ -1,4 +1,4 @@
-"""Collections tabs, items, key items, and the card collection.
+"""Collections tabs — items, key items, and the card collection.
 
 Items: the save stores a byte-per-item quantity array at payload 0x03A7.
 CONFIRMED (2026-09-02): all 352 slots are named from the decomp ItemId table
@@ -303,10 +303,10 @@ class ItemCategoryPage(QWidget):
 
 
 class ItemsTab(ItemCategoryPage):
-    """Consumables / field items, save slots 0..47 (Power Charge…TNT Ball).
+    """Consumables / field items — save slots 0..47 (Power Charge…TNT Ball).
 
     Slot 48 is the Booster 01a pack counter and is intentionally NOT shown
-    here, it lives on the Card Packs page (pack #0).
+    here — it lives on the Card Packs page (pack #0).
     """
 
     TITLE = "Items"
@@ -315,7 +315,7 @@ class ItemsTab(ItemCategoryPage):
 
 
 class WeaponsTab(ItemCategoryPage):
-    """Weapons, save slots 49..171 (Short Sword…Glorious Horn)."""
+    """Weapons — save slots 49..171 (Short Sword…Glorious Horn)."""
 
     TITLE = "Weapons"
     START = 49
@@ -323,7 +323,7 @@ class WeaponsTab(ItemCategoryPage):
 
 
 class ArmorTab(ItemCategoryPage):
-    """Armor, save slots 172..248 (Bandanna…Apocalypse)."""
+    """Armor — save slots 172..248 (Bandanna…Apocalypse)."""
 
     TITLE = "Armor"
     START = 172
@@ -331,7 +331,7 @@ class ArmorTab(ItemCategoryPage):
 
 
 class AccessoriesTab(ItemCategoryPage):
-    """Accessories, save slots 249..316 (Power Gem…Dark Power S)."""
+    """Accessories — save slots 249..316 (Power Gem…Dark Power S)."""
 
     TITLE = "Accessories"
     START = 249
@@ -349,7 +349,7 @@ def make_inventory_pages() -> list[tuple[str, ItemCategoryPage]]:
 
 
 class CardsTab(QWidget):
-    """Card collection editor, 314 cards, 0-9 each, at payload 0x06A3."""
+    """Card collection editor — 314 cards, 0-9 each, at payload 0x06A3."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -496,7 +496,7 @@ class CardsTab(QWidget):
 
 
 class PacksTab(QWidget):
-    """Card pack quantities editor, all 35 booster packs (0-99 each).
+    """Card pack quantities editor — all 35 booster packs (0-99 each).
 
     Packs are stored in the main item-qty array: Booster 01a at slot 48,
     Booster 02a-15a at 318-331, Booster 1b-15b at 332-346, R-Booster 01-05 at
@@ -661,7 +661,7 @@ class PacksTab(QWidget):
 
 
 class DigimonTab(QWidget):
-    """Per-Digimon stat editor, 8 roster partners (Kotemon..Patamon).
+    """Per-Digimon stat editor — 8 roster partners (Kotemon..Patamon).
 
     Records at payload 0x0A48 + idx*0x3DC. CONFIRMED 2026-09-02 against the
     player's live card: HP/MP/level/EXP/stat edits all displayed in-game.
@@ -770,7 +770,7 @@ class DigimonTab(QWidget):
         for si, spin in self._spinboxes.items():
             spin.setValue(st["stats"][si])
         self.status_label.setText(
-            f"{self.roster_combo.currentText()}, HP {st['hp']}/{st['hp_max']}, "
+            f"{self.roster_combo.currentText()} — HP {st['hp']}/{st['hp_max']}, "
             f"MP {st['mp']}/{st['mp_max']}, Lv {st['level']}"
         )
         self._busy = False
@@ -996,7 +996,7 @@ class KeyItemsTab(QWidget):
             win._mark_dirty()
 # Canonical order of the 44 evolved forms (decomp DigimonId 9..52). Every one
 # of the 8 rookies can reach every one of these (STFGTREP EVOS tables list the
-# same 44 destinations for each rookie: verified from the decomp).
+# same 44 destinations for each rookie — verified from the decomp).
 EVOLVED_FORMS_44 = [
     "Dinohumon", "Hookmon", "Grizzmon", "Greymon", "ExVeemon", "Growlmon",
     "Kyubimon", "Angemon", "Devimon", "Stingmon", "Angewomon", "Kyukimon",
@@ -1022,7 +1022,7 @@ class DigivolutionTab(QWidget):
     Every digimon can reach all 44 evolved forms (decomp EVOS tables). Which
     forms it has earned is visible in the slot's identity marker u16 at
     slot+16..17 (each form has a constant card-independent marker; marker 0 =
-    not earned, probe 2 proved a level alone does NOT earn/display a form).
+    not earned — probe 2 proved a level alone does NOT earn/display a form).
     The Earned checkbox mirrors that marker.
     """
 
@@ -1035,7 +1035,7 @@ class DigivolutionTab(QWidget):
         root.setContentsMargins(20, 16, 20, 16)
         root.setSpacing(12)
 
-        # 8 sprite tiles (one per rookie): keeps the GUI's roster theme.
+        # 8 sprite tiles (one per rookie) — keeps the GUI's roster theme.
         from dmw3editor.ui import assets
 
         self._digi_buttons: list[QToolButton] = []
@@ -1153,7 +1153,7 @@ class DigivolutionTab(QWidget):
             check.setChecked(is_earned)
             # Earned rows are locked; unearned rows can be ticked to force-earn
             # (writes the form's identity marker into the next empty slot on
-            # Apply: CONFIRMED in-game 2026-09-02: Seraphimon 42 / Rosemon 7
+            # Apply — CONFIRMED in-game 2026-09-02: Seraphimon 42 / Rosemon 7
             # appeared on Agumon's DV screen after marker+level were written).
             if is_earned:
                 check.setEnabled(False)
@@ -1201,14 +1201,14 @@ class DigivolutionTab(QWidget):
         if checked:
             spin.setValue(1)
         self.status_label.setText(
-            "Earn toggled, set the DV level, then Apply to force-earn" if checked
-            else "Earn unticked, Apply will leave this form unearned"
+            "Earn toggled — set the DV level, then Apply to force-earn" if checked
+            else "Earn unticked — Apply will leave this form unearned"
         )
 
     def _on_edit(self, _v: int) -> None:
         if self._busy:
             return
-        self.status_label.setText("DV level changed, Apply to write to the card")
+        self.status_label.setText("DV level changed — Apply to write to the card")
 
     def _apply_all(self) -> None:
         if self._save is None:

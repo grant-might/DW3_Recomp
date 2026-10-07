@@ -1,4 +1,4 @@
-"""DMW3 Save Editor, main window.
+"""DMW3 Save Editor — main window.
 
 ShadCN-style single-window app: a left sidebar groups the editor into pages
 (Save slots, Inventory subclasses, Card Packs, Digimon, Cards, Important
@@ -132,7 +132,7 @@ class SlotEditor(QWidget):
 
         self.empty_note = QLabel(
             "This slot is empty. Editing it would create a save the game may "
-            "not accept, load a card whose slot is in use instead."
+            "not accept — load a card whose slot is in use instead."
         )
         self.empty_note.setWordWrap(True)
         self.empty_note.setProperty("role", "warning")
@@ -141,7 +141,7 @@ class SlotEditor(QWidget):
 
         # --- party -------------------------------------------------------
         # Untitled card: the avatar/digimon/level rows are self-explanatory
-        # (the old "Party: Digimon and levels" group title was removed
+        # (the old "Party — Digimon and levels" group title was removed
         # 2026-09-03 per user request).
         party_box = QFrame()
         party_box.setProperty("role", "card")
@@ -284,6 +284,9 @@ class SlotEditor(QWidget):
                 idx = self.party_ids[i].findData(did)
                 self.party_ids[i].setCurrentIndex(max(idx, 0))
                 self.party_levels[i].setValue(max(1, min(level, LEVEL_MAX)))
+            # NOTE: slot.partner_id is the legacy alias for the AREA index
+            # (decomp stgmcard.c:167); a MemCardSave has no single Digimon
+            # "partner" field. See docs/MEMCARD_FORMAT.md §4.
             pidx = self.partner.findData(slot.partner_id)
             self.partner.setCurrentIndex(max(pidx, 0))
             self.money.setValue(min(slot.money, MONEY_MAX))
@@ -308,6 +311,11 @@ class SlotEditor(QWidget):
         if self._loading or self._save is None:
             return
         try:
+            # set_party_member writes BOTH copies: the info-summary partners[3]
+            # (ids, what the load screen shows) and the data-section
+            # GameState.party[3] (indices, what the game loads --
+            # stgmcard.c:1027). The data-section copy is skipped for in-game
+            # slots 2/3, whose sections are still inside FORBIDDEN_REGIONS.
             for i in range(PARTY_SIZE):
                 self._save.set_party_member(
                     self.index,
@@ -315,6 +323,9 @@ class SlotEditor(QWidget):
                     self.party_ids[i].currentData(),
                     self.party_levels[i].value(),
                 )
+            # NOTE: writes a Digimon id into the AREA field at slot+0x18 (legacy
+            # mislabel, kept for API compatibility). The authoritative party
+            # ids are slot.party; see docs/MEMCARD_FORMAT.md §4/§8.
             self._save.set_partner(self.index, self.partner.currentData())
             self._save.set_money(self.index, self.money.value())
             self._save.set_play_time(
@@ -401,7 +412,7 @@ class MainWindow(QMainWindow):
         self.dev_toggle = QCheckBox("Developer mode")
         self.dev_toggle.setToolTip(
             "Enables the hex editor and other low-level tools. For advanced "
-            "users only, the editor still guards unverified regions."
+            "users only — the editor still guards unverified regions."
         )
         self.dev_toggle.toggled.connect(self._on_dev_toggle)
         hl.addWidget(self.dev_toggle)
@@ -594,7 +605,7 @@ class MainWindow(QMainWindow):
             return
         mark = " •" if self._dirty else ""
         name = self._path.name if self._path else "card"
-        self.setWindowTitle(f"{APP_NAME}, {name}{mark}")
+        self.setWindowTitle(f"{APP_NAME} — {name}{mark}")
         for i, ed in enumerate(self.slot_editors):
             slot = self._save.slot(i)
             label = f"Slot {i + 1}"
