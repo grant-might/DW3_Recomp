@@ -56,8 +56,9 @@ pixels different between what the bar draws and the original icon**, scaled the 
   time, and that fallback also skips icon columns, so an icon cannot be flattened that way either.
 
 Regenerate them with `.\.venv\Scripts\python.exe make_placeholders.py --force`. Without `--force`
-it only fills gaps and never clobbers your art. Anything you supplied is kept alongside as
-`<slot>.placeholder.bak`, so the generated version is still there to compare against.
+it only fills gaps and never clobbers your art. Anything you supplied is kept aside as
+`<slot>.placeholder.bak` in your local copy, so the generated version is still there to compare
+against. Those backups are gitignored, so they are never committed or shipped.
 
 ## Still to make
 
@@ -76,8 +77,9 @@ beelzemon-purple, `#17371f` on gargomon-green.
 Drop a `background.png` in and it is used instead, drawn full-bleed at 28% opacity and
 centre-cropped. If you ever do make one, author it to 1280 × 800 (2×: 2560 × 1600) and keep the
 middle **1024 × 640** clear of anything that matters, since the rest is what gets cropped away. The
-generated placeholder that used to sit here is kept as `background.png.placeholder.bak`.
-
+middle **1024 x 640** clear of anything that matters, since the rest is what gets cropped away. The
+generated placeholder is kept locally as `background.png.placeholder.bak` for comparison; like the
+other backups it is gitignored and does not ship.
 ### `header_bar.png`: removed at your request, and the header is blank without it
 
 The header is now a **flat panel in the theme's panel tone** with the logo and the two buttons on it
