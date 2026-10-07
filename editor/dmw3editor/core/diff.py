@@ -30,7 +30,7 @@ try:
         SLOT_OFFSETS,
         SLOT_SIZE,
     F_AREA,
-    F_SHOP,
+    F_PLACE,
     F_MONEY,
     F_TIME_FRAMES,
     F_HOURS,
@@ -50,7 +50,7 @@ except ImportError:  # run as a standalone script: `python diff.py a.gme b.gme`
         SLOT_OFFSETS,
         SLOT_SIZE,
         F_AREA,
-        F_SHOP,
+        F_PLACE,
         F_MONEY,
         F_TIME_FRAMES,
         F_HOURS,
@@ -84,7 +84,7 @@ def _add(base: int, rel: int, size: int, label: str) -> None:
 
 for _i, _slot in enumerate(SLOT_OFFSETS):
     _add(_slot, F_AREA, 4, f"slot{_i + 1}.area (s32)")
-    _add(_slot, F_SHOP, 4, f"slot{_i + 1}.shop (s32)")
+    _add(_slot, F_PLACE, 4, f"slot{_i + 1}.place (s32)")
     _add(_slot, F_MONEY, 4, f"slot{_i + 1}.money (u32)")
     _add(_slot, F_TIME_FRAMES, 4, f"slot{_i + 1}.play_frames (s32)")
     _add(_slot, F_HOURS, 2, f"slot{_i + 1}.play_hours (u16)")

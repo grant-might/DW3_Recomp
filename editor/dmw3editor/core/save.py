@@ -5,6 +5,12 @@ against the ddw3 decompilation. See docs/SAVE_FORMAT.md for the evidence.
 
 Design rule: this module refuses to guess. Fields we have not proven are simply
 absent rather than exposed with invented meanings.
+
+The game's OWN names for the bytes this module reads (flags, progress, modes,
+techniques, battle codes, memory-card constants) live in
+:mod:`dmw3editor.core.game_state`, copied from the upstream decompilation
+(ReGame-Labs/dw3_decomp). That module is documentation-only; this one is the
+executable model.
 """
 
 from __future__ import annotations
@@ -54,13 +60,24 @@ CARD_MAX = 9
 
 # Item quantity array: byte-per-item at payload 0x03A7.
 # CONFIRMED 2026-09-02 via controlled diff + live item-screen anchors.
-# Layout (save slot = decomp ItemId enum idx - 35):
-#   items       slots 0-48   (49: Power Charge -> Booster 01a)   [decomp 35-83]
-#   weapons     slots 49-171 (123: Short Sword -> Glorious Horn) [decomp 84-206]
-#   armor       slots 172-248 (77)                               [decomp 207-283]
-#   accessories slots 249-316 (68)                               [decomp 284-351]
+#
+# WHERE THE BASE COMES FROM (upstream reconciliation, 2026-10-07). GAME.items
+# (game_state.h:383) sits at payload 0x037C, and 0x03A7 = 0x037C + 0x2B: the
+# editor's item array is indexed into the SAME array GAME.items is, offset by
+# 0x2B (43) so that slot 0 is item id 0x2B — the FIRST USABLE ITEM. The decomp's
+# item-id lists (src/main/game/items.c:338-349) put KEY_ITEM_IDS at 1..0x2A and
+# start USABLE_ITEM_IDS at 0x2B, so 0x2B is exactly "first usable item"
+# ("Power Charge"). GAME.items[] is indexed by item id (1-based ITEMS[id-1]),
+# as the key-item block below independently shows (items[4..0x2A] == key-item
+# ids 4..42). The older note here ("ItemId enum idx - 35" / "[decomp 35-83]")
+# undercounts by 8; the real delta is 0x2B.
+# Layout (save slot + 0x2B == decomp item id):
+#   items       slots 0-48   (49: Power Charge -> Booster 01a)   [decomp 0x2B-0x5B]
+#   weapons     slots 49-171 (123: Short Sword -> Glorious Horn) [decomp 0x5C-0xD6]
+#   armor       slots 172-248 (77)                               [decomp 0xD7-0x123]
+#   accessories slots 249-316 (68)                               [decomp 0x124-0x167]
 #   card packs  slots 317-351 (35: Monmon DDNA, Booster 02a-15b,
-#               R-Booster 01-05)                                 [decomp 352-386]
+#               R-Booster 01-05)                                 [decomp 0x168-0x18A]
 # NOTE: the earlier "important items at 317-351" label was WRONG (withdrawn
 # 2026-09-02). Those slots are booster card packs (player-verified via the
 # item tab read-back). Key items live in their own flag arrays, below.
@@ -109,6 +126,19 @@ PACK_COUNT = 35
 # Records at payload 0x0A48, stride 0x3DC, roster_index 0-7 =
 # Kotemon, Kumamon, Monmon, Agumon, Veemon, Guilmon, Renamon, Patamon
 # (decomp DigimonId 1-8, confirmed by unique-HP read-back).
+#
+# WHY THE BASE IS 0x14 BEFORE GAME.partners (upstream reconciliation,
+# 2026-10-07). GAME.partners (game_state.h:389) sits at payload 0x0A5C and each
+# Partner is 0x3DC bytes — exactly DIGI_STAT_STRIDE. The editor anchors its
+# record 0x14 bytes before Partner[i], but every field offset is calibrated to
+# land on the decomp's fields, so the ABSOLUTE addresses are identical:
+#   D_EXP   0x38 -> Partner+0x24 == PartnerStats.exp     (game_state.h:238)
+#   D_LEVEL 0x3C -> Partner+0x28 == PartnerStats.stats[0] (STAT_LEVEL)
+#   D_HP    0x40 -> Partner+0x2C == stats[2] (STAT_HP);  D_MP 0x44 -> stats[4]
+#   D_STATS 0x48 -> Partner+0x34 == stats[6] (the 6 battle stats + 7 resistances)
+#   D_UNLOCK 0x18 -> Partner+0x04 == Partner.unlocked
+# The 0x14 is only the anchor's padding; no field moves. See
+# dmw3editor/core/game_state.py for the full named map.
 DIGI_STAT_BASE = 0x0A48
 DIGI_STAT_STRIDE = 0x3DC
 DIGI_STAT_COUNT = 8
@@ -287,8 +317,12 @@ SLOT_SIZE = 0x44
 # Field offsets relative to a slot's start (decomp: MemCardSave, 0x44 bytes).
 F_NAME = 0x00            # u8[0x18]: C string; [0] == 0 marks a free slot
 F_NAME_SIZE = 0x18
-F_AREA = 0x18            # s32: index into the area-name text (STAREA, 0xAA)
-F_SHOP = 0x1C            # s32: index into the shop-name text (SHPNAM, 0x95)
+F_AREA = 0x18            # s32: MemCardSave.area — index into TEXT_AREA_NAMES
+F_PLACE = 0x1C           # s32: MemCardSave.place — index into TEXT_SHOP_NAMES
+# Upstream (stgmcard.h:82-83) names +0x18 ``area`` and +0x1C ``place``; both are
+# drawn as text by the save list (TEXT_AREA_NAMES[TEXT_SHOP_NAMES]). This offset
+# was long called F_SHOP / "shop" here — the game calls it PLACE (the save point
+# shown, named after the shop list). ``F_SHOP`` is kept as the deprecated alias.
 F_MONEY = 0x20           # s32: Bits
 F_TIME_FRAMES = 0x24     # s32: play-time frames (PlayTime.frames)
 F_HOURS = 0x28           # s16
@@ -301,10 +335,12 @@ F_UNK42 = 0x42           # s16: unidentified
 
 # DEPRECATED aliases kept for the shipped API and its tests. 0x18 was long read
 # as a Digimon "partner"; the decomp (stgmcard.c:167) proves it is the save's
-# AREA index. The real party ids are F_PARTY_IDS — there is no single partner
-# field in a MemCardSave.
+# AREA index. 0x1C was long read as "shop"; upstream (stgmcard.h:83) names it
+# PLACE. The real party ids are F_PARTY_IDS — there is no single partner field
+# in a MemCardSave.
 F_PARTNER = F_AREA
-F_UNKNOWN_1C = F_SHOP
+F_SHOP = F_PLACE
+F_UNKNOWN_1C = F_PLACE
 
 MONEY_MAX = 9_999_999
 LEVEL_MAX = 99
@@ -587,13 +623,20 @@ class Slot:
 
     @property
     def area_id(self) -> int:
-        """The save's AREA index (decomp stgmcard.c:167, the name text 0xAA)."""
+        """The save's AREA index (decomp stgmcard.c:167; MemCardSave.area, +0x18,
+        a string of TEXT_AREA_NAMES)."""
         return self._u32(F_AREA)
 
     @property
+    def place_id(self) -> int:
+        """The save's PLACE index (decomp stgmcard.c:168; MemCardSave.place,
+        +0x1C, a string of TEXT_SHOP_NAMES)."""
+        return self._u32(F_PLACE)
+
+    @property
     def shop_id(self) -> int:
-        """The save's SHOP index (decomp stgmcard.c:168, the name text 0x95)."""
-        return self._u32(F_SHOP)
+        """DEPRECATED alias for :attr:`place_id` — upstream names +0x1C ``place``."""
+        return self.place_id
 
     @property
     def partner_id(self) -> int:
@@ -1250,6 +1293,6 @@ class DMW3Save:
                 continue
             lines.append(
                 f"{label}: {s.party_text} | {s.money:,} Bits | "
-                f"{s.play_time_text} | area #{s.area_id} shop #{s.shop_id}"
+                f"{s.play_time_text} | area #{s.area_id} place #{s.place_id}"
             )
         return "\n".join(lines)

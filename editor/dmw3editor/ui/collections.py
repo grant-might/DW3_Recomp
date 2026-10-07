@@ -1,9 +1,10 @@
 """Collections tabs — items, key items, and the card collection.
 
 Items: the save stores a byte-per-item quantity array at payload 0x03A7.
-CONFIRMED (2026-09-02): all 352 slots are named from the decomp ItemId table
-(save slot = decomp enum idx - 35). Subclass boundaries were confirmed by live
-block tests: items 0-48, weapons 49-171, armor 172-248, accessories 249-316,
+CONFIRMED (2026-09-02): all 352 slots are named from the decomp item-id table
+(save slot + 0x2B = decomp item id; slot 0 = item 0x2B = Power Charge, the
+first usable item). Slots 0-48 are additionally confirmed against the item
+screen; the subclass boundaries were confirmed by live block tests: items 0-48,
 card packs 317-351.
 
 Key Items: 48 owned-flags in the game's Important-screen order. Block A
@@ -71,8 +72,8 @@ from dmw3editor.core.save import (
 def _item_name_for(index: int) -> tuple[str, bool]:
     """Return (display_name, confirmed).
 
-    All 352 slots are now named from the authoritative decomp ItemId table
-    (save slot = decomp enum idx - 35). Indices 0-48 are additionally confirmed
+    All 352 slots are now named from the authoritative decomp item-id table
+    (save slot + 0x2B = decomp item id). Indices 0-48 are additionally confirmed
     against the player's in-game item screen; the subclass boundaries for
     weapons/armor/accessories/important were confirmed by live block tests.
     """
