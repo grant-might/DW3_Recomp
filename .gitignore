@@ -71,3 +71,7 @@ Thumbs.db
 # The README embeds its screenshots from GitHub's attachment store, so these PNGs are
 # kept out of version control. They stay on disk so the owner can re-upload them.
 docs/images/
+
+# placeholder artwork kept aside during re-skinning; not shipped
+*.bak
+*.bak-*
