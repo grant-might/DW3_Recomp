@@ -16,7 +16,7 @@ from .mods_tab import ModsTab
 from .play_tab import PlayTab
 from .settings_tab import SettingsTab
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 # The logo is drawn at the header bar's own height (its art is 727x320, a wordmark, not an icon).
 LOGO_ART_H = 64
 
