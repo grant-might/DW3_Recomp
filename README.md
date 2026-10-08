@@ -91,13 +91,40 @@ Then use the **Play** tab.
 Discs are read from `Discs/` beside the launcher, or from wherever you picked yours; the path is
 recorded in that build's own `game.toml`. A recompile is only needed once per region.
 
+## Mods (the Mods tab)
+
+A mod package is a ZIP whose archive root holds `manifest.toml`. The Mods tab loads it, shows what
+it is and what it targets, and installs it into the selected build.
+
+1. **Load mod package…** and pick the ZIP. The card shows the id, version, name, description, the
+   target discs and the features.
+2. **Install** unpacks it to `mods/packages/<id>/<version>/` and writes `mods/state.toml`. A fresh
+   install switches the mod on; **Enable** / **Disable** change that at any time, and **Reinstall**
+   replaces an installed version.
+3. A package that ships code (`plugin/<name>.c`) also has to be compiled into that build, so press
+   **Rebuild (USA)** or **Rebuild (EUR)** for the region you play. The two Rebuild buttons are
+   disabled until a mod package is loaded.
+
+**What a rebuild costs, stated before you press it.** If that region's build already exists the
+rebuild is incremental - one source file compiled and the executable relinked, seconds. If the build
+does not exist yet the rebuild refuses and tells you to build the disc on the Play tab first (10 to
+20 minutes, about 3 GB). The tab also says which regions are ready, and every failure (a missing
+toolchain, a compile error, the game still running) is reported in the tab and its log with what to
+do about it.
+
+That step exists because installing the ZIP is data only: the runtime activates plugin code whose
+constructor is already inside the executable, so the package's manifest can only reference a plugin,
+not load one. The rebuild is the launcher running its own builder with the mod's source added, which
+is why it needs the toolchain the Play tab already required. Rules and the by-hand route are in
+`docs/MODS.md`.
+
 ## Tabs
 
 | Tab | What it does |
 |---|---|
 | **Play** | Builds the game from your own disc (above), then runs the two regional builds. |
 | **Memory Card** | Opens memory cards in the embedded save editor. It finds each build's `card1.mcd` / `card2.mcd` and any cards in `cards/`, or you can open one directly. |
-| **Mods** | Lists a build's mod folders and enables/disables them by moving them. Rules in `docs/MODS.md`. |
+| **Mods** | Loads a mod package (a ZIP with `manifest.toml` at its root), installs it and switches its features on or off, and relinks a package's code into a regional build with **Rebuild (USA)** / **Rebuild (EUR)** (both disabled until a mod is loaded). Folder mods are still enabled/disabled by moving them. Rules in `docs/MODS.md`. |
 | **Decompilation** | A read-only browser over the 100% complete decompilation tree. |
 | **Settings** | Reads and writes a build's own `settings.toml` through a comment-preserving writer. |
 
@@ -152,6 +179,13 @@ title-bar X, or Alt+F4) is the way out.
   are hand-editable and carry comments; a write touches one key and keeps everything else.
 - **The editor is embedded, not reimplemented.** The Memory Card tab imports the save editor's own
   window, so an editor update is picked up automatically.
+- **A mod relink reuses the Play tab's own builder.** The Mods tab's Rebuild buttons stage the
+  package's source into the build's `mods_src/` and call the same `compile_project` the disc build
+  uses, so one fix reaches both. The mod's region define is set with
+  `set_source_files_properties()` on the mod's own sources, never with
+  `target_compile_definitions()` on the target: a target-wide define changes every object's compile
+  command line, which turns a seconds-long relink into a full recompile (measured: 35s against
+  6.6s, and 157 recompiled objects against 2).
 
 ## Dev
 

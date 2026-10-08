@@ -664,6 +664,209 @@ def assemble(region: str, project_dir: pathlib.Path, cmake_build: pathlib.Path, 
     return assemble_into(spec.folder, spec.exe_name, project_dir, cmake_build, log)
 
 
+# ---------------------------------------------------------------- relinking a mod into a build
+
+# A mod package that ships native code cannot be switched on by copying a file: the runtime only
+# activates plugin code whose constructor is compiled into the executable itself. So "installing" a
+# plugin mod is install PLUS a relink of that build. The relink is the cheap half of a build - the
+# project is already generated and compiled, so one source file is compiled and the executable is
+# relinked (seconds). The LAYOUT this expects is the one the Play tab's own build produces, so the
+# two paths cannot drift: `work_root()/<folder>/project` (the generated project) with its own
+# `build/` tree inside it.
+
+MODS_SRC_DIRNAME = "mods_src"
+_MOD_BLOCK_BEGIN = "# --- DW3 launcher: mod packages (added by the Mods tab) ---"
+_MOD_BLOCK_END = "# --- end DW3 launcher mod block ---"
+
+REGION_DEFINES = {builds.REGION_EU: "DW3_GAME_REGION_EU",
+                  builds.REGION_US: "DW3_GAME_REGION_US"}
+
+
+def region_define(region: str) -> str:
+    """The compile define a mod needs so it picks the region table for THIS build.
+
+    A mod that touches game memory carries one address table per region, and a wrong table does not
+    misbehave quietly - the plugin refuses at run time - but it must be the right one, so this is
+    set explicitly per build rather than left to a runtime guess.
+    """
+    try:
+        return REGION_DEFINES[region]
+    except KeyError:
+        raise KeyError(f"no mod region define for {region!r}") from None
+
+
+def project_dir(region: str) -> pathlib.Path:
+    """The generated project the Play tab made for this region (a relink recompiles it)."""
+    return work_root() / builds.spec(region).folder / "project"
+
+
+def cmake_build_dir(region: str) -> pathlib.Path:
+    return project_dir(region) / "build"
+
+
+def mods_src_dir(region: str) -> pathlib.Path:
+    return project_dir(region) / MODS_SRC_DIRNAME
+
+
+def has_project(region: str) -> bool:
+    return (project_dir(region) / "CMakeLists.txt").is_file()
+
+
+def stage_mod_sources(region: str, sources, log) -> list[pathlib.Path]:
+    """Copy a package's plugin sources into the build's `mods_src/`, returning what landed."""
+    d = mods_src_dir(region)
+    d.mkdir(parents=True, exist_ok=True)
+    staged: list[pathlib.Path] = []
+    for s in sources:
+        src = pathlib.Path(s)
+        if not src.is_file() or src.suffix.lower() not in (".c", ".cpp", ".cc"):
+            continue
+        dst = d / src.name
+        shutil.copy2(src, dst)
+        staged.append(dst)
+        log(f"   staged {src.name} into {d.name}/")
+    return staged
+
+
+def _mod_block(region: str) -> str:
+    """The `CMakeLists.txt` block that compiles `mods_src/` into the runtime target."""
+    define = region_define(region)
+    body = "\n".join([
+        _MOD_BLOCK_BEGIN,
+        "# A mod package's plugin ships as source and has to be compiled into this executable:",
+        "# the runtime only activates plugin code registered by a constructor that is already in",
+        "# the binary. This block is re-added automatically after a rebuild from disc.",
+        "file(GLOB MOD_SRC CONFIGURE_DEPENDS",
+        '  "${CMAKE_CURRENT_SOURCE_DIR}/mods_src/*.c"',
+        '  "${CMAKE_CURRENT_SOURCE_DIR}/mods_src/*.cpp")',
+        "if(MOD_SRC)",
+        "  target_sources(psx-runtime PRIVATE ${MOD_SRC})",
+        "# The region define goes on the MOD's own sources, never on the whole target: a target-wide",
+        "# define changes every object's compile command and forces a full recompile, which is the",
+        "# difference between a relink being seconds and being a 35 second rebuild (measured).",
+        f'  set_source_files_properties(${{MOD_SRC}} PROPERTIES COMPILE_DEFINITIONS "{define}")',
+        "endif()",
+        _MOD_BLOCK_END,
+    ])
+    return "\n" + body + "\n"
+
+
+def ensure_mod_block(region: str, log) -> bool:
+    """Add the mod-sources block to the generated `CMakeLists.txt`, once, at its current version.
+
+    The block is idempotent: present and current is a no-op, present and stale is rewritten in
+    place, absent is appended. A disc rebuild regenerates CMakeLists.txt and drops the block, so
+    the relink puts it back - that is why it is written here rather than patched in by hand.
+    """
+    cm = project_dir(region) / "CMakeLists.txt"
+    if not cm.is_file():
+        return False
+    text = cm.read_text(encoding="utf-8-sig", errors="replace")
+    want = _mod_block(region)
+    if _MOD_BLOCK_BEGIN in text and _MOD_BLOCK_END in text:
+        start = text.index(_MOD_BLOCK_BEGIN)
+        end = text.index(_MOD_BLOCK_END, start) + len(_MOD_BLOCK_END)
+        if text[start:end] == want.strip("\n"):
+            return False
+        cm.write_text(text[:start] + want.strip("\n") + text[end:], encoding="utf-8")
+        log(f"   refreshed the mod-sources block in CMakeLists.txt "
+            f"({region_define(region)})")
+        return True
+    cm.write_text(text + want, encoding="utf-8")
+    log(f"   added the mod-sources block to CMakeLists.txt ({region_define(region)})")
+    return True
+
+
+def exe_running(name: str) -> bool:
+    """True when a process of this executable name is live (its file cannot be replaced)."""
+    if sys.platform != "win32":
+        return False
+    try:
+        res = subprocess.run(["tasklist", "/FI", f"IMAGENAME eq {name}", "/NH"],
+                             capture_output=True, text=True, errors="replace", timeout=20)
+    except Exception:  # noqa: BLE001
+        return False
+    return name.lower() in (res.stdout or "").lower()
+
+
+@dataclass
+class ModRelinkResult:
+    ok: bool
+    region: str | None
+    exe: pathlib.Path | None
+    message: str
+
+
+def relink_mod(region: str, sources, log) -> ModRelinkResult:
+    """Compile a mod's plugin into a regional build and deploy the resulting executable.
+
+    This is the build path the Play tab already established, minus the recompile of the game's
+    generated sources: the project exists, so adding the mod's source and rebuilding compiles that
+    one file and relinks. It reuses `compile_project` (the toolchain pre-flight, the vcvars shell
+    for MSVC, the FetchContent unwrap) rather than inventing a second builder, so a fix to the
+    builder reaches this path too.
+
+    The mods half - `mods/packages/<id>/<version>/` and `mods/state.toml` - is written by
+    `mods.install` / `mods.set_features` next to the deployed exe, which is where the runtime
+    resolves `mods` from, so the two halves always land in the same folder.
+    """
+    spec = builds.spec(region)
+    if not has_project(region):
+        return ModRelinkResult(
+            False, region, None,
+            f"There is no {spec.label} project to relink: {project_dir(region)} is missing.\n\n"
+            f"Build the {spec.label} disc on the Play tab first (10 to 20 minutes). Once that "
+            f"build exists, a mod relink is incremental and takes seconds.")
+    if not engine_present():
+        return ModRelinkResult(False, region, None,
+                               f"The bundled engine is incomplete at {engine_dir()}.")
+    tc = preflight()
+    if not tc.ok:
+        return ModRelinkResult(False, region, None, tc.summary() + "\n\n" + tc.hint())
+    staged = stage_mod_sources(region, sources, log)
+    if not staged:
+        return ModRelinkResult(
+            False, region, None,
+            "This package ships no plugin source under plugin/.\n\n"
+            "A data-only mod (byte patches and disc overlays) needs no relink - install it and "
+            "play. Only a package with a [[plugin]] block needs its code compiled in.")
+    if exe_running(spec.exe_name):
+        return ModRelinkResult(
+            False, region, None,
+            f"The {spec.label} build is running. Close the game, then press Rebuild again: "
+            f"Windows will not let the rebuilt {spec.exe_name} replace a running one.")
+    added = ensure_mod_block(region, log)
+    log(f"== Relinking {len(staged)} mod source(s) into the {spec.label} build ==")
+    log(f"   project {project_dir(region)}")
+    log("   incremental: only the mod's source and the final link are redone")
+    if not compile_project(project_dir(region), cmake_build_dir(region), tc,
+                           work_root() / spec.folder, log):
+        return ModRelinkResult(False, region, None,
+                               "The relink failed; see the log above. The build is unchanged, so "
+                               "the game still runs as it did.")
+    exe_src = _find_exe(cmake_build_dir(region), spec.exe_name)
+    if exe_src is None:
+        return ModRelinkResult(False, region, None,
+                               f"The relink produced no executable under "
+                               f"{cmake_build_dir(region)}.")
+    out = builds.build_dir(region)
+    out.mkdir(parents=True, exist_ok=True)
+    exe_dst = out / spec.exe_name
+    try:
+        shutil.copy2(exe_src, exe_dst)
+    except OSError as exc:
+        return ModRelinkResult(
+            False, region, None,
+            f"Could not replace {exe_dst} ({exc}).\n\nClose the game if it is running, then try "
+            f"again.")
+    log(f"== placed {exe_dst.name} in {out} ==")
+    if added:
+        log("   the mod-sources block is in CMakeLists.txt; it survives an incremental rebuild")
+    return ModRelinkResult(True, region, exe_dst,
+                           f"{spec.label} build relinked. The mod's code is in "
+                           f"{exe_dst.name} and its data is in {out / 'mods'}.")
+
+
 # ---------------------------------------------------------------- the whole job
 
 @dataclass

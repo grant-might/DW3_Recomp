@@ -2039,6 +2039,320 @@ try:
 except Exception as _exc:  # noqa: BLE001
     check(False, "X1-X6 git-hygiene checks raised", f"{type(_exc).__name__}: {_exc}")
 
+# --- Z. mod packages: the file contract, and the relink the Rebuild buttons do ------------------
+# A mod is a ZIP whose root holds manifest.toml. Installing it maps the archive root onto
+# `<build>/mods/packages/<id>/<version>/`, and `state.toml` is the switch. The other half - the
+# plugin compiled into the build - is what the two Rebuild buttons do, and it cannot be exercised
+# without a toolchain, so this section pins the file contract, the CMakeLists block the relink
+# writes (including its deliberate per-source define scoping), the refusals, and the tab's own
+# wiring for what the player sees before pressing anything.
+try:
+    import zipfile as _zzipmod                                              # noqa: PLC0415
+    from dmw3launcher import builder as _zb                                 # noqa: PLC0415
+    from dmw3launcher import mods as _zm                                    # noqa: PLC0415
+
+    _zdir = _mkdtemp("hermes-verify-mods-")
+
+    _ZMANIFEST = """format_version = 5
+id = "dev.test-verify"
+version = "2.0.0"
+name = "Verify Plugin"
+description = "A package the gate writes itself. Region tables: SLES-03936 and SLUS-01436."
+resolver = "declarative"
+
+[[target]]
+game_id = "SLES-03936"
+
+[[target]]
+game_id = "SLUS-01436"
+
+[[feature]]
+id = "warp"
+name = "Fast Travel"
+group = "Tools"
+default_enabled = false
+
+[[plugin]]
+feature = "warp"
+id = "dev.test-verify"
+"""
+    _ZDATA_MANIFEST = """format_version = 5
+id = "dev.data-only"
+version = "1.0.0"
+name = "Verify Data Only"
+description = "A package that ships no code."
+
+[[target]]
+game_id = "SLUS-01436"
+
+[[feature]]
+id = "patch"
+name = "A byte patch"
+default_enabled = false
+"""
+
+    def _zwrite(path: pathlib.Path, manifest: str, plugin: bool) -> pathlib.Path:
+        with _zzipmod.ZipFile(path, "w") as z:
+            z.writestr("manifest.toml", manifest)
+            z.writestr("INSTALL.md", "# install notes\n")
+            if plugin:
+                z.writestr("plugin/test_verify.c", "/* a plugin source */\nint verify_marker = 1;\n")
+        return path
+
+    _zzip = _zwrite(_zdir / "dev.test-verify-2.0.0.zip", _ZMANIFEST, True)
+    _zdat = _zwrite(_zdir / "data-only.zip", _ZDATA_MANIFEST, False)
+    _znest = _zdir / "nested.zip"
+    with _zzipmod.ZipFile(_znest, "w") as _zz:
+        _zz.writestr("some-folder/manifest.toml", _ZMANIFEST)
+
+    # 1. reading a package: id, version, name, targets, features, plugins
+    _zpkg = _zm.read_package(_zzip)
+    check(_zpkg.id == "dev.test-verify" and _zpkg.version == "2.0.0"
+          and _zpkg.name == "Verify Plugin" and _zpkg.manifest.get("format_version") == 5,
+          "Z1 a package reads id, version, name and format_version from its manifest",
+          f"{_zpkg.id} {_zpkg.version}")
+    check(_zpkg.targets == ("SLES-03936", "SLUS-01436")
+          and _zpkg.targets_region(builds.REGION_EU) and _zpkg.targets_region(builds.REGION_US),
+          "Z2 the manifest's [[target]] list names both region disc ids",
+          str(_zpkg.targets))
+    check([f.id for f in _zpkg.features] == ["warp"] and _zpkg.feature("warp").name
+          == "Fast Travel" and _zpkg.plugins == ("dev.test-verify",) and _zpkg.has_plugin,
+          "Z3 features and the [[plugin]] id reference are read, and it counts as a plugin build",
+          f"features={[f.id for f in _zpkg.features]} plugins={_zpkg.plugins}")
+
+    # 2. a manifest that is not at the archive ROOT is refused, with the reason
+    try:
+        _zm.read_package(_znest)
+        _znest_ok = False
+        _znest_msg = ""
+    except _zm.ModPackageError as _exc:
+        _znest_ok = True
+        _znest_msg = str(_exc)
+    check(_znest_ok and "root" in _znest_msg,
+          "Z4 an archive that wraps manifest.toml in a folder is refused and says so",
+          _znest_msg[:70])
+
+    # 3. install maps the archive root onto <exe_dir>/mods/packages/<id>/<version>/
+    _zexe = _zdir / "Builds" / "USA"
+    _zexe.mkdir(parents=True)
+    check(not (_zexe / "mods").exists(), "Z5 nothing is written into a build before an install")
+    _zdest = _zm.install(_zpkg, _zexe)
+    _zwant = _zexe / "mods" / "packages" / "dev.test-verify" / "2.0.0"
+    _zfiles = sorted(str(p.relative_to(_zdest)).replace("\\", "/")
+                     for p in _zdest.rglob("*") if p.is_file())
+    check(_zdest == _zwant and _zfiles == ["INSTALL.md", "manifest.toml", "plugin/test_verify.c"],
+          "Z6 install unpacks the archive root to mods/packages/<id>/<version>/",
+          f"{_zdest.relative_to(_zexe)} -> {_zfiles}")
+
+    # 4. the runtime refuses a duplicate version; Reinstall is the documented way back
+    try:
+        _zm.install(_zpkg, _zexe)
+        _zdup = ""
+    except _zm.ModPackageError as _exc:
+        _zdup = str(_exc)
+    check("already installed" in _zdup, "Z7 installing the same version twice is refused",
+          _zdup[:60])
+    _zm.install(_zpkg, _zexe, replace=True)
+    check(_zm.is_installed(_zexe, _zpkg) and _zm.installed_versions(_zexe, _zpkg.id) == ["2.0.0"],
+          "Z8 Reinstall replaces the package version")
+
+    # 5. the switch: a missing state file means the manifest default (off for these mods)
+    check(_zm.state_path(_zexe).is_file() is False
+          and _zm.feature_states(_zexe, _zpkg) == {"warp": False},
+          "Z9 with no state file a feature runs at its manifest default (off)")
+    _zm.set_features(_zexe, _zpkg, {"warp": True})
+    _zstate = _zm.state_path(_zexe).read_text(encoding="utf-8")
+    check("format_version = 2" in _zstate and 'id = "dev.test-verify"' in _zstate
+          and 'version = "2.0.0"' in _zstate and 'package_id = "dev.test-verify"' in _zstate
+          and "enabled = true" in _zstate,
+          "Z10 state.toml is the documented format_version 2 shape ([[package]] + [[feature]])",
+          _zstate.replace("\n", " | ")[:90])
+    check(_zm.feature_states(_zexe, _zpkg) == {"warp": True} and "enabled: warp" in
+          _zm.state_summary(_zexe, _zpkg),
+          "Z11 the enabled flag round-trips, and the summary says so")
+
+    # 6. switching one package off keeps another package's entries (merge, not overwrite)
+    _zdat_pkg = _zm.read_package(_zdat)
+    _zm.install(_zdat_pkg, _zexe)
+    _zm.set_features(_zexe, _zdat_pkg, {"patch": True})
+    _zm.set_features(_zexe, _zpkg, {"warp": False})
+    _zboth = {s.id: (s.version, s.features) for s in _zm.read_state(_zexe)}
+    check(_zboth.get("dev.test-verify") == ("2.0.0", {"warp": False})
+          and _zboth.get("dev.data-only") == ("1.0.0", {"patch": True}),
+          "Z12 toggling one package's feature keeps every other package's state",
+          str(_zboth))
+    check(not _zdat_pkg.has_plugin and _zm.plugin_sources(
+        _zm.install_dir(_zexe, _zdat_pkg)) == [],
+          "Z13 a data-only package has no plugin source and so needs no relink")
+
+    # 7. remove deletes the version directory and drops it from the state file
+    _zm.remove(_zdat_pkg, _zexe)
+    check(not _zm.install_dir(_zexe, _zdat_pkg).exists()
+          and [s.id for s in _zm.read_state(_zexe)] == ["dev.test-verify"],
+          "Z14 remove deletes the package folder and its state entry together")
+    _zm.remove(_zpkg, _zexe)
+    check(not _zm.install_dir(_zexe, _zpkg).exists() and _zm.read_state(_zexe) == []
+          and _zm.feature_states(_zexe, _zpkg) == {"warp": False},
+          "Z14b removing the last package leaves an empty state file, and the feature falls back "
+          "to its manifest default")
+
+    # 8. the CMakeLists block the relink writes into the generated project
+    _zwork = _zdir / "work"
+    _zproj = _zwork / "USA" / "project"
+    _zproj.mkdir(parents=True)
+    (_zproj / "CMakeLists.txt").write_text(
+        "cmake_minimum_required(VERSION 3.20)\nproject(demo C CXX)\n", encoding="utf-8")
+    _zquiet = lambda _line: None                                            # noqa: E731
+    _zorig = {_n: getattr(_zb, _n) for _n in
+              ("work_root", "engine_present", "preflight", "compile_project")}
+    _zcompiled: list[str] = []
+    try:
+        _zb.work_root = lambda: _zwork
+        _zb.engine_present = lambda: True
+        _zb.preflight = lambda refresh=False: _zb.ToolChain(
+            cmake="cmake", ninja="ninja", compiler="cl", compiler_kind="msvc",
+            compiler_label="MSVC")
+        _zb.compile_project = (lambda p, b, tc, s, log: (_zcompiled.append(str(p)), True)[1])
+        _zfirst = _zb.ensure_mod_block(builds.REGION_US, _zquiet)
+        _zagain = _zb.ensure_mod_block(builds.REGION_US, _zquiet)
+        _ztext = (_zproj / "CMakeLists.txt").read_text(encoding="utf-8")
+        check(_zfirst and not _zagain,
+              "Z15 the mod-sources block is added to the generated CMakeLists once")
+        check("target_sources(psx-runtime PRIVATE ${MOD_SRC})" in _ztext
+              and "CONFIGURE_DEPENDS" in _ztext,
+              "Z16 ...and it adds whatever lands in mods_src/ to the runtime target")
+        check("DW3_GAME_REGION_US" in _ztext and "set_source_files_properties" in _ztext
+              and "target_compile_definitions(psx-runtime" not in _ztext,
+              "Z17 the region define is scoped to the MOD's own sources, never the whole target "
+              "(a target-wide define changes every object's command line and forces a full "
+              "recompile: 35s measured against 6.6s for the scoped form)")
+        check(_zb.region_define(builds.REGION_EU) == "DW3_GAME_REGION_EU"
+              and _zb.region_define(builds.REGION_US) == "DW3_GAME_REGION_US",
+              "Z18 each region has its own compile define")
+
+        _zsrc_dir = _zdir / "pkg-src"
+        _zsrc_dir.mkdir(exist_ok=True)
+        with _zzipmod.ZipFile(_zzip) as _zz2, \
+                open(_zsrc_dir / "test_verify.c", "wb") as _zf2:
+            _zf2.write(_zz2.read("plugin/test_verify.c"))
+        _zstaged = _zb.stage_mod_sources(builds.REGION_US, sorted(_zsrc_dir.glob("*.c")), _zquiet)
+        check([p.name for p in _zstaged] == ["test_verify.c"]
+              and (_zb.mods_src_dir(builds.REGION_US) / "test_verify.c").is_file(),
+              "Z19 the package's plugin source is staged into the build's mods_src/",
+              str([p.name for p in _zstaged]))
+
+        # 9. the refusals: no project tree, and a package that ships no source
+        _znoproj = _zb.relink_mod(builds.REGION_EU, _zstaged, _zquiet)
+        check((not _znoproj.ok) and "Play tab" in _znoproj.message
+              and "10 to 20 minutes" in _znoproj.message,
+              "Z20 a relink with no project tree is refused with the Play tab as the way to get one",
+              _znoproj.message.replace("\n", " ")[:80])
+        _znosrc = _zb.relink_mod(builds.REGION_US, [], _zquiet)
+        check((not _znosrc.ok) and "no plugin source" in _znosrc.message,
+              "Z21 a relink with nothing to compile is refused, not silently linked",
+              _znosrc.message.replace("\n", " ")[:70])
+        check(not _zcompiled, "Z22 neither refusal reached the compiler")
+    finally:
+        for _n, _fn in _zorig.items():
+            setattr(_zb, _n, _fn)
+
+    # 10. the tab the player sees: buttons, the cost note, the card and the switches
+    from dmw3launcher.ui.mods_tab import ModsTab as _ZTab                   # noqa: PLC0415
+    _zbuilds = {_n: getattr(builds, _n) for _n in
+                ("build_dir", "builds_dir", "mods_dir", "build_status", "game_toml")}
+    _zroot = _zdir / "Builds"
+    for _s in builds.BUILDS:
+        _d = _zroot / _s.folder
+        _d.mkdir(parents=True, exist_ok=True)
+        (_d / _s.exe_name).write_bytes(b"stub")
+    try:
+        builds.builds_dir = lambda: _zroot
+        builds.build_dir = lambda r: _zroot / builds.spec(r).folder
+        builds.mods_dir = lambda r: builds.build_dir(r) / "mods"
+        builds.build_status = lambda r: ((builds.build_dir(r)
+                                          / builds.spec(r).exe_name).is_file(),
+                                         builds.build_dir(r) / builds.spec(r).exe_name)
+
+        _ztab = _ZTab({"version": 1, "editor_root": None})
+        check(not _ztab.btn_rebuild_us.isEnabled() and not _ztab.btn_rebuild_eu.isEnabled(),
+              "Z23 both Rebuild buttons are DISABLED until a mod package is loaded")
+        check("Play tab" in _ztab.lbl_cost.text() and "seconds" in _ztab.lbl_cost.text()
+              and "10 to 20 minutes" in _ztab.lbl_cost.text(),
+              "Z24 the cost is stated before pressing: seconds when the build exists, 10 to 20 "
+              "minutes when it does not",
+              _ztab.lbl_cost.text()[:80])
+
+        _ztab._pick_package_file = lambda: str(_zzip)
+        _ztab.load_package()
+        del _ztab._pick_package_file
+        check(_ztab.package is not None and _ztab.package.id == "dev.test-verify",
+              "Z25 loading a package file shows it in the tab",
+              _ztab.package.summary() if _ztab.package else "none")
+        check(_ztab.btn_rebuild_us.isEnabled() and _ztab.btn_rebuild_eu.isEnabled(),
+              "Z26 ...and BOTH rebuild buttons become enabled once a mod is loaded")
+        _zcard = _ztab.card.toPlainText()
+        check(all(_t in _zcard for _t in ("Verify Plugin", "2.0.0", "dev.test-verify",
+                                          "SLES-03936", "SLUS-01436", "warp", "Fast Travel",
+                                          "Description")),
+              "Z27 the card shows name, id, version, targets, the features and the description")
+        check("USA" in _ztab.lbl_rebuild.text() and "Europe" in _ztab.lbl_rebuild.text(),
+              "Z28 the rebuild line names both regions and where each one stands",
+              _ztab.lbl_rebuild.text()[:90])
+        check(_ztab.combo_feature.count() == 2
+              and _ztab.combo_feature.itemText(0) == "All features"
+              and _ztab.combo_feature.itemData(1) == "warp",
+              "Z29 the feature picker offers every feature plus all of them",
+              f"{_ztab.combo_feature.count()} entries")
+        check(all(_t in _ztab.guide.toPlainText() for _t in ("card1.mcd", "orig-stock")),
+              "Z30 the tab's rules still carry the folder-mod rules it ships")
+
+        # the switches, through the tab, against the temp build
+        _ztab.set_enabled(True)
+        check(_ztab.lbl_state.text().find("not installed") >= 0
+              and _ztab.lbl_state.objectName() == "err",
+              "Z31 turning a feature on before an install is refused with what to do",
+              _ztab.lbl_state.text()[:70])
+        check(_ztab.install(), "Z32 Install unpacks the package into the region's build")
+        check(_zm.is_installed(_zexe, _zpkg)
+              and _zm.feature_states(_zexe, _zpkg) == {"warp": True}
+              and "enabled: warp" in _ztab.lbl_state.text(),
+              "Z33 a fresh install writes state.toml with the feature ON and the tab says so",
+              _ztab.lbl_state.text()[:70])
+        _ztab.set_enabled(False)
+        check(_zm.feature_states(_zexe, _zpkg) == {"warp": False}
+              and "off: warp" in _ztab.lbl_state.text(),
+              "Z34 Disable writes enabled = false and the tab reports it")
+        _ztab.set_enabled(True)
+        check(_zm.feature_states(_zexe, _zpkg) == {"warp": True},
+              "Z35 Enable turns it back on")
+        _ztab.remove_package()
+        check(not _zm.is_installed(_zexe, _zpkg)
+              and "not installed" in _ztab.lbl_state.text(),
+              "Z36 Remove takes the package and its state entry out of the build")
+
+        # A finished rebuild must LEAVE its message on screen. The refresh that follows it
+        # recomputes the rebuild line from scratch, so the outcome has to be set after the refresh.
+        _zztab = _ZTab({"version": 1, "editor_root": None})
+        _zztab.package = _zpkg
+        _zztab._on_relink_done(_zb.ModRelinkResult(True, builds.REGION_US,
+                                                   _zexe / "x.exe", "USA build relinked."))
+        check("relinked" in _zztab.lbl_rebuild.text()
+              and _zztab.lbl_rebuild.objectName() == "ok"
+              and _zztab.btn_rebuild_us.isEnabled(),
+              "Z37 a finished rebuild leaves its outcome on screen and re-enables the buttons",
+              _zztab.lbl_rebuild.text()[:60])
+        _zztab._on_relink_done(_zb.ModRelinkResult(False, builds.REGION_US, None,
+                                                   "The compile failed; see the log above."))
+        check("compile failed" in _zztab.lbl_rebuild.text()
+              and _zztab.lbl_rebuild.objectName() == "err",
+              "Z38 a failed rebuild reports the failure and stays pressable to retry",
+              _zztab.lbl_rebuild.text()[:60])
+    finally:
+        for _n, _fn in _zbuilds.items():
+            setattr(builds, _n, _fn)
+except Exception as _exc:  # noqa: BLE001
+    check(False, "Z1-Z36 mod package checks raised", f"{type(_exc).__name__}: {_exc}")
+
 # Sweep every temp dir the gate made. Each section also cleans its own; this is the net that
 # catches a dir whose section raised before it could, so a run never leaves anything in TEMP.
 for _d in _TMP_REGISTRY:
