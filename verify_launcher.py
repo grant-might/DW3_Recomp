@@ -2347,11 +2347,306 @@ default_enabled = false
               and _zztab.lbl_rebuild.objectName() == "err",
               "Z38 a failed rebuild reports the failure and stays pressable to retry",
               _zztab.lbl_rebuild.text()[:60])
+
+        # 11. an enabled package that DECLARES a plugin but ships no plugin source can never be
+        # compiled; it must be reported (at load/install time and by the rebuild's refusal), never
+        # dropped silently and never allowed to produce an executable that cannot start.
+        _znosrc_zip = _zdir / "no-source.zip"
+        with _zzipmod.ZipFile(_znosrc_zip, "w") as _zz3:
+            _zz3.writestr("manifest.toml", _ZMANIFEST.replace("dev.test-verify", "dev.no-source"))
+        _znopkg = _zm.read_package(_znosrc_zip)
+        check(_znopkg.has_plugin and _zm.package_file_plugin_sources(_znosrc_zip) == [],
+              "Z39 a package file that declares a plugin but ships no source reads as source-less",
+              str(_zm.package_file_plugin_sources(_znosrc_zip)))
+        _zm.install(_znopkg, _zexe)
+        _zm.set_features(_zexe, _znopkg, {"warp": True})
+        _zmiss = [p.id for p in _zm.enabled_plugins_without_source(_zexe)]
+        check(_zmiss == ["dev.no-source"],
+              "Z40 enabled_plugins_without_source names the enabled package that cannot be compiled",
+              str(_zmiss))
+        _zntab = _ZTab({"version": 1, "editor_root": None})
+        _zntab._pick_package_file = lambda: str(_znosrc_zip)
+        _zntab.load_package()
+        del _zntab._pick_package_file
+        check(_zntab.lbl_state.objectName() == "err"
+              and "declares a plugin but ships no plugin source under plugin/" in _zntab.lbl_state.text()
+              and "declares a plugin but ships no plugin source" in _zntab.log.toPlainText(),
+              "Z41 loading a package that declares a plugin without source is flagged at LOAD time",
+              _zntab.lbl_state.text()[:70])
+        _zntab.package = _znopkg
+        _zborig_hp = _zb.has_project
+        _zb.has_project = lambda _r: True
+        try:
+            _zntab.rebuild(builds.REGION_US)
+        finally:
+            _zb.has_project = _zborig_hp
+        check(_zntab._worker is None
+              and _zntab.lbl_rebuild.objectName() == "err"
+              and "dev.no-source" in _zntab.lbl_rebuild.text()
+              and "declares a plugin but ships no plugin source under plugin/" in _zntab.lbl_rebuild.text(),
+              "Z42 the rebuild REFUSES an enabled package that declares a plugin without source "
+              "and names it, instead of producing an executable that cannot start",
+              _zntab.lbl_rebuild.text()[:90])
+        check("dev.no-source" in _zntab.log.toPlainText()
+              and "refused" in _zntab.log.toPlainText(),
+              "Z43 ...and the refusal is in the tab's Activity log too")
+        _zm.remove(_znopkg, _zexe)      # leave the temp build as the earlier checks expect
     finally:
         for _n, _fn in _zbuilds.items():
             setattr(builds, _n, _fn)
 except Exception as _exc:  # noqa: BLE001
-    check(False, "Z1-Z36 mod package checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "Z1-Z43 mod package checks raised", f"{type(_exc).__name__}: {_exc}")
+
+# --- AA. BPS apply: the pure-Python .bps applier, and the Mods tab's Apply card -----------------
+# A .bps patch turns the player's own retail disc image into the modded image. This section pins the
+# applier's decoder - all four action types, metadata, the trailing CRC32s - with patches the check
+# builds itself from tiny synthetic images, so it needs no game data and no external tool. It also
+# pins the two refusals that keep a wrong base safe (a source-CRC mismatch before writing, a
+# target-CRC mismatch after) and that a failure leaves no output file behind.
+try:
+    import zlib                                                              # noqa: PLC0415
+    from PySide6.QtWidgets import QGroupBox as _AAGroupBox                  # noqa: PLC0415
+    from dmw3launcher import bpspatch as _bp                                 # noqa: PLC0415
+
+    _aadir = _mkdtemp("hermes-verify-bps-")
+
+    def _aa_num(v: int) -> bytes:
+        """Encode a BPS number (seven data bits per byte, top bit marks the last)."""
+        out = bytearray()
+        while True:
+            x = v & 0x7F
+            v >>= 7
+            if v == 0:
+                out.append(x | 0x80)
+                return bytes(out)
+            out.append(x)
+            v -= 1
+
+    def _aa_signed(v: int) -> bytes:
+        return _aa_num((abs(v) << 1) | (1 if v < 0 else 0))
+
+    def _aa_patch(source: bytes, target_crc: int, actions, metadata: bytes = b"") -> bytes:
+        n = sum(a[1] for a in actions)
+        body = (b"BPS1" + _aa_num(len(source)) + _aa_num(n) + _aa_num(len(metadata)) + metadata)
+        for kind, length, *extra in actions:
+            body += _aa_num(((length - 1) << 2) | kind)
+            if kind == 1:
+                body += extra[0]
+            elif kind in (2, 3):
+                body += _aa_signed(extra[0])
+        tail = ((zlib.crc32(source) & 0xFFFFFFFF).to_bytes(4, "little")
+                + (target_crc & 0xFFFFFFFF).to_bytes(4, "little"))
+        blob = body + tail
+        return blob + (zlib.crc32(blob) & 0xFFFFFFFF).to_bytes(4, "little")
+
+    # A source and a scripted action list that exercises all four kinds, with the target built by
+    # hand (independent of the applier) so the byte comparison proves the decoder, not itself.
+    _aa_src = bytes(range(40))
+    _aa_tgt = (bytes(range(10)) + b"XYZ" + bytes([0, 1, 2, 3, 4]) + bytes([20, 21, 22, 23])
+               + bytes([22, 23, 24, 25, 26, 27]) + bytes([2, 3, 4]))
+    _aa_actions = [(0, 10), (1, 3, b"XYZ"), (3, 5, 0), (2, 4, 20), (0, 6), (3, 3, -3)]
+    _aa_meta = b"dw3-verify-metadata"
+    _aa_src_f = _aadir / "source.bin"
+    _aa_src_f.write_bytes(_aa_src)
+
+    # 1. header parsing: sizes, metadata and all three trailing CRC32s
+    _aa_blob = _aa_patch(_aa_src, zlib.crc32(_aa_tgt) & 0xFFFFFFFF, _aa_actions, _aa_meta)
+    _aa_pf = _aadir / "all-four.bps"
+    _aa_pf.write_bytes(_aa_blob)
+    _aa_h = _bp.read_header(_aa_pf)
+    check(_aa_h.source_size == 40 and _aa_h.target_size == 31 and _aa_h.metadata == _aa_meta,
+          "AA1 a BPS header reads its source/target sizes and metadata",
+          f"src={_aa_h.source_size} tgt={_aa_h.target_size} meta={_aa_h.metadata!r}")
+    check(_aa_h.source_crc == zlib.crc32(_aa_src) & 0xFFFFFFFF
+          and _aa_h.target_crc == zlib.crc32(_aa_tgt) & 0xFFFFFFFF
+          and _aa_h.patch_crc == zlib.crc32(_aa_blob[:-4]) & 0xFFFFFFFF,
+          "AA2 the header's source, target and patch CRC32s parse from the tail",
+          f"{_aa_h.source_crc:08X} {_aa_h.target_crc:08X} {_aa_h.patch_crc:08X}")
+    check(_aa_h.metadata_text == _aa_meta.decode(),
+          "AA3 metadata decodes as text", _aa_h.metadata_text)
+
+    # 2. the action stream really carries all four kinds
+    _aa_kinds = set()
+    _aa_b2 = _aa_blob
+    _aa_pos = [4]
+
+    def _aa_rn():
+        out = 0
+        sh = 1
+        while True:
+            x = _aa_b2[_aa_pos[0]]
+            _aa_pos[0] += 1
+            out += (x & 0x7F) * sh
+            if x & 0x80:
+                return out
+            sh <<= 7
+            out += sh
+
+    _aa_rn(); _aa_rn(); _aa_ms = _aa_rn(); _aa_pos[0] += _aa_ms
+    while _aa_pos[0] < len(_aa_b2) - 12:
+        _d = _aa_rn()
+        _k = _d & 3
+        _aa_kinds.add(_k)
+        if _k == 1:
+            _aa_pos[0] += (_d >> 2) + 1
+        elif _k in (2, 3):
+            _aa_rn()
+    check(_aa_kinds == {0, 1, 2, 3},
+          "AA4 one patch exercises all four action types (SourceRead/TargetRead/SourceCopy/TargetCopy)",
+          str(sorted(_aa_kinds)))
+
+    # 3. round trip: SourceRead, TargetRead, SourceCopy and TargetCopy rebuild the target exactly
+    _aa_out = _aadir / "all-four.out"
+    _aa_res = _bp.apply(_aa_pf, _aa_src_f, _aa_out)
+    check(_aa_res.ok and _aa_out.read_bytes() == _aa_tgt,
+          "AA5 applying the patch reproduces the target byte for byte",
+          f"ok={_aa_res.ok} len={_aa_out.stat().st_size}")
+    check(_aa_src_f.read_bytes() == _aa_src,
+          "AA6 the source image is untouched by an apply")
+    check(_aa_out.read_bytes() != _aa_src, "AA7 the output is the target, not the source")
+
+    # 4. wrong base: one byte changed in a same-size copy is refused BEFORE anything is written
+    _aa_wrong = _aadir / "wrong.bin"
+    _aa_wrong.write_bytes(_aa_src[:-1] + bytes([_aa_src[-1] ^ 0xFF]))
+    _aa_wrong_out = _aadir / "wrong.out"
+    try:
+        _bp.apply(_aa_pf, _aa_wrong, _aa_wrong_out)
+        _aa_w_msg = ""
+    except _bp.BpsError as _exc:
+        _aa_w_msg = str(_exc)
+    check("not intended for this ROM" in _aa_w_msg,
+          "AA8 a same-size base with one byte changed is refused with the Flips-style message",
+          _aa_w_msg[:80])
+    check(not _aa_wrong_out.exists(),
+          "AA9 the refused apply left no output file behind")
+    check(_aa_wrong.read_bytes() == _aa_src[:-1] + bytes([_aa_src[-1] ^ 0xFF]),
+          "AA10 the refused base file was not modified either")
+
+    # 5. a mismatched declared target CRC is refused and the bad output is DELETED
+    _aa_badcrc = _aadir / "badcrc.bps"
+    _aa_badcrc.write_bytes(_aa_patch(_aa_src, 0xDEADBEEF, _aa_actions))
+    _aa_bc_out = _aadir / "badcrc.out"
+    try:
+        _bp.apply(_aa_badcrc, _aa_src_f, _aa_bc_out)
+        _aa_bc_msg = ""
+    except _bp.BpsError as _exc:
+        _aa_bc_msg = str(_exc)
+    check("failed its target checksum" in _aa_bc_msg and not _aa_bc_out.exists(),
+          "AA11 a result that fails the target CRC is refused and the output is deleted",
+          _aa_bc_msg[:80])
+
+    # 6. a patch that is damaged, or truncated mid-instruction, fails cleanly (no traceback)
+    _aa_damaged = bytearray(_aa_blob)
+    _aa_damaged[9] ^= 0xFF
+    (_aadir / "damaged.bps").write_bytes(bytes(_aa_damaged))
+    try:
+        _bp.apply(_aadir / "damaged.bps", _aa_src_f, _aadir / "d.out")
+        _aa_d_msg = ""
+    except _bp.BpsError as _exc:
+        _aa_d_msg = str(_exc)
+    check("damaged" in _aa_d_msg, "AA12 a patch whose own CRC32 is wrong is refused as damaged",
+          _aa_d_msg[:70])
+    # A TargetRead that claims more bytes than the patch holds, with a VALID patch CRC, must be
+    # caught by the decoder as a truncation rather than overrunning.
+    _aa_truncbody = _aa_patch(_aa_src, zlib.crc32(_aa_tgt) & 0xFFFFFFFF,
+                              [(0, 10), (1, 100, b"short")])
+    _aa_tf = _aadir / "truncmid.bps"
+    _aa_tf.write_bytes(_aa_truncbody)
+    try:
+        _bp.apply(_aa_tf, _aa_src_f, _aadir / "t.out")
+        _aa_t_msg = ""
+    except _bp.BpsError as _exc:
+        _aa_t_msg = str(_exc)
+    check("truncated" in _aa_t_msg,
+          "AA13 a TargetRead past the end of the data is reported as a truncation",
+          _aa_t_msg[:70])
+
+    # 7. a .cue is resolved to the .bin it names, so a player can pick either
+    _aa_cue = _aadir / "disc.cue"
+    _aa_cue.write_text('FILE "source.bin" BINARY\n  TRACK 01 MODE2/2352\n', encoding="utf-8")
+    _aa_cue_out = _aadir / "cue.out"
+    _aa_cue_res = _bp.apply(_aa_pf, _aa_cue, _aa_cue_out)
+    check(_aa_cue_res.ok and _aa_cue_out.read_bytes() == _aa_tgt
+          and _aa_cue_res.source == _aa_src_f,
+          "AA14 a .cue is resolved to the .bin beside it and patched", str(_aa_cue_res.source))
+
+    # 8. the default output never names the base file and moves past an existing name
+    _aa_do = _bp.default_output(_aa_src_f)
+    check(_aa_do != _aa_src_f and _aa_do.parent == _aa_src_f.parent,
+          "AA15 the default output is a sibling of the base and not the base itself", _aa_do.name)
+    _aa_do.write_bytes(b"taken")
+    _aa_do2 = _bp.default_output(_aa_src_f)
+    check(_aa_do2 != _aa_do and not _aa_do2.exists(),
+          "AA16 an existing output name is skipped for a free one", _aa_do2.name)
+    try:
+        _bp.apply(_aa_pf, _aa_src_f, _aa_src_f)
+        _aa_self = False
+    except _bp.BpsError as _exc:
+        _aa_self = "overwrite your disc image" in str(_exc)
+    check(_aa_self, "AA17 applying onto the base image itself is refused")
+
+    # 9. the Mods tab's Apply card: it lists the bundled patch, defaults the base to the disc the
+    #    launcher already knows, and reports a verified result through the worker's own path.
+    try:
+        from dmw3launcher.ui.mods_tab import ModsTab as _AATab, _BpsWorker as _AAWorker  # noqa: PLC0415
+        _aatab = _AATab({"version": 1, "editor_root": None})
+        _aacards = [_g.title() for _g in _aatab.findChildren(_AAGroupBox)]
+        check(any("bps" in _t.lower() for _t in _aacards),
+              "AA18 the Mods tab carries the .bps Apply card",
+              "; ".join(_aacards)[:70])
+        _aabundled = paths.bundled_patches()
+        if _aabundled:
+            _aah = _bp.read_header(_aabundled[0])
+            check(_aah.source_size == 647526768 and _aah.target_size == 647526768
+                  and _aah.target_crc == 0x69DEBBBF and _aah.metadata == b"",
+                  "AA19 the bundled patch's header is the shipped DW3 patch",
+                  f"{_aah.source_crc:08X} {_aah.target_crc:08X} {_aah.patch_crc:08X}")
+            check(_aatab.combo_bps.count() >= 1
+                  and "DW3-USA-Complete.bps" in _aatab.combo_bps.itemText(0),
+                  "AA20 the bundled patch is listed as a choice", _aatab.combo_bps.itemText(0))
+        else:
+            check(True, "AA19-AA20 skipped: no bundled patch in patches/ (fresh clone)")
+        # run the tab's apply with the worker's run() called inline, so the signal is delivered
+        # synchronously and the check does not depend on a Qt event loop.
+        _aatab._bps_patch = _aa_pf
+        _aatab._bps_base = _aa_src_f
+        _aatab._bps_out = _aadir / "tab.out"
+        _aastart = _AAWorker.start
+        _AAWorker.start = lambda self: self.run()
+        try:
+            _aatab.apply_bps()
+        finally:
+            _AAWorker.start = _aastart
+        check(_aatab.lbl_bps.objectName() == "ok" and _aatab.lbl_bps.text().endswith("verified.")
+              and (_aadir / "tab.out").read_bytes() == _aa_tgt,
+              "AA21 the tab's Apply ends on a status line that names the output and says verified",
+              _aatab.lbl_bps.text()[-60:])
+        # and a wrong base through the tab is reported, not raised
+        _aatab._bps_base = _aa_wrong
+        _aatab._bps_out = _aadir / "tab2.out"
+        _AAWorker.start = lambda self: self.run()
+        try:
+            _aatab.apply_bps()
+        finally:
+            _AAWorker.start = _aastart
+        check(_aatab.lbl_bps.objectName() == "err"
+              and "not intended for this ROM" in _aatab.lbl_bps.text()
+              and not (_aadir / "tab2.out").exists(),
+              "AA22 the tab reports a wrong-base refusal in its status line and leaves no output",
+              _aatab.lbl_bps.text()[:70])
+        # the tab refuses with no patch chosen
+        _aatab._bps_patch = None
+        _aatab.combo_bps.setCurrentIndex(-1)
+        _aatab.apply_bps()
+        check(_aatab.lbl_bps.objectName() == "err" and "Choose a .bps patch first" in
+              _aatab.lbl_bps.text(),
+              "AA23 the tab refuses to apply with no patch chosen",
+              _aatab.lbl_bps.text()[:60])
+    except Exception as _exc:  # noqa: BLE001
+        check(False, "AA18-AA23 the Mods tab's Apply card checks raised",
+              f"{type(_exc).__name__}: {_exc}")
+except Exception as _exc:  # noqa: BLE001
+    check(False, "AA1-AA23 BPS apply checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # Sweep every temp dir the gate made. Each section also cleans its own; this is the net that
 # catches a dir whose section raised before it could, so a run never leaves anything in TEMP.

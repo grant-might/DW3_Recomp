@@ -39,6 +39,25 @@ def docs_dir() -> pathlib.Path:
     return launcher_root() / "docs"
 
 
+def patches_dir() -> pathlib.Path:
+    """BPS patches the launcher offers for one-click applying.
+
+    These are the project's own patches - a diff between two images, not game data - so the common
+    case (turning a retail disc into the finished modded disc) needs no file hunt. The list is only
+    a convenience: the Mods tab still lets the player choose ANY .bps file with the file picker, and
+    an empty or missing folder is fine.
+    """
+    return launcher_root() / "patches"
+
+
+def bundled_patches() -> list[pathlib.Path]:
+    """Every `.bps` in ``patches/``, in name order. Empty when the folder is absent or empty."""
+    d = patches_dir()
+    if not d.is_dir():
+        return []
+    return sorted(p for p in d.glob("*.bps") if p.is_file())
+
+
 def cards_dir() -> pathlib.Path:
     """Memory cards the player drops beside the launcher, alongside Builds/ and Discs/."""
     return launcher_root() / "cards"

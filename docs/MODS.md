@@ -31,15 +31,21 @@ a constructor inside the binary, and the manifest's `[[plugin]]` block is only a
 a loader. A launch with a package selected whose plugin is not linked in is refused
 (`trusted plugin is unavailable`), so the ZIP on its own can add nothing.
 
-The rebuild stages the package's `plugin/<name>.c` into the build, sets that build's region define
-(a mod that touches game memory carries one address table per region), rebuilds and relinks, and
-replaces the executable. It reuses the launcher's own build path, so nothing about your toolchain
-setup changes.
+The rebuild compiles the plugin source of **every installed and enabled package** for that region in
+one pass, not just the one loaded in the Mods tab: it stages each enabled package's
+`plugin/<name>.c` into the build, sets that build's region define (a mod that touches game memory
+carries one address table per region), rebuilds and relinks once, and replaces the executable. It
+prunes the staged sources down to exactly the enabled set first, so a mod you disable stops being
+compiled in rather than staying linked forever. It reuses the launcher's own build path, so nothing
+about your toolchain setup changes.
 
-**How long it takes.** If that region's build tree already exists, the rebuild is incremental: one
-source file is compiled and the executable is relinked, which takes seconds. If the build does not
-exist yet the rebuild says so and does nothing - build the disc on the Play tab first (10 to 20
-minutes, about 3 GB), and every rebuild after that is the fast path.
+**How long it takes.** If that region's build tree already exists, the rebuild is incremental: the
+enabled mods' source files are compiled and the executable is relinked, which takes seconds. If the
+build does not exist yet the rebuild says so and does nothing - build the disc on the Play tab first
+(10 to 20 minutes, about 3 GB), and every rebuild after that is the fast path.
+
+Two enabled packages that name each other in `conflicts` cannot run together: the rebuild refuses
+before it compiles anything and names both ids, so disable one of the pair first.
 
 A package that ships no `plugin/` folder is data only (byte patches, disc overlays): install it and
 play. The Rebuild buttons say so rather than doing pointless work.
@@ -99,3 +105,32 @@ Mods change the game data and the game's executable for that build. Keep the lau
 tab for your saves, and copy `card1.mcd` / `card2.mcd` somewhere safe before adding a mod that
 claims to change balance. Removing a package and pressing Rebuild again puts the build back to the
 mod-free executable.
+
+## Patching your disc image with a .bps patch
+
+The packages above change a recompiled build. A **.bps patch** changes the **disc image** itself,
+which is a different thing and lives on the Mods tab too, in the card "Apply a .bps patch to your
+disc image". That card turns your own retail image into a finished patched image in one step:
+
+1. **Patch** lists the patches the launcher ships (a `.bps` is small and holds no game data). Pick
+   the listed one, or **Choose .bps file…** for any `.bps` on your machine.
+2. **Disc image** defaults to the disc the launcher already knows for this build (from `Discs/`, or
+   the one baked into the build's `game.toml`). Override it with **Change disc image…**; a `.cue` is
+   accepted and the `.bin` it names is used.
+3. **Output** defaults to a free name beside your image (`… (patched).bin`). **Change output…** sets
+   your own name; an existing file is refused rather than overwritten.
+4. **Apply patch** runs off the UI thread and reports in the card's status line and log.
+
+What the launcher guarantees while it runs:
+
+- your disc image is opened **read-only** and is never modified;
+- the patch's **source checksum is checked against your image before anything is written**, so a
+  patch for a different disc is refused (the same meaning as Flips' "This patch is not intended for
+  this ROM") and no output file is left behind;
+- the result's **target checksum is checked after**, and if it does not match the output is deleted
+  so no bad image is left looking finished;
+- the images are streamed through a memory map, so a ~650 MB disc is not loaded into RAM.
+
+A `.bps` is not a mod package and needs no rebuild: the patched image is used like any other disc
+image (point the Play tab / the build's `game.toml` at it). Keep the original image: the patch only
+ever writes a copy.

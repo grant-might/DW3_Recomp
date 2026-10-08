@@ -901,6 +901,32 @@ static int16_t voice_next_sample(int idx) {
     return (int16_t)shaped;
 }
 
+/* ---- Trusted-mod hook: per-sample KEYON output-volume scale -------------
+ * A statically linked mod plugin may ask that every voice KEYON whose ADPCM
+ * start address equals `spu_vol_scale_addr` mix at num/den of the volume the
+ * guest programmed.  The scale is applied to that voice's L/R volume
+ * registers (and their live sweep envelopes) at the instant of KEYON, so it
+ * is exact from the first output sample and touches no other voice, sample,
+ * register, bank or global.  Disabled by default: with no caller the mixer is
+ * byte-for-byte stock.  (Used by the launcher footstep-volume mods.) */
+static uint32_t spu_vol_scale_addr = 0xFFFFFFFFu; /* 0xFFFFFFFF = disabled */
+static int64_t  spu_vol_scale_num  = 1;
+static int64_t  spu_vol_scale_den  = 1;
+
+void spu_set_sample_volume_scale(uint32_t start_addr, uint32_t num,
+                                 uint32_t den) {
+    if (den == 0u || start_addr == 0xFFFFFFFFu ||
+        start_addr >= (uint32_t)SPU_RAM_SIZE) {
+        spu_vol_scale_addr = 0xFFFFFFFFu;
+        spu_vol_scale_num = 1;
+        spu_vol_scale_den = 1;
+        return;
+    }
+    spu_vol_scale_addr = start_addr & (SPU_RAM_SIZE - 1u);
+    spu_vol_scale_num = (int64_t)num;
+    spu_vol_scale_den = (int64_t)den;
+}
+
 static void key_on(uint32_t mask) {
     for (int i = 0; i < SPU_VOICE_COUNT; i++) {
         if (!(mask & (1u << i))) continue;
@@ -918,6 +944,25 @@ static void key_on(uint32_t mask) {
         v->env_level = 0;
         v->adsr_divider = 0;
         v->adsr_phase = ADSR_ATTACK;
+        /* Trusted-mod hook: scale this voice's L/R mix volume if it is the
+         * sample a mod asked to duck.  Direct-mode volume registers only
+         * (bit15 clear); a sweep-mode register is left untouched. */
+        if (spu_vol_scale_addr != 0xFFFFFFFFu &&
+            v->cur_addr == spu_vol_scale_addr) {
+            for (int ch = 0; ch < 2; ch++) {
+                uint16_t raw = spu_regs[(uint32_t)i * 8u + (uint32_t)ch];
+                if (raw & 0x8000u) continue;
+                int32_t scaled = (int32_t)(
+                    ((int64_t)(int16_t)raw * spu_vol_scale_num) /
+                    spu_vol_scale_den);
+                if (scaled > 32767) scaled = 32767;
+                if (scaled < -32768) scaled = -32768;
+                spu_regs[(uint32_t)i * 8u + (uint32_t)ch] =
+                    (uint16_t)(int16_t)scaled;
+                sweep_env_write(&sweep_voice_env[i][ch],
+                                (uint16_t)(int16_t)scaled);
+            }
+        }
         key_on_count++;
         endx_latch &= ~(1u << i);  /* KEYON clears ENDX bit on real hw */
         spu_event_record(SPU_EV_KEYON, i, v->cur_addr);

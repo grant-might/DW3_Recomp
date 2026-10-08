@@ -67,6 +67,14 @@ Thumbs.db
 !engine/framework/bios/openbios.bin
 !engine/framework/bios/*.LICENSE
 
+# --- BPS patches the Mods tab offers ---------------------------------------------
+# `patches/` is the folder the Mods tab's Apply card lists. A .bps patch encodes the byte diff
+# between a retail disc image and the modded one, and the project's own patch is marked local-only
+# ("do not upload the patch or the image anywhere"), so the file stays on disk but is never
+# committed. The applier works with any .bps the player picks, and lists nothing when the folder
+# is empty, so a fresh clone still works - it just asks for the player's own patch.
+patches/*.bps
+
 # --- documentation screenshots -----------------------------------------------------
 # The README embeds its screenshots from GitHub's attachment store, so these PNGs are
 # kept out of version control. They stay on disk so the owner can re-upload them.

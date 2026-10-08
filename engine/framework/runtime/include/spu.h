@@ -118,6 +118,16 @@ void     spu_event_reset(void);
 uint32_t spu_read(uint32_t addr);
 void spu_write(uint32_t addr, uint32_t value);
 
+/* ---- Trusted-mod hook: per-sample KEYON output-volume scale -------------
+ * Request that every voice KEYON whose ADPCM start address equals
+ * `start_addr` (a byte address in SPU RAM) mix at num/den of the volume the
+ * guest programmed, applied at KEYON so it is exact from the first output
+ * sample.  Touches only that voice's L/R mix volume; no other voice, sample,
+ * register or bank changes.  Pass den == 0 (or start_addr == 0xFFFFFFFF) to
+ * disable and restore the stock mixer. */
+void spu_set_sample_volume_scale(uint32_t start_addr, uint32_t num,
+                                 uint32_t den);
+
 /* DMA channel 4 interface. spu_dma_read reads one 32-bit word from SPU RAM
  * at the current transfer address, advances the address by 4, and runs the
  * SPU IRQ-address check (SPU RAM -> CPU direction, DICR direction bit 0). */

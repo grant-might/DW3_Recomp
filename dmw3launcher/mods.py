@@ -68,6 +68,7 @@ class ModPackage:
     targets: tuple[str, ...] = ()
     features: tuple[ModFeature, ...] = ()
     plugins: tuple[str, ...] = ()          # plugin ids the manifest references
+    conflicts: tuple[str, ...] = ()        # package ids the runtime refuses to run alongside
     format_version: int = 0
     manifest: dict = field(default_factory=dict)
     zip_path: pathlib.Path | None = None   # set when it came from a package file
@@ -132,6 +133,12 @@ def parse_manifest(text: str, origin: str = "") -> ModPackage:
         str(p.get("id", "")) for p in (doc.get("plugin") or [])
         if isinstance(p, dict) and p.get("id")
     )
+    # A top-level `conflicts = ["<id>", ...]`: the runtime refuses a launch while any listed id is
+    # also enabled (see the C++ provider's resolution), so the tab can pre-empt that failure.
+    conflicts = tuple(
+        str(c) for c in (doc.get("conflicts") or [])
+        if isinstance(c, str) and c
+    )
     targets = tuple(
         str(t.get("game_id", "")) for t in (doc.get("target") or [])
         if isinstance(t, dict) and t.get("game_id")
@@ -144,6 +151,7 @@ def parse_manifest(text: str, origin: str = "") -> ModPackage:
         targets=targets,
         features=features,
         plugins=plugins,
+        conflicts=conflicts,
         format_version=int(doc.get("format_version", 0) or 0),
         manifest=doc,
     )
@@ -230,6 +238,27 @@ def plugin_sources(package_dir: pathlib.Path) -> list[pathlib.Path]:
         return []
     return sorted(p for p in d.rglob("*")
                   if p.is_file() and p.suffix.lower() in SOURCE_SUFFIXES)
+
+
+def package_file_plugin_sources(zip_path: pathlib.Path) -> list[str]:
+    """The plugin source members inside a package ZIP (`plugin/**/*.c`), by name.
+
+    The load-time twin of `plugin_sources`: a package loaded from a ZIP is not on disk yet, so the
+    only way to tell whether it carries plugin source is to look inside the archive. An unreadable
+    archive reports nothing, which is the safe direction for the caller's warning.
+    """
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            out = []
+            for name in zf.namelist():
+                n = name.replace("\\", "/")
+                if not n.startswith("plugin/"):
+                    continue
+                if pathlib.PurePosixPath(n).suffix.lower() in SOURCE_SUFFIXES:
+                    out.append(n)
+            return sorted(out)
+    except (OSError, zipfile.BadZipFile):
+        return []
 
 
 def _extract_archive(zf: zipfile.ZipFile, dest: pathlib.Path) -> None:
@@ -416,3 +445,60 @@ def state_summary(exe_dir: pathlib.Path, package: ModPackage) -> str:
     if off:
         parts.append("off: " + ", ".join(off))
     return "installed; " + "; ".join(parts)
+
+
+# ---------------------------------------------------------------- the enabled set a rebuild compiles
+
+def enabled_packages(exe_dir: pathlib.Path) -> list[ModPackage]:
+    """Every installed package with at least one feature switched on, in id order.
+
+    A Rebuild compiles the plugin of exactly this set, no more and no less: the runtime activates a
+    feature only when its plugin id is already registered in the executable and refuses to launch
+    otherwise (`trusted plugin is unavailable`), so the compiled set must match the enabled set for
+    a region - not just the one package the Mods tab happens to have loaded.
+    """
+    out: list[ModPackage] = []
+    for pkg in installed_packages(exe_dir):
+        if any(feature_states(exe_dir, pkg).values()):
+            out.append(pkg)
+    out.sort(key=lambda p: (p.id, p.version))
+    return out
+
+
+def conflicting_pairs(packages) -> list[tuple[str, str]]:
+    """Enabled package pairs where one names the other in its `conflicts` list.
+
+    The runtime refuses a launch while two conflicting packages are both enabled, so this is checked
+    BEFORE a rebuild instead of producing an executable that will not start. Each pair is returned
+    once, ordered by id, so a caller can name both sides.
+    """
+    enabled_ids = {p.id for p in packages}
+    seen: set[tuple[str, str]] = set()
+    pairs: list[tuple[str, str]] = []
+    for pkg in packages:
+        for other in pkg.conflicts:
+            if other == pkg.id or other not in enabled_ids:
+                continue
+            key = tuple(sorted((pkg.id, other)))
+            if key not in seen:
+                seen.add(key)
+                pairs.append(key)
+    pairs.sort()
+    return pairs
+
+
+def enabled_plugins_without_source(exe_dir: pathlib.Path) -> list[ModPackage]:
+    """Enabled packages that declare a plugin but ship no plugin source under `plugin/`.
+
+    A rebuild compiles plugin source into the executable, and the runtime activates an enabled
+    feature only when its plugin id is already registered in that executable - otherwise it refuses
+    to launch (`trusted plugin is unavailable`). So an enabled package whose manifest declares a
+    `[[plugin]]` but whose `plugin/` folder holds no source can NEVER be satisfied by a rebuild, and
+    compiling the rest of the enabled set would still deploy an executable that cannot start. A
+    rebuild must name these packages and refuse, never drop them silently.
+    """
+    out: list[ModPackage] = []
+    for pkg in enabled_packages(exe_dir):
+        if pkg.has_plugin and not plugin_sources(install_dir(exe_dir, pkg)):
+            out.append(pkg)
+    return out

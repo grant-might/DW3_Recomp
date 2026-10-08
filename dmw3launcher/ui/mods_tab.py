@@ -21,6 +21,13 @@ That is half the job, and it is not the half a player should have to do by hand:
 The old folder-drop mods (a folder in `mods/`, moved to `mods/.disabled/` to switch off) are still
 listed at the bottom. Those are data-only mods and need no relink.
 
+This tab also carries the DISC side of modding, which is a different mechanism: the recompiled
+builds above are native code and never touch a PS1 image, so a patch that rebuilds the disc itself
+is a `.bps` file applied to the player's own image. The "Apply a .bps patch to your disc image" card
+lists the project's bundled patch (and any `.bps` the player picks), defaults the disc image to the
+one the launcher already knows for this build, and applies it with `dmw3launcher.bpspatch` - which
+checks the base image's CRC32 before it writes anything and the result's CRC32 after.
+
 Every failure is reported in the tab's own status line and Activity log rather than in a modal
 dialog: the message sits next to the button that was pressed, and a modal cannot be dismissed by a
 headless check.
@@ -31,11 +38,11 @@ import pathlib
 import shutil
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtWidgets import (QComboBox, QFrame, QGroupBox, QHBoxLayout, QLabel, QListWidget,
-                               QListWidgetItem, QPlainTextEdit, QPushButton, QScrollArea,
-                               QTextBrowser, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QFileDialog, QFrame, QGroupBox, QHBoxLayout, QLabel,
+                               QListWidget, QListWidgetItem, QPlainTextEdit, QPushButton,
+                               QScrollArea, QTextBrowser, QVBoxLayout, QWidget)
 
-from .. import builder, builds, mods, paths, runtime
+from .. import bpspatch, builder, builds, mods, paths, runtime
 from . import theme
 
 RULES_SUMMARY = (
@@ -54,6 +61,14 @@ COST_TEXT = (
     "that build already exists this is an incremental relink and takes seconds. If it does not "
     "exist yet, build the disc on the Play tab first (10 to 20 minutes, about 3 GB): a rebuild "
     "cannot make a build from nothing."
+)
+
+# The shared sentence for an enabled package that declares a plugin but ships no source. Used
+# verbatim by the rebuild's refusal, the pre-press rebuild line, and the load/install flags, so a
+# player reads the same words wherever they meet it.
+MISSING_SOURCE_TAIL = (
+    "declares a plugin but ships no plugin source under plugin/, so the executable cannot "
+    "satisfy it and the game would refuse to launch (trusted plugin is unavailable)"
 )
 
 
@@ -77,6 +92,34 @@ class _RelinkWorker(QThread):
         self.done.emit(res)
 
 
+class _BpsWorker(QThread):
+    """Applies a .bps patch off the UI thread, forwarding the applier's own log lines.
+
+    `bpspatch.apply` can hold the CPU for a while on a 647 MB image, so it runs here rather than on
+    the UI thread; the applier's `log` goes straight to the card's log. A `BpsError` is a normal,
+    reportable outcome (wrong base, damaged patch), so it becomes a failed result, not a crash.
+    """
+
+    line = Signal(str)
+    done = Signal(object)      # bpspatch.BpsResult
+
+    def __init__(self, patch: pathlib.Path, base: pathlib.Path, out: pathlib.Path,
+                 parent=None) -> None:
+        super().__init__(parent)
+        self.patch = pathlib.Path(patch)
+        self.base = pathlib.Path(base)
+        self.out = pathlib.Path(out)
+
+    def run(self) -> None:  # noqa: D102 (QThread entry point)
+        try:
+            res = bpspatch.apply(self.patch, self.base, self.out, log=self.line.emit)
+        except bpspatch.BpsError as exc:
+            res = bpspatch.BpsResult(False, message=str(exc))
+        except Exception as exc:  # noqa: BLE001 - a worker must never take the app down
+            res = bpspatch.BpsResult(False, message=f"{type(exc).__name__}: {exc}")
+        self.done.emit(res)
+
+
 class ModsTab(QWidget):
     def __init__(self, cfg: dict) -> None:
         super().__init__()
@@ -84,6 +127,14 @@ class ModsTab(QWidget):
         self.region: str = builds.default_region()
         self.package: mods.ModPackage | None = None
         self._worker: _RelinkWorker | None = None
+        # The .bps Apply card's own state: the chosen patch, the disc image (None = "use the disc
+        # the launcher already knows for this build"), a chosen output (None = derive one), and any
+        # extra .bps files the player has picked this session.
+        self._bps_patch: pathlib.Path | None = None
+        self._bps_base: pathlib.Path | None = None
+        self._bps_out: pathlib.Path | None = None
+        self._bps_extra: list[pathlib.Path] = []
+        self._bps_worker: _BpsWorker | None = None
 
         # The page scrolls rather than squeezes: a package card, the rebuild card, the file list
         # and the rules need more height than the window gives them, and a squeezed layout
@@ -220,6 +271,86 @@ class ModsTab(QWidget):
         rl.addWidget(self.log)
         lay.addWidget(rbox)
 
+        # ---- apply a .bps patch to a disc image ------------------------------
+        # The DISC side of modding, kept apart from the packages above: a package changes the
+        # recompiled build, while a .bps patch rebuilds the PS1 image the player owns. The card is
+        # deliberately self-contained (its own log, not the rebuild card's).
+        bbox = QGroupBox("Apply a .bps patch to your disc image")
+        bl2 = QVBoxLayout(bbox)
+        bl2.setContentsMargins(theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD)
+        bl2.setSpacing(theme.ROW_GAP)
+        bps_hint = QLabel(
+            "A .bps patch rebuilds the disc image it was made for; it is the DISC side of modding, "
+            "separate from the packages above. Pick a patch (the bundled one is the usual case, or "
+            "choose any .bps file), pick the disc image it applies to, and press Apply. Your image "
+            "is opened read-only and is never changed: its checksum is checked BEFORE anything is "
+            "written, and the patched copy's checksum is checked after. The source is streamed in "
+            "small chunks and never loaded whole; the output is written through a memory map, so "
+            "its pages are file-backed and reclaimable - the apply says what that costs in RAM "
+            "before it starts.")
+        bps_hint.setObjectName("hint")
+        bps_hint.setWordWrap(True)
+        bl2.addWidget(bps_hint)
+
+        rowp = QHBoxLayout()
+        rowp.setSpacing(theme.ROW_GAP)
+        rowp.addWidget(QLabel("Patch"))
+        self.combo_bps = QComboBox()
+        self.combo_bps.setMinimumWidth(260)
+        self.combo_bps.currentIndexChanged.connect(lambda _i: self._on_bps_patch_changed())
+        rowp.addWidget(self.combo_bps)
+        self.btn_pick_bps = QPushButton("Choose .bps file…")
+        self.btn_pick_bps.clicked.connect(self.pick_bps)
+        rowp.addWidget(self.btn_pick_bps)
+        rowp.addStretch(1)
+        bl2.addLayout(rowp)
+
+        rowb = QHBoxLayout()
+        rowb.setSpacing(theme.ROW_GAP)
+        self.lbl_bps_base = QLabel()
+        self.lbl_bps_base.setWordWrap(True)
+        self.lbl_bps_base.setObjectName("hint")
+        self.btn_pick_base = QPushButton("Change disc image…")
+        self.btn_pick_base.clicked.connect(self.pick_bps_base)
+        rowb.addWidget(self.lbl_bps_base, 1)
+        rowb.addWidget(self.btn_pick_base)
+        bl2.addLayout(rowb)
+
+        rowo = QHBoxLayout()
+        rowo.setSpacing(theme.ROW_GAP)
+        self.lbl_bps_out = QLabel()
+        self.lbl_bps_out.setWordWrap(True)
+        self.lbl_bps_out.setObjectName("hint")
+        self.btn_pick_out = QPushButton("Change output…")
+        self.btn_pick_out.clicked.connect(self.pick_bps_output)
+        rowo.addWidget(self.lbl_bps_out, 1)
+        rowo.addWidget(self.btn_pick_out)
+        bl2.addLayout(rowo)
+
+        rowe = QHBoxLayout()
+        rowe.setSpacing(theme.ROW_GAP)
+        self.btn_apply_bps = QPushButton("Apply patch")
+        self.btn_apply_bps.clicked.connect(self.apply_bps)
+        rowe.addWidget(self.btn_apply_bps)
+        self.btn_open_bps_out = QPushButton("Open output folder")
+        self.btn_open_bps_out.clicked.connect(self._open_bps_output)
+        rowe.addWidget(self.btn_open_bps_out)
+        rowe.addStretch(1)
+        bl2.addLayout(rowe)
+
+        self.lbl_bps = QLabel()
+        self.lbl_bps.setWordWrap(True)
+        self.lbl_bps.setObjectName("hint")
+        bl2.addWidget(self.lbl_bps)
+
+        self.bps_log = QPlainTextEdit()
+        self.bps_log.setReadOnly(True)
+        self.bps_log.setPlaceholderText("Choosing a patch and applying it report here.")
+        self.bps_log.setMinimumHeight(96)
+        self.bps_log.setMaximumHeight(150)
+        bl2.addWidget(self.bps_log)
+        lay.addWidget(bbox)
+
         # ---- folder mods (data only, no relink) ------------------------------
         box = QGroupBox("Mod files in this build")
         bl = QVBoxLayout(box)
@@ -276,6 +407,7 @@ class ModsTab(QWidget):
             self.combo_region.blockSignals(True)
             self.combo_region.setCurrentIndex(index)
             self.combo_region.blockSignals(False)
+        self._refresh_bps_combo()
         self.refresh()
 
     # ------------------------------------------------------------------ helpers
@@ -304,6 +436,169 @@ class ModsTab(QWidget):
         except ValueError:
             return str(p)
 
+    # ------------------------------------------------------------------ the .bps Apply card
+    def _bps_say(self, text: str) -> None:
+        self.bps_log.appendPlainText(text)
+
+    def _refresh_bps_combo(self) -> None:
+        """List the bundled patches, then any .bps the player picked, keeping the selection."""
+        wanted = str(self._bps_patch) if self._bps_patch is not None else None
+        self.combo_bps.blockSignals(True)
+        self.combo_bps.clear()
+        for p in paths.bundled_patches():
+            self.combo_bps.addItem(f"{p.name}  ({p.stat().st_size:,} bytes)", str(p))
+        for p in self._bps_extra:
+            if self.combo_bps.findData(str(p)) < 0:
+                self.combo_bps.addItem(p.name, str(p))
+        self.combo_bps.blockSignals(False)
+        if self.combo_bps.count() == 0:
+            self.combo_bps.addItem('No bundled patch - press "Choose .bps file…"', None)
+        idx = self.combo_bps.findData(wanted) if wanted else -1
+        if idx < 0:
+            idx = 0
+        self.combo_bps.setCurrentIndex(idx)
+        self._on_bps_patch_changed()
+
+    def _on_bps_patch_changed(self) -> None:
+        data = self.combo_bps.currentData()
+        self._bps_patch = pathlib.Path(str(data)) if data else None
+        self._refresh_bps_buttons()
+
+    def _bps_base_path(self) -> pathlib.Path | None:
+        """The disc image to patch: the player's choice, else the one the launcher already knows."""
+        if self._bps_base is not None:
+            return self._bps_base
+        return builds.resolve_image(self.region) or builds.resolve_image(builds.REGION_US)
+
+    def _bps_out_path(self) -> pathlib.Path | None:
+        """The output path: the player's choice, else a free name derived from the base image."""
+        if self._bps_out is not None:
+            return self._bps_out
+        base = self._bps_base_path()
+        if base is None:
+            return None
+        try:
+            return bpspatch.default_output(base)
+        except bpspatch.BpsError:
+            return None
+
+    def _refresh_bps_labels(self) -> None:
+        base = self._bps_base_path()
+        if base is None:
+            self.lbl_bps_base.setText(
+                "Disc image: none selected - drop your .cue/.bin in the Discs folder, or press "
+                '"Change disc image…".')
+        else:
+            self.lbl_bps_base.setText(f"Disc image: {base}")
+        out = self._bps_out_path()
+        self.lbl_bps_out.setText(f"Output: {out}" if out is not None
+                                 else "Output: (choose a disc image first)")
+
+    def _refresh_bps_buttons(self) -> None:
+        busy = self._bps_worker is not None
+        self.btn_apply_bps.setEnabled(not busy and self._bps_patch is not None)
+        self.btn_pick_bps.setEnabled(not busy)
+        self.btn_pick_base.setEnabled(not busy)
+        self.btn_pick_out.setEnabled(not busy)
+        if busy:
+            self.lbl_bps.setText("Applying the patch... see the log below.")
+
+    def pick_bps(self) -> None:
+        start = str(paths.patches_dir()) if paths.patches_dir().is_dir() else ""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select a .bps patch", start, "BPS patches (*.bps);;All files (*)")
+        if not path:
+            return
+        p = pathlib.Path(path)
+        if p not in self._bps_extra:
+            self._bps_extra.append(p)
+        self._refresh_bps_combo()
+        idx = self.combo_bps.findData(str(p))
+        if idx >= 0:
+            self.combo_bps.setCurrentIndex(idx)
+        self._bps_say(f"selected patch {p}")
+
+    def pick_bps_base(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select the disc image to patch", "",
+            "Disc images (*.cue *.bin);;All files (*)")
+        if not path:
+            return
+        self._bps_base = pathlib.Path(path)
+        self._bps_out = None      # re-derive the output name for the new base
+        self._bps_say(f"disc image for patching: {self._bps_base}")
+        self._refresh_bps_labels()
+
+    def pick_bps_output(self) -> None:
+        start = str(self._bps_out_path() or "")
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save the patched image as", start, "Disc images (*.bin);;All files (*)")
+        if not path:
+            return
+        self._bps_out = pathlib.Path(path)
+        self._refresh_bps_labels()
+
+    def _open_bps_output(self) -> None:
+        out = self._bps_out_path()
+        runtime.open_path(out.parent if out is not None else paths.launcher_root())
+
+    def apply_bps(self) -> None:
+        """Start the apply off the UI thread, after the cheap checks that need no worker."""
+        if self._bps_worker is not None:
+            return
+        patch = self.combo_bps.currentData() if self._bps_patch is None else str(self._bps_patch)
+        if not patch or not pathlib.Path(str(patch)).is_file():
+            self._set_label(self.lbl_bps, "err",
+                            'Choose a .bps patch first: the bundled one in the list, or any file '
+                            'with "Choose .bps file…".')
+            return
+        base = self._bps_base_path()
+        if base is None or not base.exists():
+            self._set_label(self.lbl_bps, "err",
+                            "Choose the disc image this patch applies to (your own retail "
+                            '.cue/.bin), with "Change disc image…".')
+            return
+        try:
+            out = self._bps_out_path()
+        except bpspatch.BpsError as exc:
+            self._set_label(self.lbl_bps, "err", str(exc))
+            return
+        if out is None:
+            self._set_label(self.lbl_bps, "err", "Choose an output file first.")
+            return
+        if out.exists():
+            self._set_label(
+                self.lbl_bps, "err",
+                f"{out} already exists. Press \"Change output…\" and pick another name, so an "
+                f"existing file is never overwritten.")
+            return
+        self._bps_out = out
+        self._bps_worker = _BpsWorker(pathlib.Path(str(patch)), base, out, self)
+        self._bps_worker.line.connect(self._bps_say)
+        self._bps_worker.done.connect(self._on_bps_done)
+        self._refresh_bps_buttons()
+        self._set_label(self.lbl_bps, "hint",
+                        f"Applying {pathlib.Path(str(patch)).name} to {base.name}; the result goes "
+                        f"to {out}. See the log below.")
+        self._bps_say(f"== Apply {pathlib.Path(str(patch)).name} -> {out} ==")
+        self._bps_worker.start()
+
+    def _on_bps_done(self, res) -> None:
+        self._bps_worker = None
+        ok = bool(getattr(res, "ok", False))
+        if ok:
+            out = getattr(res, "output", None) or self._bps_out
+            crc = int(getattr(res, "target_crc", 0))
+            self._set_label(self.lbl_bps, "ok",
+                            f"{out} - target CRC32 {crc:08X} matches the patch; verified.")
+            self._bps_say(f"APPLY OK: {out} verified (target CRC32 {crc:08X})")
+        else:
+            message = str(getattr(res, "message", "The patch could not be applied."))
+            self._set_label(self.lbl_bps, "err", message)
+            self._bps_say("FAILED: " + message)
+        self._refresh_bps_buttons()
+        self._refresh_bps_labels()
+
     # ------------------------------------------------------------------ refresh
     def refresh(self) -> None:
         ready = builds.build_status(self.region)[0]
@@ -321,6 +616,10 @@ class ModsTab(QWidget):
         self._refresh_mod_list()
         self._refresh_package_card()
         self._refresh_rebuild_state()
+        # The Apply card's base image follows the build region until the player overrides it, so a
+        # region change re-derives it here.
+        self._refresh_bps_labels()
+        self._refresh_bps_buttons()
 
     def _refresh_mod_list(self) -> None:
         self.list_mods.clear()
@@ -405,12 +704,45 @@ class ModsTab(QWidget):
                     lines.append(f"      {f.description}")
         if pkg.description:
             lines += ["", "Description", pkg.description]
+        if self._plugin_source_missing(pkg, ready):
+            lines += ["", "! this package declares a plugin but ships no plugin source under "
+                          "plugin/ - a rebuild cannot satisfy it and the game would refuse to "
+                          "start (trusted plugin is unavailable)."]
         self.card.setPlainText("\n".join(lines))
 
         state = (mods.state_summary(self._exe_dir(), pkg) if ready
                  else "not installed here (build this region on the Play tab first)")
-        self._set_label(self.lbl_state, "ok" if "enabled" in state else "warn",
-                        f"{pkg.id} {pkg.version}: {state}")
+        if self._plugin_source_missing(pkg, ready):
+            self._set_label(self.lbl_state, "err", f"{pkg.id} {MISSING_SOURCE_TAIL}")
+        else:
+            self._set_label(self.lbl_state, "ok" if "enabled" in state else "warn",
+                            f"{pkg.id} {pkg.version}: {state}")
+
+    def _plugin_source_missing(self, pkg: mods.ModPackage, ready: bool) -> bool:
+        """True when a package declares a plugin but carries no plugin source.
+
+        The check follows where the package actually is: an INSTALLED copy is read off disk, a
+        package only loaded from its ZIP is read out of the archive. A data-only package is never
+        flagged. This is what makes the tab say so at load and install time rather than leaving the
+        player to find out when the game refuses to launch.
+        """
+        if not pkg.has_plugin:
+            return False
+        try:
+            if ready and mods.is_installed(self._exe_dir(), pkg):
+                return not mods.plugin_sources(mods.install_dir(self._exe_dir(), pkg))
+        except OSError:
+            pass
+        if pkg.zip_path is not None:
+            return not mods.package_file_plugin_sources(pkg.zip_path)
+        return False
+
+    def _flag_plugin_source_missing(self, pkg: mods.ModPackage) -> None:
+        """Say, in the log and the state line, that a package cannot be compiled as shipped."""
+        if not self._plugin_source_missing(pkg, True):
+            return
+        self._say(f"WARNING: {pkg.id} {MISSING_SOURCE_TAIL}")
+        self._set_label(self.lbl_state, "err", f"{pkg.id} {MISSING_SOURCE_TAIL}")
 
     def _refresh_rebuild_state(self) -> None:
         """The two rebuild buttons: off until a package is loaded, and honest about each region."""
@@ -431,17 +763,55 @@ class ModsTab(QWidget):
                             f"Install it above and play.")
             return
         parts = []
+        warn = []
         for region in (builds.REGION_US, builds.REGION_EU):
             spec = builds.spec(region)
             if builder.has_project(region):
-                parts.append(f"{spec.label}: build tree ready, relink is incremental")
+                miss = self._unsatisfied_plugin_ids(region)
+                if miss:
+                    warn.append(f"{spec.label}: {', '.join(miss)}")
+                n, ids = self._enabled_plugin_summary(region)
+                detail = (f"compiles {n} enabled mod(s): {', '.join(ids)}" if n
+                          else "no enabled plugin mods to compile yet")
+                parts.append(f"{spec.label}: build tree ready, relink is incremental ({detail})")
             elif builds.build_status(region)[0]:
                 parts.append(f"{spec.label}: executable present but no project tree, rebuild it "
                              f"from disc on the Play tab first")
             else:
                 parts.append(f"{spec.label}: not built yet, build it on the Play tab first")
+        if warn:
+            # Report the unsatisfiable enabled package BEFORE the button is pressed, so the player
+            # is told why the rebuild will refuse instead of meeting it as a surprise refusal.
+            self._set_label(
+                self.lbl_rebuild, "err",
+                f"{'; '.join(warn)} - {MISSING_SOURCE_TAIL}. A rebuild refuses rather than deploy "
+                f"an executable that cannot start; install a package that ships its plugin source, "
+                f"or disable it.")
+            return
         self._set_label(self.lbl_rebuild, "hint",
                         "Press the button for the region you play.   " + "   ".join(parts))
+
+    def _unsatisfied_plugin_ids(self, region: str) -> list[str]:
+        """Ids of this region's enabled packages that declare a plugin but ship no source."""
+        try:
+            pkgs = mods.enabled_plugins_without_source(builds.build_dir(region))
+        except OSError:
+            return []
+        return [p.id for p in pkgs]
+
+    def _enabled_plugin_summary(self, region: str) -> tuple[int, list[str]]:
+        """(count, ids) of the installed+enabled packages a rebuild of this region would compile.
+
+        Shown before the button is pressed, so the line states the real set a rebuild will land
+        rather than only the package the UI happens to have loaded.
+        """
+        try:
+            exe_dir = builds.build_dir(region)
+            pkgs = [p for p in mods.enabled_packages(exe_dir)
+                    if p.has_plugin and mods.plugin_sources(mods.install_dir(exe_dir, p))]
+        except OSError:
+            return 0, []
+        return len(pkgs), [p.id for p in pkgs]
 
     # ------------------------------------------------------------------ the package
     def _pick_package_file(self) -> str:
@@ -473,6 +843,7 @@ class ModsTab(QWidget):
         self._refresh_feature_combo()
         self._refresh_package_card()
         self._refresh_rebuild_state()
+        self._flag_plugin_source_missing(pkg)
 
     def install(self, replace: bool = False) -> bool:
         """Unpack the loaded package into this build. A fresh install switches its features on."""
@@ -505,6 +876,7 @@ class ModsTab(QWidget):
         self._refresh_feature_combo()
         self._refresh_package_card()
         self._refresh_rebuild_state()
+        self._flag_plugin_source_missing(pkg)
         return True
 
     def remove_package(self) -> None:
@@ -597,7 +969,14 @@ class ModsTab(QWidget):
 
     # ------------------------------------------------------------------ the rebuild
     def rebuild(self, region: str) -> None:
-        """Install the loaded package for `region`, relink it into that build, deploy the exe."""
+        """Install the loaded package if needed, then relink EVERY enabled mod into that build.
+
+        The runtime activates a feature only when its plugin id is already linked into the
+        executable and refuses to start when an enabled feature's plugin is missing (`trusted
+        plugin is unavailable`). So one press compiles the plugin source of every installed and
+        enabled package for this region - not just the one loaded in the UI - pruning the staged
+        sources down to exactly that set, and relinks once.
+        """
         pkg = self.package
         if pkg is None or self._worker is not None:
             return
@@ -611,13 +990,9 @@ class ModsTab(QWidget):
                 f"mod relink takes seconds.")
             self._say(f"rebuild ({spec.label}) refused: no build at {exe_dir}")
             return
-        if not pkg.has_plugin:
-            self._set_label(self.lbl_rebuild, "hint",
-                            f"{pkg.id} ships no plugin code, so there is nothing to link in. "
-                            f"Install it and play.")
-            return
         # The code half needs the package's source and the data half the packages/ folder plus
-        # state.toml inside that region's mods folder, so install first when it is not there yet.
+        # state.toml inside that region's mods folder, so install the loaded package first when it
+        # is not there yet (a fresh install switches its features on).
         try:
             if not mods.is_installed(exe_dir, pkg):
                 dest = mods.install(pkg, exe_dir)
@@ -629,17 +1004,65 @@ class ModsTab(QWidget):
             self._set_label(self.lbl_rebuild, "err", str(exc))
             self._say(f"FAILED: {exc}")
             return
-        sources = mods.plugin_sources(mods.install_dir(exe_dir, pkg))
-        if not sources:
-            self._set_label(self.lbl_rebuild, "err",
-                            f"{pkg.id} declares a plugin but ships no source under plugin/, so "
-                            f"there is nothing to compile in this package.")
+
+        # The compiled set is the ENABLED set for this region, read from the build's own state.
+        enabled_pkgs = mods.enabled_packages(exe_dir)
+
+        # An enabled package that DECLARES a plugin but ships no plugin source can never be
+        # satisfied: there is nothing to compile, the runtime would not register its id, and a
+        # launch would be refused (`trusted plugin is unavailable`). Report it and refuse BEFORE
+        # compiling - the same shape as the conflicting-pairs check below - because pressing on
+        # would deploy an executable that cannot start and say nothing about why. A refusal leaves
+        # the previous, working executable in place.
+        unsatisfied = mods.enabled_plugins_without_source(exe_dir)
+        if unsatisfied:
+            ids = ", ".join(p.id for p in unsatisfied)
+            self._set_label(
+                self.lbl_rebuild, "err",
+                f"{spec.label} rebuild refused: {ids} {MISSING_SOURCE_TAIL}. Install a package "
+                f"that ships its plugin source, or disable {ids} (Mods tab, Feature: off), then "
+                f"press Rebuild again.")
+            self._say(f"rebuild ({spec.label}) refused: {ids} {MISSING_SOURCE_TAIL}")
             return
+
+        conflicts = mods.conflicting_pairs(enabled_pkgs)
+        if conflicts:
+            pairs = "; ".join(f"{a} <-> {b}" for a, b in conflicts)
+            self._set_label(
+                self.lbl_rebuild, "err",
+                f"{spec.label} refuses to launch with these mods enabled together: {pairs}. "
+                f"Disable one of each pair, then press Rebuild again.")
+            self._say(f"rebuild ({spec.label}) refused: conflicting enabled mods: {pairs}")
+            return
+
+        compile_pkgs = [p for p in enabled_pkgs
+                        if p.has_plugin and mods.plugin_sources(mods.install_dir(exe_dir, p))]
+        sources: list[pathlib.Path] = []
+        for p in compile_pkgs:
+            sources.extend(mods.plugin_sources(mods.install_dir(exe_dir, p)))
+
+        if not sources:
+            if not pkg.has_plugin:
+                self._set_label(self.lbl_rebuild, "hint",
+                                f"{pkg.id} ships no plugin code, so it needs no rebuild. "
+                                f"Install it above and play.")
+            else:
+                self._set_label(
+                    self.lbl_rebuild, "err",
+                    f"{pkg.id} declares a plugin but ships no source under plugin/, and no other "
+                    f"enabled mod ships plugin code - there is nothing to compile.")
+            self._say(f"rebuild ({spec.label}) found no enabled mod with plugin source to compile")
+            return
+
+        ids = ", ".join(p.id for p in compile_pkgs)
         self._worker = _RelinkWorker(region, sources, self)
         self._worker.line.connect(self._say)
         self._worker.done.connect(self._on_relink_done)
         self._refresh_rebuild_state()
-        self._say(f"== Rebuild ({spec.label}) with {pkg.id} {pkg.version} ==")
+        self._set_label(self.lbl_rebuild, "hint",
+                        f"Rebuilding {spec.label}: compiling {len(compile_pkgs)} mod(s) - "
+                        f"{ids}. See the log below.")
+        self._say(f"== Rebuild ({spec.label}): compiling {len(compile_pkgs)} mod(s): {ids} ==")
         self._worker.start()
 
     def _on_relink_done(self, res) -> None:

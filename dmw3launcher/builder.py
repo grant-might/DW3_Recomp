@@ -30,7 +30,7 @@ import sys
 import tempfile
 from dataclasses import dataclass, field
 
-from . import builds, disc, paths
+from . import builds, disc, mods, paths
 
 # ---------------------------------------------------------------- what the engine package holds
 
@@ -719,13 +719,37 @@ def stage_mod_sources(region: str, sources, log) -> list[pathlib.Path]:
     staged: list[pathlib.Path] = []
     for s in sources:
         src = pathlib.Path(s)
-        if not src.is_file() or src.suffix.lower() not in (".c", ".cpp", ".cc"):
+        if not src.is_file() or src.suffix.lower() not in mods.SOURCE_SUFFIXES:
             continue
         dst = d / src.name
         shutil.copy2(src, dst)
         staged.append(dst)
         log(f"   staged {src.name} into {d.name}/")
     return staged
+
+
+def prune_mod_sources(region: str, log) -> list[pathlib.Path]:
+    """Remove every staged mod source from this region's `mods_src/`.
+
+    A rebuild must compile exactly the mods that are enabled NOW: the runtime refuses to launch when
+    an enabled feature's plugin is missing, and a plugin left behind by a mod that was since
+    disabled stays linked into the executable forever otherwise. So the directory is emptied of mod
+    source files before the enabled set is staged. Only `mods.SOURCE_SUFFIXES` files are touched -
+    nothing else in the tree is a mod source, and nothing else is deleted.
+    """
+    d = mods_src_dir(region)
+    removed: list[pathlib.Path] = []
+    if not d.is_dir():
+        return removed
+    for p in sorted(d.rglob("*"), key=lambda q: str(q)):
+        if p.is_file() and p.suffix.lower() in mods.SOURCE_SUFFIXES:
+            try:
+                p.unlink()
+            except OSError:
+                continue
+            removed.append(p)
+            log(f"   pruned {p.relative_to(d)} from {d.name}/")
+    return removed
 
 
 def _mod_block(region: str) -> str:
@@ -798,13 +822,17 @@ class ModRelinkResult:
 
 
 def relink_mod(region: str, sources, log) -> ModRelinkResult:
-    """Compile a mod's plugin into a regional build and deploy the resulting executable.
+    """Compile the given mod plugin sources into a regional build and deploy the executable.
 
     This is the build path the Play tab already established, minus the recompile of the game's
-    generated sources: the project exists, so adding the mod's source and rebuilding compiles that
-    one file and relinks. It reuses `compile_project` (the toolchain pre-flight, the vcvars shell
+    generated sources: the project exists, so adding the mod sources and rebuilding compiles those
+    files and relinks. It reuses `compile_project` (the toolchain pre-flight, the vcvars shell
     for MSVC, the FetchContent unwrap) rather than inventing a second builder, so a fix to the
     builder reaches this path too.
+
+    `sources` is the plugin source of EVERY installed and enabled package for this region, so one
+    call lands the whole enabled set. The staged set is pruned to exactly those sources first, so a
+    mod that was disabled or removed cannot leave its code linked into the executable.
 
     The mods half - `mods/packages/<id>/<version>/` and `mods/state.toml` - is written by
     `mods.install` / `mods.set_features` next to the deployed exe, which is where the runtime
@@ -823,6 +851,9 @@ def relink_mod(region: str, sources, log) -> ModRelinkResult:
     tc = preflight()
     if not tc.ok:
         return ModRelinkResult(False, region, None, tc.summary() + "\n\n" + tc.hint())
+    # Prune first, then stage: the compiled set must be exactly the enabled set, never a stale
+    # source a disabled mod left behind.
+    prune_mod_sources(region, log)
     staged = stage_mod_sources(region, sources, log)
     if not staged:
         return ModRelinkResult(
@@ -863,8 +894,8 @@ def relink_mod(region: str, sources, log) -> ModRelinkResult:
     if added:
         log("   the mod-sources block is in CMakeLists.txt; it survives an incremental rebuild")
     return ModRelinkResult(True, region, exe_dst,
-                           f"{spec.label} build relinked. The mod's code is in "
-                           f"{exe_dst.name} and its data is in {out / 'mods'}.")
+                           f"{spec.label} build relinked: {len(staged)} mod source(s) compiled "
+                           f"into {exe_dst.name}, with the mods' data in {out / 'mods'}.")
 
 
 # ---------------------------------------------------------------- the whole job
