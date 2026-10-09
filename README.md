@@ -3,6 +3,8 @@
 A Windows launcher and local builder for native recompilations of **Digimon World 3** and
 **Digimon World 2003**.
 
+Join our discord server for community forum, assistance, to make suggestions, etc. https://discord.gg/rJv3uVsgx
+
 It ships **no game code and no game data**. You point it at your own disc image, it recompiles that
 disc on your own machine with the engine it bundles, and then it runs the result. Both regions are
 supported: Digimon World 3 (NTSC-U, `SLUS-01436`) and Digimon World 2003 (PAL, `SLES-03936`).
