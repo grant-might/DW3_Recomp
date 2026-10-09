@@ -1132,6 +1132,7 @@ typedef struct {
     uint8_t load_failed;
     int resident;
     int capacity_suppressed;
+    uint32_t path_hash;      /* case/slash-folded hash of `path` (cache_idx_has_path) */
     char path[768];
 } CacheEntry;
 static CacheEntry s_cache_idx[CACHE_IDX_CAP];
@@ -1236,6 +1237,23 @@ static int cache_path_equal(const char *a, const char *b) {
         b++;
     }
     return *a == '\0' && *b == '\0';
+}
+
+/* Case- and slash-folded FNV-1a hash of a cache path: equal-under-
+ * cache_path_equal() inputs hash identically. cache_idx_has_path() compares
+ * this 32-bit value first so a rescan of a mature cache rejects non-matching
+ * index entries with one integer compare instead of a per-character tolower()
+ * walk. The hash lives IN the entry, so the index's swap-removal keeps it
+ * correct with no separate bookkeeping. */
+static uint32_t cache_path_hash(const char *p) {
+    uint32_t h = 2166136261u;
+    for (; p && *p; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (c == '\\') c = '/';
+        c = (unsigned char)tolower(c);
+        h = (h ^ c) * 16777619u;
+    }
+    return h;
 }
 
 static int cache_path_has_root(const char *path, const char *root) {
@@ -1462,21 +1480,40 @@ void overlay_loader_note_code_write(void) {
     }
 }
 
+/* Entries [0, s_lazy_indexed_through) are already folded into the lazy
+ * manifest index. A rescan only APPENDS newly published DLLs, so re-parsing
+ * every entry's .ranges manifest on the emulation thread was pure waste: a
+ * mature (3500-DLL) cache re-read its whole manifest set on every autocompile
+ * batch and stalled the emulator for hundreds of ms. Any index compaction
+ * (swap-removal of a stale/foreign artifact) renumbers the survivors, so it
+ * bumps s_cache_idx_removal_gen and forces a full rebuild. */
+static int s_lazy_indexed_through = 0;
+static int s_cache_idx_removal_gen = 0;
+
 static void rebuild_lazy_manifest_index(void) {
-    memset(s_exact_entry_bitmap, 0, sizeof(s_exact_entry_bitmap));
-    s_lazy_man_n = 0;
-    s_lazy_man_overflow = 0;
-    s_lazy_range_link_n = 0;
-    for (uint32_t i = 0; i < LAZY_ENTRY_CAP; i++) {
-        s_lazy_entry_head[i] = -1;
-        s_lazy_entry_tail[i] = -1;
+    static int last_removal_gen = -1;
+    int full = (s_lazy_indexed_through == 0) ||
+               (s_cache_idx_count < s_lazy_indexed_through) ||
+               (s_cache_idx_removal_gen != last_removal_gen);
+    int start = 0;
+    if (full) {
+        memset(s_exact_entry_bitmap, 0, sizeof(s_exact_entry_bitmap));
+        s_lazy_man_n = 0;
+        s_lazy_man_overflow = 0;
+        s_lazy_range_link_n = 0;
+        for (uint32_t i = 0; i < LAZY_ENTRY_CAP; i++) {
+            s_lazy_entry_head[i] = -1;
+            s_lazy_entry_tail[i] = -1;
+        }
+        for (int i = 0; i < CACHE_IDX_CAP; i++) s_lazy_bundle_head[i] = -1;
+        for (uint32_t i = 0; i < RANGE_PAGE_COUNT; i++) {
+            s_lazy_page_head[i] = -1;
+            s_lazy_page_tail[i] = -1;
+        }
+    } else {
+        start = s_lazy_indexed_through;
     }
-    for (int i = 0; i < CACHE_IDX_CAP; i++) s_lazy_bundle_head[i] = -1;
-    for (uint32_t i = 0; i < RANGE_PAGE_COUNT; i++) {
-        s_lazy_page_head[i] = -1;
-        s_lazy_page_tail[i] = -1;
-    }
-    for (int ci = 0; ci < s_cache_idx_count; ci++) {
+    for (int ci = start; ci < s_cache_idx_count; ci++) {
         s_cache_idx[ci].func_count = 0;
         s_cache_idx[ci].indexed_func_count = 0;
         s_cache_idx[ci].manifest_ok = 0;
@@ -1553,12 +1590,18 @@ static void rebuild_lazy_manifest_index(void) {
         free(man);
         if (s_lazy_man_overflow) break;
     }
+    if (!s_lazy_man_overflow) {
+        s_lazy_indexed_through = s_cache_idx_count;
+        last_removal_gen = s_cache_idx_removal_gen;
+    }
     for (int i = 0; i < s_cand_n; i++) exact_entry_set(s_cand[i].addr);
 }
 
 static int cache_idx_has_path(const char *path) {
+    uint32_t h = cache_path_hash(path);
     for (int i = 0; i < s_cache_idx_count; i++)
-        if (cache_path_equal(s_cache_idx[i].path, path)) return 1;
+        if (s_cache_idx[i].path_hash == h &&
+            cache_path_equal(s_cache_idx[i].path, path)) return 1;
     return 0;
 }
 
@@ -1599,8 +1642,9 @@ static int cache_path_is_bios_resident(const char *dll_path) {
     return strstr(buf, BIOS_RESIDENT_MARKER_SCHEMA) != NULL;
 }
 
-static void refresh_bios_resident_flags(void) {
-    for (int i = 0; i < s_cache_idx_count; i++)
+static void refresh_bios_resident_flags(int from) {
+    if (from < 0) from = 0;
+    for (int i = from; i < s_cache_idx_count; i++)
         s_cache_idx[i].resident =
             cache_path_is_bios_resident(s_cache_idx[i].path);
 }
@@ -1657,6 +1701,7 @@ static int add_posix_cache_file(const PsxOverlayCacheFile *file, void *opaque) {
     e->resident = cache_path_is_bios_resident(file->path);
     e->capacity_suppressed = 0;
     snprintf(e->path, sizeof(e->path), "%s", file->path);
+    e->path_hash = cache_path_hash(e->path);
     return 0;
 }
 #endif
@@ -1700,6 +1745,7 @@ static void scan_one_cache_dir(const char *dir, int tier) {
         e->load_failed = 0;
         e->capacity_suppressed = 0;
         snprintf(e->path, sizeof(e->path), "%s", full);
+        e->path_hash = cache_path_hash(e->path);
         e->resident = cache_path_is_bios_resident(full);
     } while (FindNextFileA(h, &fd));
     FindClose(h);
@@ -1774,6 +1820,7 @@ static void cache_idx_remove_path(const char *path) {
     for (int i = 0; i < s_cache_idx_count; i++) {
         if (cache_path_equal(s_cache_idx[i].path, path)) {
             s_cache_idx[i] = s_cache_idx[--s_cache_idx_count];
+            s_cache_idx_removal_gen++;   /* renumbers survivors -> full lazy rebuild */
             return;
         }
     }
@@ -1867,6 +1914,7 @@ static void abi_preflight_sweep(const char *dir) {
             for (int i = 0; i < s_cache_idx_count; i++) {
                 if (cache_path_equal(s_cache_idx[i].path, full)) {
                     s_cache_idx[i] = s_cache_idx[--s_cache_idx_count];
+                    s_cache_idx_removal_gen++;   /* renumbers survivors */
                     break;
                 }
             }
@@ -1903,6 +1951,7 @@ static void abi_preflight_sweep(const char *dir) {
 
 static void scan_cache_dir(void) {
     char dir[768];
+    int before = s_cache_idx_count;   /* entries above this are new this scan */
     /* Index both tiers and every immutable artifact. Runtime selection prefers
      * usable GCC over TCC; an invalid GCC artifact cannot suppress a valid TCC
      * fallback merely because its filename was enumerated first. */
@@ -1919,7 +1968,7 @@ static void scan_cache_dir(void) {
     scan_one_cache_dir(dir, CACHE_TIER_TCC);
     abi_preflight_sweep(dir);
 
-    refresh_bios_resident_flags();
+    refresh_bios_resident_flags(before);
     rebuild_lazy_manifest_index();
 
     /* Never-again guard: if we loaded NOTHING but wrong-hash shards exist, shout. */
