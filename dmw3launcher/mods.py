@@ -42,6 +42,25 @@ STATE_NAME = "state.toml"
 SOURCE_SUFFIXES = (".c", ".cpp", ".cc")
 
 
+def moddable_regions() -> tuple[str, ...]:
+    """The regions a mod package can be built for.
+
+    A mod patches a region's OWN game addresses - every published manifest lists the USA and Europe
+    disc ids in its `[[target]]` block - and no package carries a Japanese address table. So a
+    package must never be installed into, or enabled for, a Japanese build: the runtime would
+    either refuse the launch (`cannot launch with selected mods: package does not target this
+    game/image`) or, for a package that targeted every game, write USA/Europe bytes into Japanese
+    memory. The moddable set is stated once, here, so the tab's buttons cannot each get it wrong.
+    """
+    from . import disc
+    return (disc.REGION_US, disc.REGION_EU)
+
+
+def supports_region(region: str) -> bool:
+    """True when a mod may be installed into and enabled for this region's build."""
+    return region in moddable_regions()
+
+
 class ModPackageError(Exception):
     """A package that cannot be read, installed, or trusted. The message is player-facing."""
 

@@ -4,15 +4,45 @@ The launcher's builds keep their saves on real PS1 memory cards: each regional b
 `card1.mcd` / `card2.mcd` (standard 128 KiB PSX cards) from its own folder, and players often keep
 extra cards beside the launcher. This module collects every card it can find so the embedded editor
 can open one directly.
+
+All three releases are first-class, the Japanese one included: `Builds/JP/` is searched exactly like
+`Builds/USA/` and `Builds/EUR/`, and a card's own product code names its region through `disc.py`'s
+one table - the launcher keeps no second list of codes to drift from it.
 """
 from __future__ import annotations
 
 import pathlib
 from dataclasses import dataclass
 
-from . import builds, paths
+from . import builds, disc, paths
 
 CARD_SUFFIXES = (".mcr", ".mcd", ".mc", ".mcs", ".ps1")
+
+
+def entry_region(name: str) -> str:
+    """The region a card's directory entry belongs to (disc.REGION_US / EU / JP / UNKNOWN).
+
+    A memory card names its save after the disc's OWN product code - `BASLUS-01436DMW3-USA`,
+    `BESLES-03936DMW3-EUR`, `BISLPS-03446DMW3-JPN` - so the same table that classifies a disc
+    classifies a card. Japan therefore needs no special case anywhere in the launcher.
+    """
+    return disc.region_of_serial(name)
+
+
+def region_label(region: str) -> str:
+    """The launcher's own name for a region: the label the Play button for it carries.
+
+    One vocabulary for the whole app (USA / Europe / Japan), and it comes from the build list rather
+    than from a second set of names kept here.
+    """
+    if builds.known_region(region):
+        return builds.spec(region).label
+    return "unrecognised region"
+
+
+def entry_label(name: str) -> str:
+    """How a card's Digimon World 3 save reads in the UI, e.g. "Digimon World 3 (Japan)"."""
+    return f"Digimon World 3 ({region_label(entry_region(name))})"
 
 
 @dataclass
@@ -38,7 +68,7 @@ def _stat(p: pathlib.Path) -> tuple[int, float]:
 
 def search_dirs(extra_card_dirs: list[pathlib.Path] | None = None) -> list[pathlib.Path]:
     """Every folder a memory card may live in, most specific first."""
-    dirs = list(builds.card_dirs())                 # Builds/EUR, Builds/USA (each card1/card2)
+    dirs = list(builds.card_dirs())                 # Builds/USA, Builds/EUR, Builds/JP (card1/card2)
     dirs += [paths.cards_dir(), paths.user_data_dir() / "cards"]
     dirs += list(extra_card_dirs or [])
     return dirs

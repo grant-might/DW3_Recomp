@@ -6,16 +6,17 @@ A Windows launcher and local builder for native recompilations of **Digimon Worl
 Join our discord server for community forum, assistance, to make suggestions, etc. https://discord.gg/rJv3uVsgx
 
 It ships **no game code and no game data**. You point it at your own disc image, it recompiles that
-disc on your own machine with the engine it bundles, and then it runs the result. Both regions are
-supported: Digimon World 3 (NTSC-U, `SLUS-01436`) and Digimon World 2003 (PAL, `SLES-03936`).
-Nothing is refused for its region.
+disc on your own machine with the engine it bundles, and then it runs the result. All three regions
+are supported: Digimon World 3 (NTSC-U, `SLUS-01436`), Digimon World 2003 (PAL, `SLES-03936`) and
+Digimon World 3 - Aratanaru Bouken no Tobira (NTSC-J, `SLPS-03446`). Nothing is refused for its
+region.
 
 ## Screenshots
 
 ![The Play tab, with a disc image routed to its region](https://github.com/user-attachments/assets/44e1c7db-240e-4f75-ad9a-ff475aa28ee6)
 
 The Play tab is the builder. Point it at your own disc image and it names the region from the
-disc's own serial, then recompiles it into `Builds/USA` or `Builds/EUR`.
+disc's own serial, then recompiles it into `Builds/USA`, `Builds/EUR` or `Builds/JP`.
 
 ![The Memory Card tab, listing the cards it found](https://github.com/user-attachments/assets/3737e81b-66d2-4812-9cf5-aab402840a37)
 
@@ -34,10 +35,10 @@ unknown keys.
 
 ## What you need
 
-- **Your own disc image**, one you legitimately own: either the European release (`SLES-03936`,
-  PAL) or the USA release (`SLUS-01436`, NTSC-U). Supply the `.cue` plus its 2352-byte-per-sector
-  `.bin`, or a bare `.bin`. A plain `.iso` will not work, because the movies are stored as raw
-  sectors.
+- **Your own disc image**, one you legitimately own: the European release (`SLES-03936`, PAL), the
+  USA release (`SLUS-01436`, NTSC-U) or the Japanese release (`SLPS-03446`, NTSC-J). Supply the
+  `.cue` plus its 2352-byte-per-sector `.bin`, or a bare `.bin`. A plain `.iso` will not work,
+  because the movies are stored as raw sectors.
 - **Windows 10 or 11, 64-bit (x64).**
 - **Python 3.12 or newer.** The launcher runs from source, so Python is not bundled.
 - **A C/C++ compiler**: either Visual Studio Build Tools 2022 or newer with the "Desktop
@@ -80,15 +81,16 @@ Then use the **Play** tab.
 ## Building the game (the Play tab)
 
 1. **Add disc image...** and pick your `.cue` or `.bin`. The launcher reads the disc's own boot
-   serial (`SLES`/`SCES` = PAL Europe, `SLUS`/`SCUS` = NTSC-U) and names the region.
+   serial (`SLES`/`SCES` = PAL Europe, `SLUS`/`SCUS` = NTSC-U, `SLPS`/`SCPS` = NTSC-J Japan) and
+   names the region.
 2. **Check disc** (optional) reports that region. It never gates a build.
 3. **Build selected disc** pre-flights the toolchain, runs the bundled recompiler over your disc,
    compiles the generated project with your CMake and Ninja, and places the finished build in
-   `Builds/EUR/` or `Builds/USA/` beside the launcher. The first build of a region takes roughly
-   10 to 20 minutes; the Activity log streams the real progress.
-4. **Play (USA)** or **Play (Europe)** runs the regional build. Each build is self-contained (exe,
-   `game.toml`, `bios/`, its input files, its memory cards) and is started with `PSX_DEV_INPUT=1`,
-   which merges the keyboard and every connected controller onto Player 1.
+   `Builds/USA/`, `Builds/EUR/` or `Builds/JP/` beside the launcher. The first build of a region
+   takes roughly 10 to 20 minutes; the Activity log streams the real progress.
+4. **Play (USA)**, **Play (Europe)** or **Play (Japan)** runs the regional build. Each build is
+   self-contained (exe, `game.toml`, `bios/`, its input files, its memory cards) and is started
+   with `PSX_DEV_INPUT=1`, which merges the keyboard and every connected controller onto Player 1.
 
 Discs are read from `Discs/` beside the launcher, or from wherever you picked yours; the path is
 recorded in that build's own `game.toml`. A recompile is only needed once per region.
@@ -105,7 +107,9 @@ it is and what it targets, and installs it into the selected build.
    replaces an installed version.
 3. A package that ships code (`plugin/<name>.c`) also has to be compiled into that build, so press
    **Rebuild (USA)** or **Rebuild (EUR)** for the region you play. The two Rebuild buttons are
-   disabled until a mod package is loaded.
+   disabled until a mod package is loaded. Mods are offered for the USA and Europe builds only: a
+   mod patches a region's own addresses and no package carries a Japanese table, so the launcher
+   refuses to install or enable one for the Japan build.
 
 **What a rebuild costs, stated before you press it.** If that region's build already exists the
 rebuild is incremental - one source file compiled and the executable relinked, seconds. If the build
@@ -124,7 +128,7 @@ is why it needs the toolchain the Play tab already required. Rules and the by-ha
 
 | Tab | What it does |
 |---|---|
-| **Play** | Builds the game from your own disc (above), then runs the two regional builds. |
+| **Play** | Builds the game from your own disc (above), then runs the regional builds. |
 | **Memory Card** | Opens memory cards in the embedded save editor. It finds each build's `card1.mcd` / `card2.mcd` and any cards in `cards/`, or you can open one directly. |
 | **Mods** | Loads a mod package (a ZIP with `manifest.toml` at its root), installs it and switches its features on or off, and relinks a package's code into a regional build with **Rebuild (USA)** / **Rebuild (EUR)** (both disabled until a mod is loaded). Folder mods are still enabled/disabled by moving them. Rules in `docs/MODS.md`. |
 | **Decompilation** | A read-only browser over the 100% complete decompilation tree. |
@@ -135,7 +139,7 @@ title-bar X, or Alt+F4) is the way out.
 
 ## The folders beside the launcher
 
-- `Builds/EUR/`, `Builds/USA/`: the builds you make from your discs (one folder each).
+- `Builds/EUR/`, `Builds/USA/`, `Builds/JP/`: the builds you make from your discs (one folder each).
 - `Discs/`: your disc images, if you keep them here. Optional; you can point at any path.
 - `cards/`: extra PS1 memory cards you want the Memory Card tab to list. Optional.
 - `editor/`: the save editor the Memory Card tab embeds. Ships with the launcher.

@@ -1,20 +1,21 @@
 """The Play tab: build the game from the player's own disc, then run the regional builds.
 
-The launcher ships no game code. Its Play tab is therefore a BUILDER plus two launch buttons:
+The launcher ships no game code. Its Play tab is therefore a BUILDER plus one launch button per
+region:
 
-  * the player points at their own Digimon World 3 disc image (Europe OR USA - both are
+  * the player points at their own Digimon World 3 disc image (Europe, USA OR Japan - all are
     first-class, nothing is refused for its region);
   * the tab reads the disc's own serial to name the region, pre-flights the C/C++ toolchain and
     says precisely what is missing BEFORE starting a 10 to 20 minute recompile;
   * it runs the bundled recompiler and compiles the result with the player's own CMake + Ninja +
     compiler, streaming honest progress into the Activity log;
-  * the finished build lands in Builds/EUR or Builds/USA beside the launcher, where the two Play
-    buttons (USA first, Europe second - the house order) run it.
+  * the finished build lands in Builds/USA, Builds/EUR or Builds/JP beside the launcher, where the
+    Play buttons (USA first, Europe second, Japan third - the house order) run it.
 
 Each build is self-contained (exe + game.toml + bios/ + its input files), and the runtime resolves
 those from its working directory, so a launch sets cwd to that folder. The disc panel is a ROUTER,
-not a gate: it reads each image's serial (SLES/SCES = PAL Europe, SLUS/SCUS = NTSC-U) and lights
-the matching Play button when that region's build exists.
+not a gate: it reads each image's serial (SLES/SCES = PAL Europe, SLUS/SCUS = NTSC-U, SLPS/SCPS =
+NTSC-J Japan) and lights the matching Play button when that region's build exists.
 """
 from __future__ import annotations
 
@@ -113,9 +114,10 @@ class PlayTab(QWidget):
         bl.setContentsMargins(theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD, theme.CARD_PAD)
         bl.setSpacing(theme.ROW_GAP)
         hint = QLabel("Point at your own Digimon World 3 disc image (.cue or .bin). The launcher "
-                      "reads its serial (SLES/SCES = PAL Europe, SLUS/SCUS = NTSC-U), recompiles "
-                      "it locally with the bundled engine, then drops the finished build beside "
-                      "the launcher. Europe and USA are both supported.")
+                      "reads its serial (SLES/SCES = PAL Europe, SLUS/SCUS = NTSC-U, SLPS/SCPS = "
+                      "NTSC-J Japan), recompiles it locally with the bundled engine, then drops "
+                      "the finished build beside the launcher. Europe, USA and Japan are all "
+                      "supported.")
         hint.setObjectName("hint")
         hint.setWordWrap(True)
         bl.addWidget(hint)
@@ -172,12 +174,14 @@ class PlayTab(QWidget):
         pl.setSpacing(theme.ROW_GAP)
         row3 = QHBoxLayout()
         row3.setSpacing(theme.CARD_GAP)
-        # USA first, Europe second: the same order the build list and the disc router walk, so the
-        # tab, its labels and the router cannot disagree about which region leads.
+        # USA first, Europe second, Japan third: the same order the build list and the disc router
+        # walk, so the tab, its labels and the router cannot disagree about which region leads.
         self.btn_play_us = QPushButton("▶  Play (USA)")
         self.btn_play_us.clicked.connect(self.play_usa)
         self.btn_play_eu = QPushButton("▶  Play (Europe)")
         self.btn_play_eu.clicked.connect(self.play_europe)
+        self.btn_play_jp = QPushButton("▶  Play (Japan)")
+        self.btn_play_jp.clicked.connect(self.play_japan)
         self.btn_stop = QPushButton("Stop")
         self.btn_stop.setObjectName("danger")
         self.btn_stop.clicked.connect(self.stop)
@@ -185,10 +189,11 @@ class PlayTab(QWidget):
         # btn_play names the leading Play button: the control pairing (and the verifier's Play/Stop
         # size check) names one lead button, and USA leads.
         self.btn_play = self.btn_play_us
-        self._controls = (self.btn_play_us, self.btn_play_eu, self.btn_stop)
+        self._controls = (self.btn_play_us, self.btn_play_eu, self.btn_play_jp, self.btn_stop)
         self._size_control_buttons()
         row3.addWidget(self.btn_play_us)
         row3.addWidget(self.btn_play_eu)
+        row3.addWidget(self.btn_play_jp)
         row3.addWidget(self.btn_stop)
         row3.addStretch(1)
         pl.addLayout(row3)
@@ -329,11 +334,12 @@ class PlayTab(QWidget):
         if not self.list_discs.count():
             _us = builds.spec(builds.REGION_US)
             _eu = builds.spec(builds.REGION_EU)
+            _jp = builds.spec(builds.REGION_JP)
             self._set_disc_label(
                 "err",
                 f"No disc image found in {builds.discs_dir()}. Add your own with the "
                 f"\"Add disc image...\" button, or drop \"{_us.disc_name}\" / "
-                f"\"{_eu.disc_name}\" in there.")
+                f"\"{_eu.disc_name}\" / \"{_jp.disc_name}\" in there.")
             return
         sel = self._selected_disc()
         if sel is None:
@@ -342,8 +348,8 @@ class PlayTab(QWidget):
         if region == disc.REGION_UNKNOWN:
             self._set_disc_label(
                 "err",
-                f"\"{img.name}\" carries no PAL or NTSC-U serial. Pick the .bin/.cue that came "
-                f"off your own Digimon World 3 disc. You can still try to build it; the "
+                f"\"{img.name}\" carries no PAL, NTSC-U or NTSC-J serial. Pick the .bin/.cue that "
+                f"came off your own Digimon World 3 disc. You can still try to build it; the "
                 f"recompiler is the judge.")
         else:
             self._set_disc_label("ok", f"\"{img.name}\" -> {_region_label(region)}")
@@ -357,7 +363,8 @@ class PlayTab(QWidget):
     def _light_buttons(self) -> None:
         """Enable the Play button whose region has a finished build beside the launcher."""
         for btn, region in ((self.btn_play_us, builds.REGION_US),
-                            (self.btn_play_eu, builds.REGION_EU)):
+                            (self.btn_play_eu, builds.REGION_EU),
+                            (self.btn_play_jp, builds.REGION_JP)):
             ready = builds.build_status(region)[0]
             btn.setEnabled(ready)
             name = "primary" if ready else ""
@@ -407,7 +414,7 @@ class PlayTab(QWidget):
         else:
             img, region = sel
             where = (builds.spec(region).folder
-                     if region in (builds.REGION_EU, builds.REGION_US) else "OTHER")
+                     if builds.known_region(region) else "OTHER")
             self.lbl_progress.setText(
                 f"Ready to build {img.name} -> Builds/{where}. A recompile takes 10 to 20 minutes.")
         self.btn_recheck.setEnabled(not busy)
@@ -511,6 +518,9 @@ class PlayTab(QWidget):
     def play_usa(self) -> None:
         self._play(builds.REGION_US)
 
+    def play_japan(self) -> None:
+        self._play(builds.REGION_JP)
+
     def _fail(self, message: str) -> None:
         self._say("FAILED: " + message)
         QMessageBox.critical(self, "Could not start the game", message)
@@ -547,6 +557,7 @@ class PlayTab(QWidget):
             return
         self.btn_play_eu.setEnabled(False)
         self.btn_play_us.setEnabled(False)
+        self.btn_play_jp.setEnabled(False)
         self.btn_stop.setEnabled(True)
         self.lbl_run.setText(f"Running: {s.label} build   -   pid {self._proc.pid}")
         self._say(f"launched the {s.label} build (pid {self._proc.pid}, cwd "

@@ -602,8 +602,16 @@ class ModsTab(QWidget):
     # ------------------------------------------------------------------ refresh
     def refresh(self) -> None:
         ready = builds.build_status(self.region)[0]
+        moddable = mods.supports_region(self.region)
         label = builds.spec(self.region).label
-        if ready:
+        if not moddable:
+            self.head.setText(
+                f"The {label} build is not moddable. A mod patches a region's own game addresses "
+                f"(every package targets the USA and Europe discs) and there is no {label} address "
+                f"table, so installing or enabling one here would either make the game refuse to "
+                f"launch or write USA/Europe bytes into it. Mods are offered for USA and Europe; "
+                f"play {label} unmodded.")
+        elif ready:
             self.head.setText(f"{label} build. Mods for it live in "
                               f"{self._simplify_path(self._exe_dir() / 'mods')}")
         else:
@@ -611,7 +619,7 @@ class ModsTab(QWidget):
                               f"install a mod into. Build it on the Play tab first.")
         for b in (self.btn_toggle, self.btn_folder, self.btn_mkmod, self.btn_install,
                   self.btn_reinstall, self.btn_remove, self.btn_open_packages):
-            b.setEnabled(ready)
+            b.setEnabled(ready and moddable)
         self._refresh_feature_combo()
         self._refresh_mod_list()
         self._refresh_package_card()
@@ -850,6 +858,13 @@ class ModsTab(QWidget):
         pkg = self.package
         if pkg is None:
             return False
+        if not mods.supports_region(self.region):
+            label = builds.spec(self.region).label
+            self._set_label(self.lbl_state, "err",
+                            f"The {label} build is not moddable: mods are offered for USA and "
+                            f"Europe only. Installing one here would apply USA/Europe patches to "
+                            f"a {label} game.")
+            return False
         if not builds.build_status(self.region)[0]:
             self._set_label(self.lbl_state, "err",
                             f"The {builds.spec(self.region).label} build is not on disk yet. "
@@ -896,6 +911,13 @@ class ModsTab(QWidget):
     def set_enabled(self, enabled: bool) -> None:
         pkg = self.package
         if pkg is None or not pkg.features:
+            return
+        if not mods.supports_region(self.region):
+            label = builds.spec(self.region).label
+            self._set_label(self.lbl_state, "err",
+                            f"The {label} build is not moddable: mods are offered for USA and "
+                            f"Europe only. Enabling one here would apply USA/Europe patches to a "
+                            f"{label} game.")
             return
         if not mods.is_installed(self._exe_dir(), pkg):
             self._set_label(self.lbl_state, "err",

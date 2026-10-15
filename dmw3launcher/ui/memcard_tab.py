@@ -17,6 +17,11 @@ Two facts this module has to be honest about:
 * The editor edits PSX memory-card payloads (a 128 KiB card holds one). Each regional build keeps
   its own `card1.mcd` / `card2.mcd`, and players can drop extra cards in `cards/` beside the
   launcher; every card found is listed and every one of them can be opened.
+* USA, Europe and Japan are the same card format and the same four-block save: the tab opens a
+  Japanese card through the identical code path, names each one's release from its own product code
+  (BASLUS-01436 / BESLES-03936 / BISLPS-03446), and hands that release to the embedded editor's own
+  ROM-region selector, which offers Japan as a real choice (Auto / USA / EUR / JPN). A Japanese
+  card therefore opens as Japan, not as a USA or European one.
 """
 from __future__ import annotations
 
@@ -32,6 +37,11 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QGroupBox, QHB
 
 from .. import builds, paths, runtime, saves
 from . import theme
+
+# What a card is expected to hold, said the same way wherever it is said: the three releases' own
+# product codes are the launcher's (disc.py's) single table of codes.
+NO_SAVE_HINT = ("No Digimon World 3 save on this card. The editor looks for a save entry named "
+                "BASLUS-01436… (USA), BESLES-03936… (Europe) or BISLPS-03446… (Japan).")
 
 # Tabs currently embedding the editor. dmw3editor's theme picker applies a theme to the whole
 # QApplication, so every live embed must re-scope itself when that happens. Weak references, so a
@@ -284,14 +294,43 @@ class MemcardTab(QWidget):
         theme_mod._dmw3_launcher_hooked = True
 
     # ------------------------------------------------------------------ cards
+    def dw3_entry(self, path: pathlib.Path) -> str | None:
+        """The name of the Digimon World 3 save entry on a card, or None when it has none.
+
+        Read with the EDITOR's own card parser rather than a second one of ours: the tab then names
+        a card with exactly the entry the editor will open, so a card can never be listed as one
+        release and open as another. That parser's table already carries all three releases -
+        `BASLUS-01436` (USA), `BESLES-03936` (Europe) and `BISLPS-03446` (Japan) - so a Japanese card
+        needs no special case here; it is found, named and opened like the other two.
+
+        None means "this card holds no Digimon World 3 save" (blank or foreign), or that the editor
+        could not be loaded at all - which the tab states in its status line.
+        """
+        if self._mc is None:
+            return None
+        try:
+            loc = self._mc.MemoryCard.load(str(path)).find_dmw3_save()
+        except Exception:  # noqa: BLE001  (a file that is not a card at all)
+            return None
+        return loc.name if loc is not None else None
+
+    def _card_row(self, path: pathlib.Path) -> tuple[str, str]:
+        """(what the row says about this card, its tooltip)."""
+        name = self.dw3_entry(path)
+        if name is None:
+            return ("no Digimon World 3 save", NO_SAVE_HINT)
+        game = saves.entry_label(name)
+        return (game, f"{name}: a {game} save. Open it in the editor below.")
+
     def rescan(self) -> None:
         self.list_saves.clear()
         found = saves.discover()
         directories = saves.search_dirs()
         for f in found:
-            it = QListWidgetItem(f"{f.label}   ·   {f.size:,} B")
+            what, tip = self._card_row(f.path)
+            it = QListWidgetItem(f"{f.label}   ·   {f.size:,} B   ·   {what}")
             it.setData(Qt.ItemDataRole.UserRole, f"card\x00{f.path}\x00true\x00")
-            it.setToolTip("PS1 memory card; the Digimon World 3 entry inside it is opened.")
+            it.setToolTip(tip)
             self.list_saves.addItem(it)
 
         # No dead UI: with nothing to open the list is hidden and the situation is stated in one
@@ -363,20 +402,35 @@ class MemcardTab(QWidget):
             card = self._mc.MemoryCard.load(str(path))
             loc = card.find_dmw3_save()
             if loc is None:
-                raise self._SaveError(
-                    "No Digimon World 3 save on this card. Expected an entry named "
-                    "BASLUS-01436…, BESLES-03936… or BISLPS-03050…")
+                raise self._SaveError(NO_SAVE_HINT)
             save = self._DMW3Save(card.extract_payload(loc))
             self._editor._card, self._editor._loc = card, loc
             self._editor._save = save
             self._editor._path = pathlib.Path(path)
             self._editor._dirty = False
+            # Point the editor's own ROM-region selector at the release this card's entry names,
+            # exactly as its File->Open does: a Japanese card opens as Japan, not as whatever its
+            # version byte (Europe's, 4) would suggest. Asked of the editor through getattr so an
+            # older editor that has no such control still opens the card the way it always did.
+            select = getattr(self._editor, "select_card_region", None)
+            if callable(select):
+                select(save, getattr(loc, "region", None))
             for hook in ("_refresh_titles",):
                 fn = getattr(self._editor, hook, None)
                 if callable(fn):
                     fn()
-            self.lbl_status.setText(f"Editing {path.name}  ·  {path.parent}")
+            self.lbl_status.setText(self._editing_text(path, loc))
         except Exception as exc:  # noqa: BLE001
             self.lbl_status.setText(
                 f"{path.name} could not be opened as a memory card ({type(exc).__name__}: {exc}). "
                 f"Use “Open memory card…” to pick a real .mcr.")
+
+    def _editing_text(self, path: pathlib.Path, loc) -> str:
+        """What the tab says once a card is open: which release, and what the editor covers.
+
+        A Japanese card reports itself the same way a USA or European one does, from its own
+        product code, and the embedded editor reads it as Japan: its ROM-region selector carries a
+        Japan entry, which `open_path` selects from the card's own entry.
+        """
+        game = saves.entry_label(loc.name)
+        return f"Editing {path.name} · {game} · {path.parent}"

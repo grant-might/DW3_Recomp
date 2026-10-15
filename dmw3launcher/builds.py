@@ -7,6 +7,7 @@ in one folder:
 
     Builds/EUR, Digimon World 2003, PAL,    id SLES-03936   (exe Digimon_World_2003_Recompiled.exe)
     Builds/USA, Digimon World 3,   NTSC-U,  id SLUS-01436   (exe Digimon_World_3_Recompiled.exe)
+    Builds/JP,  Digimon World 3,   NTSC-J,  id SLPS-03446   (exe Digimon_World_3_Japan_Recompiled.exe)
 
 `BUILDS` lists the USA build first: every place that walks the tuple (the Play tab's buttons, its
 labels and the disc router) then shows USA before Europe, in one consistent order.
@@ -43,6 +44,7 @@ DEV_INPUT_VAR = "PSX_DEV_INPUT"
 # Re-exported so callers do not need disc.REGION_* just to name a build.
 REGION_EU = disc.REGION_EU
 REGION_US = disc.REGION_US
+REGION_JP = disc.REGION_JP
 
 
 @dataclass(frozen=True)
@@ -60,9 +62,22 @@ BUILDS = (
               "Digimon World 3 (USA).bin", "Digimon World 3"),
     BuildSpec(REGION_EU, "EUR", "Europe", "Digimon_World_2003_Recompiled.exe",
               "Digimon World 2003 (Europe).bin", "Digimon World 2003"),
+    BuildSpec(REGION_JP, "JP", "Japan", "Digimon_World_3_Japan_Recompiled.exe",
+              "DigimonWorld 3 - Aratanaru Bouken no Tobira (Japan).bin",
+              "Digimon World 3 Japan"),
 )
 
 _BY_REGION = {b.region: b for b in BUILDS}
+
+
+def known_region(region: str) -> bool:
+    """True when a region owns a build template AND a Play button (USA / Europe / Japan).
+
+    The single question the router, the builder and the Play tab all need to ask: a disc whose
+    serial maps to one of these builds goes to that build's own `Builds/<folder>/`, while any other
+    disc is still attempted and lands in `Builds/OTHER` with an honest note.
+    """
+    return region in _BY_REGION
 
 
 def spec(region: str) -> BuildSpec:
@@ -237,6 +252,14 @@ def launch(region: str, extra_env: dict[str, str] | None = None,
         raise FileNotFoundError(f"{spec(region).label} build folder not found: {d}")
     env = dict(os.environ)
     env[DEV_INPUT_VAR] = "1"
+    # Env-only presentation knobs (smooth-60 / frame-blend / rewind) the Settings tab saved for
+    # this build: they have no settings.toml key, so they reach the runtime on its environment.
+    # Nothing saved => nothing added, so an untouched install launches exactly as before.
+    try:
+        from . import settings as _st
+        env.update(_st.env_for_launch(region))
+    except Exception:  # noqa: BLE001 - a broken config must not stop a launch
+        pass
     env.update(extra_env or {})
     creation = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) if sys.platform == "win32" else 0
     out = None

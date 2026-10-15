@@ -60,6 +60,7 @@ from dmw3editor.core.save import (
     LEVEL_MAX,
     MONEY_MAX,
     PARTY_SIZE,
+    SAVE_VERSION_BY_REGION,
     SLOT_OFFSETS,
     TABLES,
     SaveError,
@@ -386,8 +387,9 @@ class MainWindow(QMainWindow):
         title_col.addWidget(self.subtitle)
         hl.addLayout(title_col, 1)
 
-        # ROM region: auto-detected from the card's version field; the combo
-        # lets the user force USA/EUR for unusual cards (re-binds all pages).
+        # ROM region: auto-detected from the card's own save entry (its product code) and its
+        # version field; the combo lets the user force USA/EUR/Japan for unusual cards
+        # (re-binds all pages).
         region_box = QWidget()
         region_lay = QVBoxLayout(region_box)
         region_lay.setContentsMargins(0, 0, 0, 0)
@@ -399,10 +401,18 @@ class MainWindow(QMainWindow):
         self.region_combo.addItem("Auto (detected)", "auto")
         self.region_combo.addItem("USA", "USA")
         self.region_combo.addItem("EUR", "EUR")
+        # Japan is a real choice, like the other two: its save is the same 128 KiB card and the same
+        # four-block payload, so every page reads it exactly as it reads a USA or EUR one. The
+        # version byte cannot pick it out (SLPS_034.46, like SLES_039.36, writes 4 - see
+        # `save.SAVE_VERSION_BY_REGION`), so the card's own entry names it; the manual choice is
+        # there for a payload read without its card. The visible label is the release's own
+        # abbreviation (JPN, as the other two read USA and EUR); its VALUE stays "JPN".
+        self.region_combo.addItem("JPN", "JPN")
         self.region_combo.setToolTip(
-            "Auto-detected from the card's save version (v3 = USA, v4 = EUR). "
-            "Use a manual choice only when a card's version field is missing "
-            "or you need to re-interpret it."
+            "Auto-detected from the card's own save entry (BASLUS-01436 / BESLES-03936 / "
+            "BISLPS-03446) and its version field (v3 = USA; v4 = EUR or JPN — Europe and Japan "
+            "both write 4, so the entry is what names which). Use a manual choice only when a "
+            "card's version field is missing or you need to re-interpret it."
         )
         self.region_combo.setMinimumWidth(120)
         self.region_combo.currentIndexChanged.connect(self._on_region_changed)
@@ -687,6 +697,23 @@ class MainWindow(QMainWindow):
         self._refresh_titles()
 
     # -- actions ------------------------------------------------------------
+    def select_card_region(self, save: DMW3Save, release: str | None = None) -> None:
+        """Point the ROM-region selector at the release the open card really is.
+
+        `release` is the region the card's own save ENTRY carries (the product code: USA / EUR /
+        JPN). It is what names a Japanese card, because Japan writes Europe's version byte (4) and
+        the version alone cannot separate them (see `save.SAVE_VERSION_BY_REGION`). A previous manual
+        choice is dropped on every new card, and the handler is blocked so loading does not re-bind
+        a page mid-way.
+        """
+        save.clear_region_override()
+        save.set_card_region(release)
+        guess = save.region_guess
+        self.region_combo.blockSignals(True)
+        idx = self.region_combo.findData(guess if guess in SAVE_VERSION_BY_REGION else "auto")
+        self.region_combo.setCurrentIndex(max(idx, 0))
+        self.region_combo.blockSignals(False)
+
     def open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Open PS1 memory card", "", FILTER
@@ -699,7 +726,7 @@ class MainWindow(QMainWindow):
             if loc is None:
                 raise SaveError(
                     "No Digimon World 3 save found on this card. Expected an "
-                    "entry named BASLUS-01436…, BESLES-03936… or BISLPS-03050…"
+                    "entry named BASLUS-01436…, BESLES-03936… or BISLPS-03446…"
                 )
             save = DMW3Save(card.extract_payload(loc))
         except Exception as exc:  # noqa: BLE001 - surfaced to the user
@@ -710,13 +737,9 @@ class MainWindow(QMainWindow):
         self._path = pathlib.Path(path)
         self._dirty = False
 
-        # Sync the ROM-region selector to the card's detected version. A prior
-        # manual override is reset on every new card (blocking the handler so
-        # it does not re-bind mid-load).
-        self.region_combo.blockSignals(True)
-        idx = self.region_combo.findData(save.region_guess if save.region_guess in ("USA", "EUR") else "auto")
-        self.region_combo.setCurrentIndex(max(idx, 0))
-        self.region_combo.blockSignals(False)
+        # Sync the ROM-region selector to the card that was just opened: the release its own save
+        # entry names, with the version byte as the fallback (see select_card_region).
+        self.select_card_region(save, getattr(loc, "region", None))
 
         self._bind_all(save)
         self._sync_enabled()

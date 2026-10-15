@@ -17,6 +17,7 @@ import shutil
 import struct
 import sys
 import tempfile
+import threading
 
 ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -129,6 +130,22 @@ try:
 finally:
     saves.search_dirs = _orig_search      # type: ignore[assignment]
     shutil.rmtree(_tmpB, ignore_errors=True)
+
+# B4-B5 Japan is a buildable region, so it owns cards exactly as USA and Europe do: its build
+# folder is searched, and a card's own product code - the one table in disc.py - names its release.
+_jpdirB = builds.build_dir(builds.REGION_JP)
+check(_jpdirB in saves.search_dirs(),
+      "B4 the Japanese build's folder is searched for memory cards like the other two",
+      str(_jpdirB).replace(str(paths.launcher_root()), "<launcher>"))
+_codesB = {name: saves.entry_region(name) for name in
+           ("BASLUS-01436DMW3-USA", "BESLES-03936DMW3-EUR", "BISLPS-03446DMW3-JPN")}
+check(_codesB == {"BASLUS-01436DMW3-USA": builds.REGION_US,
+                  "BESLES-03936DMW3-EUR": builds.REGION_EU,
+                  "BISLPS-03446DMW3-JPN": builds.REGION_JP}
+      and saves.entry_label("BISLPS-03446DMW3-JPN") == "Digimon World 3 (Japan)"
+      and saves.region_label(builds.REGION_JP) == "Japan",
+      "B5 a card's product code names its release, Japan included, from the disc table",
+      str(_codesB))
 
 # --- C. region classification from the disc's own boot serial -------------------
 # The serial in the image's first sectors is the only trustworthy signal, and the same one the
@@ -306,6 +323,44 @@ finally:
     shutil.rmtree(_empty, ignore_errors=True)
 
 # --- I. the Memory Card tab: the editor must embed from the bundled editor/ folder ------------
+def _synthetic_card(path: pathlib.Path, entry: str | None, version: int = 3,
+                    title: str = "DIGIMON WORLD 3") -> bytes:
+    """A 128 KiB PSX card holding one DMW3 save, built to the format the editor itself parses.
+
+    SYNTHETIC, and deliberately so: no retail Japanese save exists on this machine, so a card's
+    RELEASE is chosen by its directory entry name - the one byte string that differs between a USA,
+    a European and a Japanese card (`BASLUS-01436DMW3-USA` / `BESLES-03936DMW3-EUR` /
+    `BISLPS-03446DMW3-JPN`) - over one and the same payload. The directory is written the way real
+    cards carry it: 15 frames in block 0, a first block (0x51) at frame 1 with the 20-byte name at
+    +0x0A, the middle/last states (0x52/0x53) the editor's chain walker follows, and the 32 KiB
+    payload in blocks 1-4. The payload is the minimum the editor's model accepts: an 'SC' title
+    frame, the 'DMW3' tag at 0x0204 and a MEMCARD_SAVE_VERSION byte at 0x0202 (`version`: 3 for a
+    USA card, 4 for a European or Japanese one - the values each release's own disc writes).
+    `entry=None` leaves every frame free (0xA0), which is what a freshly formatted card - the
+    Japanese build's own card1.mcd, for one - looks like.
+    """
+    card = bytearray(131072)
+    for frame in range(1, 16):
+        base = frame * 128
+        if entry is None or frame > 4:
+            card[base:base + 10] = struct.pack("<IIH", 0xA0, 0, 0xFFFF)
+            continue
+        # A degenerate directory (next_block == own index), exactly as the shipped saves carry it.
+        card[base:base + 10] = struct.pack("<IIH", {1: 0x51, 4: 0x53}.get(frame, 0x52),
+                                           32768 if frame == 1 else 0, frame)
+        if frame == 1:
+            card[base + 10:base + 30] = entry.encode("ascii")[:20].ljust(20, b"\x00")
+    payload = bytearray(32768)
+    payload[0:2] = b"SC"
+    payload[2], payload[3] = 0x13, 4           # icon flags / frame count, as real cards carry
+    payload[0x04:0x04 + 48] = title.encode("ascii")[:48].ljust(48, b"\x00")
+    payload[0x202] = version                   # MEMCARD_SAVE_VERSION
+    payload[0x204:0x208] = b"DMW3"
+    card[8192:8192 + len(payload)] = payload
+    path.write_bytes(bytes(card))
+    return bytes(payload)
+
+
 from PySide6.QtCore import Qt                          # noqa: E402
 
 try:
@@ -354,6 +409,187 @@ try:
               "I6 the Memory Card tab carries no theme chooser of its own (the Appearance "
               "dropdown lives in Settings, and the editor's page is gone from this embed)",
               f"{len(_nav)} nav entries, stack {_mc_tab._editor.stack.count()}")
+    # I7-I16 the Japanese card. USA, Europe and Japan are the same 128 KiB card, the same
+    # directory and the same four-block save, so every feature the tab has must treat them
+    # identically - and where one genuinely cannot follow a Japanese card (the embedded editor's
+    # own ROM-region choice, which offers Auto/USA/Europe), the tab has to say so out loud.
+    #
+    # These cards are SYNTHETIC (see `_synthetic_card`): no retail Japanese save exists on this
+    # machine, so a card's RELEASE is set by its directory entry name - the one byte string that
+    # differs between a USA, European and Japanese card - over one and the same payload. That
+    # isolates the region handling this section is here to pin, and it cannot be fooled by a real
+    # card's other differences.
+    _cardsI = _mkdtemp("hermes-verify-dmw3-cards-")
+    _orig_dirsI = saves.search_dirs
+    try:
+        _jp_card = _cardsI / "jp_card1.mcd"
+        # Version 4, the byte the JAPANESE release's own disc writes into its cards (observed in
+        # the memory-card code on the retail Japanese disc: the store right after the 'DMW3' magic),
+        # which is the same byte Europe writes - the card's entry is what makes this card Japanese.
+        _synthetic_card(_jp_card, "BISLPS-03446DMW3-JPN", version=4)
+        _us_card = _cardsI / "us_card1.mcd"
+        _synthetic_card(_us_card, "BASLUS-01436DMW3-USA", version=3)
+        _eu_card = _cardsI / "eu_card1.mcd"
+        _synthetic_card(_eu_card, "BESLES-03936DMW3-EUR", version=4)
+        _blank_card = _cardsI / "blank_card1.mcd"
+        _synthetic_card(_blank_card, None)          # formatted, no save on it
+        saves.search_dirs = lambda extra=None: [_cardsI]      # type: ignore[assignment]
+        _mc_tab.rescan()
+        _rowsI: dict[str, tuple[str, str]] = {}
+        for _i in range(_mc_tab.list_saves.count()):
+            _it = _mc_tab.list_saves.item(_i)
+            _pI = pathlib.Path(str(_it.data(Qt.ItemDataRole.UserRole)).split("\x00")[1])
+            _rowsI[_pI.name] = (_it.text(), _it.toolTip())
+        check(len(_rowsI) == 4
+              and "Digimon World 3 (Japan)" in _rowsI["jp_card1.mcd"][0]
+              and "Digimon World 3 (USA)" in _rowsI["us_card1.mcd"][0]
+              and "Digimon World 3 (Europe)" in _rowsI["eu_card1.mcd"][0]
+              and "no Digimon World 3 save" in _rowsI["blank_card1.mcd"][0],
+              "I7 every listed card names its own release, Japan included, and a card carrying no "
+              "DW3 save says that instead of guessing one",
+              " | ".join(f"{k}: {v[0].split('·')[-1].strip()}" for k, v in sorted(_rowsI.items())))
+
+        # The Japanese row is the USA row with a different release in it: same fields, same order,
+        # so no part of a Japanese card is handled by a code path of its own.
+        _shapesI = {
+            _rowsI[_k][0].replace(f"Digimon World 3 ({_rel})", "RELEASE").replace(_k, "CARD")
+            for _k, _rel in (("jp_card1.mcd", "Japan"), ("us_card1.mcd", "USA"),
+                             ("eu_card1.mcd", "Europe"))}
+        check(len(_shapesI) == 1,
+              "I8 the Japanese card's row is the same row as the USA and European ones (one "
+              "format, one code path)", str(sorted(_shapesI))[:120])
+
+        check(_mc_tab.dw3_entry(_jp_card) == "BISLPS-03446DMW3-JPN"
+              and _mc_tab.dw3_entry(_us_card) == "BASLUS-01436DMW3-USA"
+              and _mc_tab.dw3_entry(_eu_card) == "BESLES-03936DMW3-EUR"
+              and _mc_tab.dw3_entry(_blank_card) is None,
+              "I9 the tab identifies a card by the save entry the editor itself will open",
+              f"{_mc_tab.dw3_entry(_jp_card)}")
+        check("BISLPS-03446" in _rowsI["blank_card1.mcd"][1]
+              and "Japan" in _rowsI["blank_card1.mcd"][1],
+              "I10 a card with no DW3 save names all three product codes, the Japanese one "
+              "included", _rowsI["blank_card1.mcd"][1][:90])
+
+        # Opening, editing and the tab's own record of it: the same for all three releases.
+        _openedI = {}
+        for _card, _release in ((_jp_card, "JPN"), (_us_card, "USA"), (_eu_card, "EUR")):
+            _mc_tab.open_path("card", _card)
+            _edI, _saveI = _mc_tab._editor, _mc_tab._editor._save
+            _saveI.set_money(0, 1234)               # an edit, in memory: nothing is saved to disk
+            _openedI[_release] = (_edI._loc.region, tuple(_edI._loc.chain),
+                                  _saveI.slot(0).money, str(_edI._path.name))
+        check(_openedI == {"JPN": ("JPN", (1, 2, 3, 4), 1234, "jp_card1.mcd"),
+                           "USA": ("USA", (1, 2, 3, 4), 1234, "us_card1.mcd"),
+                           "EUR": ("EUR", (1, 2, 3, 4), 1234, "eu_card1.mcd")},
+              "I11 all three releases open, edit and report identically (same four-block entry, "
+              "same fields, the card the tab was asked for)", str(_openedI))
+
+        # Opening a Japanese card, and what the tab says about it. It names the release from the
+        # card's own product code, exactly as a USA or European one does, and it carries NO warning
+        # about the editor's region selector: Japan is a real entry in that selector (I14-I19).
+        _mc_tab.open_path("card", _jp_card)
+        _jp_status = _mc_tab.lbl_status.text()
+        _mc_tab.open_path("card", _us_card)
+        _us_status = _mc_tab.lbl_status.text()
+        check("Digimon World 3 (Japan)" in _jp_status
+              and "leave that on Auto" not in _jp_status and "Japan-format" not in _jp_status,
+              "I12 opening a Japanese card names its release and carries no stale warning about "
+              "what the editor's region selector can do with it",
+              _jp_status.replace("\n", " ")[:120])
+        check("Digimon World 3 (USA)" in _us_status and "Japan" not in _us_status,
+              "I13 the USA and European cards are named the same way, with no Japanese text on "
+              "either of them", _us_status.replace("\n", " ")[:90])
+
+        # The note the tab used to print is GONE because the thing it warned about is fixed: the
+        # editor's own ROM-region selector carries a Japan entry, so the tab no longer has anything
+        # to warn about - and the tab still asks the editor rather than assuming (it just has no
+        # way to reach the old sentence any more).
+        _real_combo = _mc_tab._editor.region_combo
+        _data_combo = [str(_real_combo.itemData(_i)) for _i in range(_real_combo.count())]
+        _text_combo = [_real_combo.itemText(_i) for _i in range(_real_combo.count())]
+        _mc_tab.open_path("card", _jp_card)
+        _jp_text = _mc_tab._editing_text(_jp_card, _mc_tab._editor._loc)
+        check(_data_combo == ["auto", "USA", "EUR", "JPN"]
+              and _text_combo == ["Auto (detected)", "USA", "EUR", "JPN"]
+              and not hasattr(_mc_tab, "_region_override_covers_japan")
+              and "leave that on Auto" not in _jp_text and "Japan-format" not in _jp_text,
+              "I14 the editor's own ROM-region selector offers all three releases, each named by its "
+              "own abbreviation (Auto / USA / EUR / JPN - the Japanese entry's value is still 'JPN') "
+              "and the tab's stale warning is gone",
+              f"{_text_combo} -> {_data_combo}")
+
+        # One table of product codes, not two: every code the embedded editor recognises is a
+        # region the launcher can name, so neither side can drift away from the other unnoticed.
+        _ed_codes = dict(getattr(_mc_tab._mc, "DMW3_PREFIXES", {}))
+        _unknownI = {code: region for code, region in _ed_codes.items()
+                     if not builds.known_region(saves.entry_region(code))}
+        check(_ed_codes and "BISLPS-03446" in _ed_codes and not _unknownI,
+              "I15 every save code the editor recognises is a region the launcher can name "
+              "(USA, Europe, Japan)", str(_unknownI) or str(sorted(_ed_codes)))
+
+        # The write path, exercised on a COPY inside the temp folder (never on a card the owner
+        # might care about): a Japanese card saves in place with its .bak backup and reopens with
+        # the same entry and the edited field, exactly like the other two releases.
+        _jp_write = _cardsI / "jp_roundtrip.mcd"
+        shutil.copy2(_jp_card, _jp_write)
+        _mc_tab.open_path("card", _jp_write)
+        _mc_tab._editor._save.set_money(0, 777)
+        _mc_tab._editor._write_to(_jp_write)
+        _againI = _mc_tab.dw3_entry(_jp_write)
+        _mc_tab.open_path("card", _jp_write)
+        check(_againI == "BISLPS-03446DMW3-JPN"
+              and _jp_write.with_suffix(".mcd.bak").is_file()
+              and _mc_tab._editor._loc.region == "JPN"
+              and _mc_tab._editor._save.slot(0).money == 777,
+              "I16 a Japanese card saves in place (with its .bak) and reopens with the same entry "
+              "and the edited field",
+              f"{_againI} · bak={_jp_write.with_suffix('.mcd.bak').is_file()} · "
+              f"money={_mc_tab._editor._save.slot(0).money}")
+
+        # I17-I19 the selector driving the card, and the version byte under it. Japan writes the
+        # SAME version byte Europe does (4), so a card's release cannot be read from that byte: it
+        # is read from the card's own entry, which is what these three pin.
+        _edI = _mc_tab._editor
+        _comboI = _edI.region_combo
+        _dataI = [str(_comboI.itemData(_i)) for _i in range(_comboI.count())]
+        _syncI = {}
+        for _card, _key in ((_jp_card, "JPN"), (_eu_card, "EUR"), (_us_card, "USA")):
+            _mc_tab.open_path("card", _card)
+            _syncI[_key] = (str(_comboI.currentData()), _edI._save.region_guess, _edI._save.version)
+        check(_syncI == {"JPN": ("JPN", "JPN", 4), "EUR": ("EUR", "EUR", 4),
+                         "USA": ("USA", "USA", 3)},
+              "I17 opening a card selects that card's own release in the editor (Japan included), "
+              "though Europe and Japan write the same version byte 4 and only USA's 3 differs",
+              str(_syncI))
+
+        # The value each release writes is pinned where it was OBSERVED - in each release's own
+        # memory-card code on its own disc, the store right after the 'DMW3' magic goes into the
+        # card's info section - not inferred from the version numbers looking tidy.
+        import dmw3editor.core.save as _saveC                          # noqa: PLC0415
+        check(_saveC.SAVE_VERSION_BY_REGION == {"USA": 3, "EUR": 4, "JPN": 4}
+              and _saveC.REGION_BY_VERSION == {3: "USA", 4: "EUR"},
+              "I18 the version byte each release writes is the one read off that release's own disc "
+              "(USA 3; Europe 4; Japan 4)", str(_saveC.SAVE_VERSION_BY_REGION))
+
+        # The manual choice is a real one too: picking Japan in the selector re-reads the save as
+        # Japan, and leaves every byte of the card alone.
+        _mc_tab.open_path("card", _jp_card)
+        _beforeI = bytes(_edI._save.to_bytes())
+        _comboI.setCurrentIndex(_dataI.index("USA"))
+        _comboI.setCurrentIndex(_dataI.index("JPN"))
+        _manualI = (str(_comboI.currentData()), _edI._save.region_guess,
+                    bytes(_edI._save.to_bytes()) == _beforeI)
+        _comboI.setCurrentIndex(_dataI.index("auto"))
+        check(_manualI == ("JPN", "JPN", True) and str(_comboI.currentData()) == "auto"
+              and _edI._save.region_guess == "JPN",
+              "I19 choosing Japan by hand reads the save as Japan, writes nothing into it, and "
+              "Auto goes back to the card's own release", str(_manualI))
+    except Exception as _exc:  # noqa: BLE001
+        check(False, "I7-I19 Japanese memory card checks raised",
+              f"{type(_exc).__name__}: {_exc}")
+    finally:
+        saves.search_dirs = _orig_dirsI      # type: ignore[assignment]
+        shutil.rmtree(_cardsI, ignore_errors=True)
 except Exception as _exc:  # noqa: BLE001
     check(False, "I1-I6 memory card tab checks raised", f"{type(_exc).__name__}: {_exc}")
 
@@ -1060,8 +1296,11 @@ try:
               "Q8 the tree is the real project, and vendored external/ is not listed",
               ", ".join(sorted(_names)))
         _src_files = [f for f in _dc.scan().files if f.rel.startswith("src/")]
-        check(sum(1 for f in _src_files if f.suffix == ".c") == 377,
-              "Q9 the tree holds the project's 377 C files",
+        # Pinned to the decomp as of upstream 8ba17e5 (the Japanese version landed): 627 .c files
+        # under src/. The number is a tripwire for a truncated or substituted tree, not a target of
+        # ours, so it moves when the tree upstream moves.
+        check(sum(1 for f in _src_files if f.suffix == ".c") == 627,
+              "Q9 the tree holds the project's 627 C files",
               f"{sum(1 for f in _src_files if f.suffix == '.c')}")
         check(sum(f.stubs for f in _src_files) == 0,
               "Q10 no stubs remain in src/ (the complete tree has nothing left to match)")
@@ -1079,10 +1318,341 @@ try:
               "(USA leads, as everywhere else)",
               f"{_d.progress.percent.text()} · {_d.progress.counts.text()}")
 
+        # Q11b-Q11g the third version. Japan is in the tree (config/jp/ holds its own checklists and
+        # sha1); the README's NUMERIC table has no row for it, but the project DOES publish its
+        # figures - as the three decomp.dev badges its version row links - so the tab fetches those,
+        # off the GUI thread, and reads the number out of the SVG each badge serves. Nothing here is
+        # pinned to that row's wording, and nothing anywhere is a number of ours.
+        _targetsQ = {t["region"]: t for t in _dc.regions()}
+        _jpQ = _targetsQ.get("Japan", {})
+        _jp_cfgQ = _dc.ROOT / "config" / "jp" / "SLPS_034.46.sha1"
+        check(_jpQ.get("binary") == "SLPS_034.46" and _jpQ.get("present") is True
+              and _jp_cfgQ.is_file()
+              and _jpQ.get("sha1") == _jp_cfgQ.read_text(encoding="utf-8").split()[0],
+              "Q11b the tab sees the Japanese version as really present (config/jp, SLPS_034.46)",
+              f"{_jpQ.get('binary')} {str(_jpQ.get('sha1'))[:12]}")
+
+        _segQ = [b.text() for b in _d.progress._group.buttons()]
+        # Before its badges have been read, the Japan segment carries the STATE it is in - where its
+        # figures are - not a number, and not "no figures" either (the README row links decomp.dev
+        # pages for it, so the project does publish them).
+        _seg_state_ok = ("decomp.dev" in _segQ[2]) if _jpQ.get("page") else ("no figures" in _segQ[2])
+        check(list(_d.progress._buttons) == list(_dc.REGION_ORDER) and len(_segQ) == 3
+              and [_tQ.split()[0] for _tQ in _segQ] == ["USA", "Europe", "Japan"]
+              and "%" not in _segQ[2] and _seg_state_ok,
+              "Q11c three segments, USA then Europe then Japan, the Japanese one saying where its "
+              "figures are until they have been asked for",
+              " | ".join(_segQ))
+
+        # A third segment must not squeeze the other two: a button narrower than its own label is
+        # the bug the owner sees first. Measured at the default size and at the window's minimum,
+        # which is the size this page is most likely to be misjudged at.
+        _clippedQ = []
+        for _wQ, _hQ in ((1200, 880), (_win5.minimumWidth(), _win5.minimumHeight())):
+            _win5.resize(_wQ, _hQ)
+            for _ in range(3):
+                _app5.processEvents()
+            _d.progress.layout().activate()
+            for _ in range(2):
+                _app5.processEvents()
+            _clippedQ += [f"{b.text()} {b.width()}<{b.sizeHint().width()} @{_wQ}px"
+                          for b in _d.progress._group.buttons()
+                          if b.width() < b.sizeHint().width()]
+        _win5.resize(1200, 880)
+        for _ in range(3):
+            _app5.processEvents()
+        check(not _clippedQ,
+              "Q11h all three region segments fit their own labels, at the default size and at the "
+              "window's minimum", "; ".join(_clippedQ)
+              or f"{len(_d.progress._group.buttons())} segments fit")
+
+        # Q11d-Q11k Japan's figures. They come from decomp.dev, and everything below is decided by
+        # what the injected fetcher hands back - the report decomp.dev serves for SLPS_034.46 (the
+        # real one's own numbers, captured from the live site) and the badge SVGs its README row
+        # links - so no check here depends on whether this machine has a network. The cache file is a
+        # temporary one for the same reason: a canned report must not become a figure the real panel
+        # later shows.
+        import json as _jsonQ                                             # noqa: PLC0415
+
+        def _measuresQ(units: int, funcs: int, code: int, data: int,
+                       percent: float = 100.0) -> dict:
+            """One unit's measures, in the shape decomp.dev's own report publishes them."""
+            return {"total_units": units, "complete_units": 0,
+                    "total_functions": funcs, "matched_functions": funcs,
+                    "matched_functions_percent": percent,
+                    "total_code": code, "matched_code": code, "matched_code_percent": percent,
+                    "total_data": data, "matched_data": data, "matched_data_percent": percent}
+
+        # decomp.dev's report for SLPS_034.46, captured from the live site: every category it lists
+        # (id, name, units, functions, code, data). Every one of them is matched there, which is why
+        # the fixture's percentages are its own 100.00.
+        _jp_catsQ = (
+            ("game", "Game (executable)", 38, 346, 64652, 234348),
+            ("cardgame", "CARDGAME overlay", 23, 306, 134112, 8496),
+            ("cnty_sel", "CNTY_SEL overlay", 1, 26, 5800, 156),
+            ("fieldstg", "FIELDSTG overlay", 31, 222, 62940, 38944),
+            ("fightstg", "FIGHTSTG overlay", 54, 301, 126840, 10536),
+            ("shocktst", "SHOCKTST overlay", 1, 17, 7208, 540),
+            ("soundtst", "SOUNDTST overlay", 1, 8, 2564, 9108),
+            ("stages", "Stage overlays", 294, 1590, 283424, 967241),
+            ("stagslct", "STAGSLCT overlay", 1, 8, 5280, 14384),
+            ("stcrdabm", "STCRDABM overlay", 1, 29, 11336, 264),
+            ("stcrddek", "STCRDDEK overlay", 7, 55, 28908, 6416),
+            ("stcrdshp", "STCRDSHP overlay", 6, 45, 24868, 16340),
+            ("stdgname", "STDGNAME overlay", 5, 32, 14212, 10476),
+            ("stdwtitl", "STDWTITL overlay", 14, 74, 16848, 1748),
+            ("stfgtrep", "STFGTREP overlay", 6, 36, 15212, 10720),
+            ("stgdglab", "STGDGLAB overlay", 10, 71, 50020, 3032),
+            ("stgmcard", "STGMCARD overlay", 7, 45, 21052, 2280),
+            ("stgtrain", "STGTRAIN overlay", 8, 94, 37000, 5260),
+            ("stitshop", "STITSHOP overlay", 7, 69, 38688, 3228),
+            ("stplnmet", "STPLNMET overlay", 8, 53, 21740, 6272),
+            ("ststatus", "STSTATUS overlay", 12, 123, 93616, 6172),
+            ("wfightmn", "WFIGHTMN overlay", 5, 42, 19968, 652),
+            ("wfightts", "WFIGHTTS overlay", 1, 14, 11168, 3420),
+        )
+        _reportQ = _jsonQ.dumps({
+            "id": 1406408757, "owner": "ReGame-Labs", "repo": "dw3_decomp",
+            "repo_url": "https://github.com/ReGame-Labs/dw3_decomp",
+            "name": "Digimon World 3(2003)", "platform": "psx",
+            "default_version": "SLES_039.36", "default_category": "game",
+            "commit": {"sha": "7fa6f071efe0fe9062ea8c1ebf6fd90ee4811ae9",
+                       "message": "Show the Japanese version's progress from decomp.dev (#42)",
+                       "timestamp": "2026-10-15T02:01:15Z"},
+            "measures": _measuresQ(541, 3606, 1097456, 1360033),
+            "report_versions": ["SLES_039.36", "SLPS_034.46", "SLUS_014.36"],
+            "report_categories": [{"id": _cid, "name": _name, "measures": _measuresQ(_u, _f, _c, _d)}
+                                  for _cid, _name, _u, _f, _c, _d in _jp_catsQ],
+        })
+        _badge_codeQ = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="98" height="20" role="img" '
+            'aria-label="Code: 100.00%"><title>Code: 100.00%</title><g><rect width="98" '
+            'height="20"/></g><g fill="#fff"><text x="195" y="140" transform="scale(.1)">Code'
+            '</text><text x="665" y="140" transform="scale(.1)">100.00%</text></g></svg>')
+        _badge_dataQ = _badge_codeQ.replace("Code", "Data")
+        _badge_funcsQ = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20" role="img" '
+            'aria-label="Functions: 3,606 / 3,606"><title>Functions: 3,606 / 3,606</title>'
+            '<g fill="#fff"><text x="325" y="140" transform="scale(.1)">Functions</text>'
+            '<text x="1055" y="140" transform="scale(.1)">3,606 / 3,606</text></g></svg>')
+        _fetchedQ: list[str] = []
+        _off_guiQ: list[bool] = []
+        # The "network" holds until the check releases it, so the placeholder is observed
+        # deterministically - and observing it at all proves show_region() returned without waiting
+        # for the fetch (the window would have frozen otherwise).
+        _gateQ = threading.Event()
+
+        def _serveQ(url, timeout=None):
+            """decomp.dev hands back when its URL is asked for: the version's report, or a badge SVG.
+
+            Which one is decided by the URL the app asks for, exactly as the site itself does it.
+            Records which thread answered, so "this does not run on the GUI thread" is checked rather
+            than assumed.
+            """
+            _off_guiQ.append(threading.current_thread() is threading.main_thread())
+            _fetchedQ.append(url)
+            _gateQ.wait(20.0)
+            if url.endswith(".json"):
+                return _reportQ
+            if "measure=data" in url:
+                return _badge_dataQ
+            if "measure=functions" in url:
+                return _badge_funcsQ
+            return _badge_codeQ
+
+        import time as _timeQ                                             # noqa: PLC0415
+
+        def _settleQ(ready, seconds: float = 10.0) -> bool:
+            """Pump the event loop until the fetch's queued signal has been handled."""
+            deadline = _timeQ.time() + seconds
+            while _timeQ.time() < deadline:
+                _app5.processEvents()
+                if ready():
+                    return True
+                _timeQ.sleep(0.01)
+            return bool(ready())
+
+        _main_memoryQ = dict(_dc._FIGURE_MEMORY)
+        _main_fetcherQ = _d.progress.fetcher
+        _main_cacheQ = _d.progress.cache_file
+        _badge_dirQ = _mkdtemp("hermes-verify-dmw3-badges-")
+        _dc._FIGURE_MEMORY.clear()                 # nothing read yet: this run decides from scratch
+        _d.progress.fetcher = _serveQ
+        _d.progress.cache_file = _badge_dirQ / "figures.json"
+        try:
+            _d.progress.show_region("Japan")
+            for _ in range(2):
+                _app5.processEvents()
+            _placeholderQ = _d.progress.percent.text()
+            _gateQ.set()                           # decomp.dev answers now
+            _settleQ(lambda: _d.progress.percent.text() != _placeholderQ)
+            _jp_txtQ = " · ".join([_d.progress.percent.text(), _d.progress.counts.text(),
+                                   _d.progress.value_code.text(), _d.progress.value_data.text()])
+            _d.progress.layout().activate()
+            for _ in range(2):
+                _app5.processEvents()
+            _clipped_figQ = [f"{b.text()} {b.width()}<{b.sizeHint().width()}"
+                             for b in _d.progress._group.buttons()
+                             if b.width() < b.sizeHint().width()]
+            check(_placeholderQ == "…" and _d.progress.percent.text() == "100.00%"
+                  and _d.progress.value_code.text() == "100.00%"
+                  and _d.progress.value_data.text() == "100.00%"
+                  and _d.progress.bar_code._frac == 1.0 and _d.progress.bar_data._frac == 1.0
+                  and _d.progress.counts.text() == "3,606 / 3,606 functions matched"
+                  and not _d.progress._fetching and not _clipped_figQ
+                  and _fetchedQ == [_jpQ["report"]]
+                  and _off_guiQ and not any(_off_guiQ),
+                  "Q11d Japan is shown as the other two are: the project's own 100.00%, both bars "
+                  "full, its report's own 3,606 / 3,606 - a placeholder first, decomp.dev's JSON "
+                  "report asked for in one round trip off the GUI thread, and no segment clipped by "
+                  "the new label",
+                  f"placeholder {_placeholderQ!r} -> {_jp_txtQ} · fetched={_fetchedQ} · "
+                  f"off-gui={_off_guiQ} · clipped={_clipped_figQ}")
+
+            # ...and its per-part rows are the report's own figures, grouped the way THIS tree groups
+            # its units: 346 is the 'game' category, 1,670 is the 21 overlays config/jp/overlays.sha1
+            # names, and 1,590 is the 294 stages its own stage list carries - under the README
+            # table's own labels, with the stage row's parenthetical restated from this tree. The
+            # fourth row is the report's own total.
+            _rowsQ = [(name.text(), counts.text(), bar._frac, pct.text())
+                      for name, counts, bar, pct in _d.progress._rows]
+            _wantQ = [("Executable, game code", "346 / 346"),
+                      ("The 21 overlays", "1,670 / 1,670"),
+                      ("The stages (294)", "1,590 / 1,590"),
+                      ("Total", "3,606 / 3,606")]
+            check(len(_rowsQ) == 4
+                  and all(name.split("  (")[0] == want[0] and counts == want[1]
+                          for (name, counts, _frac, _pct), want in zip(_rowsQ, _wantQ))
+                  and all(frac == 1.0 and pct == "100.00%" for _n, _c, frac, pct in _rowsQ),
+                  "Q11e Japan's rows are real, not omitted: the same four rows the other two "
+                  "versions show, under the README table's labels, carrying the report's own counts "
+                  "and this tree's own stage count (294)",
+                  " · ".join(f"{n}={c}" for n, c, _f, _p in _rowsQ))
+
+            # The readout says where they came from and which revision they describe.
+            _jp_basisQ = _d.progress.basis.text()
+            check(_jpQ["report"] in _jp_basisQ and "7fa6f07" in _jp_basisQ
+                  and "overlays.sha1" in _jp_basisQ and "294" in _jp_basisQ
+                  and "100.00%" in _d.progress._buttons["Japan"].text(),
+                  "Q11f the readout names the report it read (its URL and the upstream commit it was "
+                  "generated from) and says how its rows were grouped from this tree",
+                  _jp_basisQ[:150])
+
+            # ...and the panel is fully consistent per region: the bug the owner saw was the Japan
+            # footnote still sitting under the USA figures. Japan's figures come back without a
+            # second round trip (the report is cached like any other figure).
+            _d.progress.show_region("USA")
+            for _ in range(3):
+                _app5.processEvents()
+            _us_basisQ = _d.progress.basis.text()
+            _leakQ = [part for part in ("SLPS_034.46", "checklists", "version row links") if
+                      part in _us_basisQ or part in _d.progress.counts.text()]
+            _us_cleanQ = (_d.progress.percent.text() == f"{_us.get('percent', 0):.2f}%"
+                          and _d.progress.counts.text().startswith(_shown)
+                          and _d.progress._rows and not _leakQ
+                          and "100.00%" not in _us_basisQ)
+            _d.progress.show_region("Japan")
+            for _ in range(3):
+                _app5.processEvents()
+            _fetches_afterQ = len(_fetchedQ)
+            check(_us_cleanQ and _d.progress.percent.text() == "100.00%"
+                  and _d.progress.counts.text() == "3,606 / 3,606 functions matched"
+                  and len(_d.progress._rows) == 4 and _fetches_afterQ == 1,
+                  "Q11i switching regions leaves nothing behind: the USA panel carries no Japan "
+                  "text, Japan's four rows come back with its figures, and the report is read once "
+                  "- the second look costs no round trip",
+                  f"leak={_leakQ} · rows={len(_d.progress._rows)} · fetches={_fetches_afterQ}")
+
+            # The badge images are still the fallback: where the report cannot be read (here: the
+            # version's .json answers 404), the SVGs the README row links are read instead, so the
+            # percentage and counts are still the project's - and with no per-part data to group, NO
+            # row is drawn rather than a row of nothing.
+            _fallbackQ = _d.progress.__class__()
+            _fallbackQ.set_status(_pub, _d._inventory.totals)
+            _fbQ: list[str] = []
+
+            def _svg_onlyQ(url, timeout=None):
+                _fbQ.append(url)
+                if url.endswith(".json"):
+                    raise OSError("404: this version has no report")
+                if "measure=data" in url:
+                    return _badge_dataQ
+                if "measure=functions" in url:
+                    return _badge_funcsQ
+                return _badge_codeQ
+
+            _dc._FIGURE_MEMORY.clear()             # a cold cache: the fallback is what answers
+            _fallbackQ.fetcher = _svg_onlyQ
+            _fallbackQ.cache_file = _badge_dirQ / "fallback.json"
+            _fallbackQ.show_region("Japan")
+            _settleQ(lambda: _fallbackQ.percent.text() != "…")
+            check(_fallbackQ.percent.text() == "100.00%"
+                  and _fallbackQ.counts.text() == "3,606 / 3,606 functions matched"
+                  and not _fallbackQ._rows and "badge" in _fallbackQ.basis.text()
+                  and _fbQ[:1] == [_jpQ["report"]] and any(".svg" in u for u in _fbQ),
+                  "Q11j when the report cannot be read the badge images it links are still the "
+                  "fallback: the figures are the project's own, and no per-part row is invented for "
+                  "them",
+                  f"{_fallbackQ.percent.text()} · rows={len(_fallbackQ._rows)} · "
+                  f"fetched={len(_fbQ)} ({_fbQ[:1]} …)")
+
+            # Offline is an honest state, not a stale number: a FAILING fetch leaves the percentage
+            # a dash and says so - a remembered figure would read as a measurement.
+            _offlineQ = _d.progress.__class__()
+            _offlineQ.set_status(_pub, _d._inventory.totals)
+
+            def _no_networkQ(url, timeout=None):
+                raise OSError("no network")
+
+            _dc._FIGURE_MEMORY.clear()             # a cold cache, off the network: the honest case
+            _offlineQ.fetcher = _no_networkQ
+            _offlineQ.cache_file = _badge_dirQ / "offline.json"
+            _offlineQ.show_region("Japan")
+            _settleQ(lambda: _offlineQ.percent.text() not in ("…",))
+            _off_textQ = " · ".join([_offlineQ.percent.text(), _offlineQ.counts.text(),
+                                     _offlineQ.value_code.text(), _offlineQ.value_data.text()])
+            check(_offlineQ.percent.text() == "-" and "%" not in _off_textQ
+                  and _offlineQ.value_code.text() == "-" and _offlineQ.value_data.text() == "-"
+                  and not _offlineQ._rows and "could not" in _offlineQ.counts.text()
+                  and _offlineQ.basis.text() == _d.progress.__class__._where_text(_jpQ),
+                  "Q11k with no network Japan says its figures could not be read and shows no "
+                  "number at all - never a stale or invented one", _off_textQ[:120])
+        finally:
+            _gateQ.set()                           # never leave the canned fetcher waiting
+            _d.progress.fetcher = _main_fetcherQ
+            _d.progress.cache_file = _main_cacheQ
+            _dc._FIGURE_MEMORY.clear()
+            _dc._FIGURE_MEMORY.update(_main_memoryQ)
+            shutil.rmtree(_badge_dirQ, ignore_errors=True)
+            _d.progress.show_region("USA")
+            for _ in range(3):
+                _app5.processEvents()
+
+        check("Japan" in _d.identity.text() and "SLPS_034.46" in _d.identity.text()
+              and str(_jpQ.get("sha1", ""))[:12] in _d.identity.text(),
+              "Q11f the identity line names all three versions and the binaries they reproduce",
+              _d.identity.text()[:140])
+
+        _euQ = _pub.get("regions", {}).get("Europe", {})
+        _d.progress.show_region("Europe")
+        for _ in range(2):
+            _app5.processEvents()
+        _eu_okQ = (_d.progress.percent.text() == f"{_euQ.get('percent', 0):.2f}%"
+                   and _d.progress._buttons["Europe"].isChecked()
+                   and "%" in _d.progress._buttons["Europe"].text())
+        _d.progress.show_region("USA")
+        for _ in range(2):
+            _app5.processEvents()
+        check(_eu_okQ and _d.progress.percent.text() == f"{_us.get('percent', 0):.2f}%"
+              and _d.progress._buttons["USA"].isChecked(),
+              "Q11g USA and Europe still render the project's published numbers unchanged, and the "
+              "pane comes back to USA",
+              f"Europe {_euQ.get('percent', 0):.2f}% -> USA {_d.progress.percent.text()}")
+
         # Every code view the tab can make must be read-only, so open one first and ask the CLASS:
         # before a file is opened there is no view at all, and asking the current widget would have
         # checked nothing while reporting a pass.
-        _d.open_path("src/stgdglab/stgdglab_4.c")
+        _d.open_path("src/cardgame/card_battle/battle.c")
         for _ in range(2):
             _app5.processEvents()
         _views = _d.findChildren(_CodeView)
@@ -1092,7 +1662,7 @@ try:
               f"{len(_views)} views, {len(_writable)} writable")
         _view = _d.view                  # the view the checks below read from
 
-        _rel = "src/stgdglab/stgdglab_4.c"
+        _rel = "src/cardgame/card_battle/battle.c"
         _opened = _d.open_path(_rel)
         for _ in range(3):
             _app5.processEvents()
@@ -1122,7 +1692,7 @@ try:
                   "Q15 a hit jumps to the line that really contains it",
                   f"{_hit_file}:{_hit_line}")
 
-        _d.filter_box.setText("stgdglab")
+        _d.filter_box.setText("digimon_lab")
         for _ in range(3):
             _app5.processEvents()
         _visible = {_d.tree.topLevelItem(i).text(0) for i in range(_d.tree.topLevelItemCount())
@@ -1137,8 +1707,8 @@ try:
         _d._close_tab(0)
     for _ in range(3):
         _app5.processEvents()
-    _first = "src/stgdglab/stgdglab_4.c"
-    _second = "src/main/system.c"
+    _first = "src/cardgame/card_battle/battle.c"
+    _second = "src/menus/digimon_lab/lab.c"
     _d.open_path(_first)
     _d.open_path(_second)
     for _ in range(3):
@@ -1169,7 +1739,7 @@ try:
     for _ in range(3):
         _app5.processEvents()
     check(_d.tabs.count() == 1 and _d.view is _d._docs.get(_second)
-          and _d.file_path.text().endswith("system.c"),
+          and _d.file_path.text().endswith(_second.rsplit("/", 1)[-1]),
           "Q21 closing a tab drops it and shows the one that is left",
           f"{_d.tabs.count()} tabs, showing {_d.file_path.text()!r}")
 
@@ -1256,6 +1826,7 @@ try:
           "R3 an invalid regex returns no hits instead of raising (it used to raise)")
 
     _rroot = _mkdtemp("hermes-verify-dmw3-layer-")
+    _rtree = None
     _real_root = _dcR.ROOT
     try:
         (_rroot / "src").mkdir()
@@ -1270,11 +1841,310 @@ try:
         _dcR.scan()                     # must not raise out of a tab's first paint
         check(_dcR.published() == {},
               "R5 a tree that vanished reports nothing and raises nothing")
+        # R6-R8 the version table's shapes. Upstream's Japan row has been a plain sentence ("the shared
+        # C, not on decomp.dev yet") and is now three decomp.dev badge images; whichever it is, the
+        # parser reports what the README offers - a page, a measure list, a sentence - and NEVER a value
+        # out of an image. Pinned on synthetic READMEs, so this holds whichever revision the tree ships.
+        _rtree = _mkdtemp("hermes-verify-dmw3-versions-")
+        (_rtree / "src").mkdir()
+        _readmeR = _rtree / "README.md"
+        _headerR = ("| Version | Code | Data | Functions |\n|---|---|---|---|\n")
+        _readmeR.write_text(
+            _headerR
+            + "| 🇯🇵 Japan (`SLPS_034.46`) | the shared C, not on decomp.dev yet | | |\n",
+            encoding="utf-8")
+        _dcR.ROOT = _rtree
+        _jpR1 = {t["region"]: t for t in _dcR.regions()}["Japan"]
+        check(_jpR1["note"] == "the shared C, not on decomp.dev yet" and _jpR1["page"] == ""
+              and _jpR1["measures"] == [] and not _jpR1["present"],
+              "R6 a version row that carries prose and no figures reads as prose, and a tree without "
+              "config/jp is not claimed to have the release",
+              f"note={_jpR1['note'][:40]!r} present={_jpR1['present']}")
+
+        _readmeR.write_text(
+            _headerR
+            + "| 🇯🇵 Japan (`SLPS_034.46`) | [![Code](https://decomp.dev/ReGame-Labs/dw3_decomp.svg"
+              "?mode=shield&measure=code&version=SLPS_034.46&label=Code)](https://decomp.dev/"
+              "ReGame-Labs/dw3_decomp/SLPS_034.46) | [![Data](https://decomp.dev/ReGame-Labs/"
+              "dw3_decomp.svg?mode=shield&measure=data&version=SLPS_034.46&label=Data)]"
+              "(https://decomp.dev/ReGame-Labs/dw3_decomp/SLPS_034.46) |\n",
+            encoding="utf-8")
+        _jpR2 = {t["region"]: t for t in _dcR.regions()}["Japan"]
+        check(_jpR2["page"] == "https://decomp.dev/ReGame-Labs/dw3_decomp/SLPS_034.46"
+              and _jpR2["measures"] == ["code", "data"] and _jpR2["note"] == "",
+              "R7 a version row that carries decomp.dev badges yields the page and the measures it "
+              "covers - and no value, which is the whole point",
+              f"{_jpR2['page']} {_jpR2['measures']}")
+
+        _readmeR.write_text(
+            _headerR
+            + "| 🇯🇵 Japan (`SLPS_034.46`) | the shared C, not on decomp.dev yet | | |\n"
+            + "\n## Status\n\n"
+            + "| Part | Version | Functions in C | Code | Data |\n|---|---|---|---|---|\n"
+            + "| Executable, game code | Japan | 346 / 346 | 100.00 % | 100.00 % |\n"
+            + "| **Total** | **Japan** | **346 / 346** | **100.00 %** | **100.00 %** |\n",
+            encoding="utf-8")
+        _pubR = _dcR.published().get("regions", {})
+        check("Japan" in _pubR and _pubR["Japan"]["total"] == 346
+              and _pubR["Japan"]["percent"] == 100.0 and _pubR["Japan"]["complete"] is True,
+              "R8 if the project ever publishes Japan's figures in its numeric table, published() "
+              "picks them up and the pane shows them - the honest state is 'no row yet', not 'never'",
+              str({k: (v["total"], round(v["percent"], 2)) for k, v in _pubR.items()}))
+
+        # R9-R12 the decomp.dev badge path: a version whose README row links badges and whose table
+        # has no row (Japan) still has published figures, and they are READ from the SVG each badge
+        # serves - never computed here. Everything below is decided by an injected fetcher and a
+        # temporary cache file, so no check depends on this machine's network being up or down.
+        _badge_codeR = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="98" height="20" role="img" '
+            'aria-label="Code: 100.00%"><title>Code: 100.00%</title><g fill="#fff">'
+            '<text x="195" y="140" transform="scale(.1)">Code</text>'
+            '<text x="665" y="140" transform="scale(.1)">100.00%</text></g></svg>')
+        _badge_funcsR = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20" role="img" '
+            'aria-label="Functions: 3,606 / 3,606"><title>Functions: 3,606 / 3,606</title>'
+            '<g fill="#fff"><text x="325" y="140" transform="scale(.1)">Functions</text>'
+            '<text x="1055" y="140" transform="scale(.1)">3,606 / 3,606</text></g></svg>')
+        _shapesR = {
+            "a percentage badge": (_badge_codeR, {"percent": 100.0}),
+            "a counts badge": (_badge_funcsR, {"counts": (3606, 3606)}),
+            "labels only": ("<svg><text>Code</text><text>Data</text></svg>", {}),
+            "nothing at all": ("", {}),
+            "two different numbers": ("<svg><text>10.00%</text><text>20.00%</text></svg>", {}),
+        }
+        _badR = [name for name, (svg, want) in _shapesR.items()
+                 if _dcR.parse_badge_svg(svg) != want]
+        check(not _badR,
+              "R9 a badge's number is read from the SVG's own text (a percentage badge and a counts "
+              "badge alike); an SVG with no number, or with two different ones, yields nothing "
+              "rather than a choice of ours", ", ".join(_badR) or f"{len(_shapesR)} shapes")
+
+        # The URLs come OUT of the README's row: nothing is written down in the module, so this is
+        # driven by a README the tree does not ship (another repo path, one badge) and a version row
+        # with no badge at all.
+        _badge_rowR = ("| Version | Code | Data | Functions |\n|---|---|---|---|\n"
+                       "| 🇯🇵 Japan (`SLPS_034.46`) | [![Code](https://decomp.dev/Other-Org/"
+                       "other_repo.svg?mode=shield&measure=code&version=SLPS_034.46&label=Code)]"
+                       "(https://decomp.dev/Other-Org/other_repo/SLPS_034.46) | | |\n"
+                       "| 🇺🇸 USA (`SLUS_014.36`) | no badge in this row | | |\n")
+        _readmeR.write_text(_badge_rowR, encoding="utf-8")
+        _dcR.ROOT = _rtree
+        _urlsR = _dcR.badge_urls("SLPS_034.46")
+        check(list(_urlsR) == ["code"] and _urlsR["code"].startswith(
+                  "https://decomp.dev/Other-Org/other_repo.svg")
+              and _dcR.badge_urls("SLUS_014.36") == {}
+              and _dcR.badge_urls("SLPS_999.99") == {},
+              "R10 a version's badge URLs are taken from its own README row (this README is not the "
+              "tree's), and a row with no badge - or no row - has nothing to fetch",
+              str(sorted(_urlsR)))
+
+        # One fetch per badge, then the answer is reused: in memory, then from the file a later run
+        # reads. An entry past its expiry is fetched again, and a fetch that FAILS contributes
+        # nothing - the stale copy is never served in its place.
+        _cacheR = _rtree / "figures-cache.json"
+        _callsR: list[str] = []
+
+        def _countR(url, timeout=None):
+            _callsR.append(url)
+            return _badge_codeR
+
+        def _boomR(url, timeout=None):
+            raise OSError("offline")
+
+        _oneR = {"code": "https://decomp.dev/Other-Org/other_repo.svg?measure=code"}
+        _dcR._FIGURE_MEMORY.clear()
+        _aR = _dcR.read_figures(_oneR, fetch=_countR, now=1000.0, cache_file=_cacheR)
+        _bR = _dcR.read_figures(_oneR, fetch=_countR, now=1001.0, cache_file=_cacheR)
+        _memoryR = (_aR == _bR == {"code": {"percent": 100.0}} and len(_callsR) == 1)
+        _dcR._FIGURE_MEMORY.clear()                   # a fresh process: the file alone serves it
+        _cR = _dcR.read_figures(_oneR, fetch=_countR, now=1002.0, cache_file=_cacheR)
+        _diskR = (_cR == {"code": {"percent": 100.0}} and len(_callsR) == 1)
+        _expiredR = _dcR.read_figures(_oneR, fetch=_countR,
+                                      now=1000.0 + _dcR.FIGURE_CACHE_TTL + 1, cache_file=_cacheR)
+        _afterR = len(_callsR)
+        _dcR._FIGURE_MEMORY.clear()
+        _offlineR = _dcR.read_figures(_oneR, fetch=_boomR, now=10 ** 9, cache_file=_cacheR)
+        _dcR._FIGURE_MEMORY.clear()
+        check(_memoryR and _diskR and _expiredR == {"code": {"percent": 100.0}} and _afterR == 2
+              and _offlineR == {},
+              "R11 a fetched badge is cached in memory and on disk, an expired copy is fetched "
+              "again, and a FAILING fetch yields nothing at all - never the stale number",
+              f"memory={_memoryR} disk={_diskR} fetches={_afterR} offline={_offlineR}")
+
+        # ...and the whole chain, as the tab calls it: README row -> badge URLs -> the figures.
+        _wholeR = _dcR.published_figures("SLPS_034.46", fetch=_countR, now=2000.0,
+                                         cache_file=_rtree / "figures-cache-2.json")
+        _no_rowR = _dcR.published_figures("SLUS_014.36", fetch=_countR, now=2000.0,
+                                          cache_file=_rtree / "figures-cache-2.json")
+        _dcR._FIGURE_MEMORY.clear()
+        check(_wholeR == {"code": {"percent": 100.0}} and _no_rowR == {},
+              "R12 published_figures() reads a version's figures end to end from its README row, "
+              "and returns nothing for a version whose row carries no badge", str(_wholeR))
+
+        # R13-R16 the decomp.dev REPORT path. A version's page serves a machine-readable report of
+        # the same figures its badges are drawn from, and that report is PREFERRED (it carries the
+        # counts and the per-category breakdown). Where its per-part rows come from is decided out of
+        # the tree's own unit lists - config/<folder>/overlays.sha1 and stages.sha1 - so the rows a
+        # version with no table row shows are the tree's grouping, not a table written down in code.
+        import json as _jsonR                                             # noqa: PLC0415
+
+        def _measuresR(units: int, matched: int, total: int, percent: float,
+                       data: int = 0) -> dict:
+            """One unit's measures, in the shape decomp.dev's report publishes them."""
+            return {"total_units": units, "complete_units": 0,
+                    "total_functions": total, "matched_functions": matched,
+                    "matched_functions_percent": percent,
+                    "total_code": total * 10, "matched_code": matched * 10,
+                    "matched_code_percent": percent,
+                    "total_data": data, "matched_data": data, "matched_data_percent": percent}
+
+        # A tree whose Japanese unit lists are SHORT and countable: two overlays and three stages.
+        (_rtree / "config" / "jp").mkdir(parents=True)
+        (_rtree / "config" / "jp" / "overlays.sha1").write_text(
+            "aa  build/jp/AAA/PRO/CARDGAME.PRO\n"
+            "bb  build/jp/AAA/PRO/FIELDSTG.PRO\n", encoding="utf-8")
+        (_rtree / "config" / "jp" / "stages.sha1").write_text(
+            "".join(f"{i:040x}  build/jp/AAA/PRO/WSTAG{200 + i}.PRO\n" for i in range(3)),
+            encoding="utf-8")
+        _readmeR.write_text(
+            _headerR
+            + "| 🇯🇵 Japan (`SLPS_034.46`) | [![Code](https://decomp.dev/Other-Org/other_repo.svg"
+              "?mode=shield&measure=code&version=SLPS_034.46&label=Code)](https://decomp.dev/"
+              "Other-Org/other_repo/SLPS_034.46) | [![Data](https://decomp.dev/Other-Org/"
+              "other_repo.svg?mode=shield&measure=data&version=SLPS_034.46&label=Data)]"
+              "(https://decomp.dev/Other-Org/other_repo/SLPS_034.46) |\n"
+            + "\n## Status\n\n"
+            + "| Part | Version | Functions in C | Code | Data |\n|---|---|---|---|---|\n"
+            + "| Executable, game code | Europe | 10 / 10 | 100.00 % | 100.00 % |\n"
+            + "| The 2 overlays | Europe | 14 / 20 | 70.00 % | 100.00 % |\n"
+            + "| The stages (3 and 2) | Europe | 30 / 30 | 100.00 % | 100.00 % |\n"
+            + "| **Total** | **Europe** | **54 / 60** | **90.00 %** | **100.00 %** |\n",
+            encoding="utf-8")
+        # The report for the same version: two overlays (one of them half matched, so the figures
+        # cannot be right by accident), the three stages the tree lists, and the executable. Its own
+        # total is the three rows' sum.
+        _catR = {
+            "game": _measuresR(1, 10, 10, 100.0),
+            "cardgame": _measuresR(1, 6, 12, 50.0),
+            "fieldstg": _measuresR(1, 8, 8, 100.0),
+            "stages": _measuresR(3, 30, 30, 100.0),
+        }
+        _reportR = _jsonR.dumps({
+            "id": 1, "owner": "Other-Org", "repo": "other_repo",
+            "repo_url": "https://github.com/Other-Org/other_repo", "name": "Digimon World 3(2003)",
+            "platform": "psx", "default_version": "SLPS_034.46", "default_category": "game",
+            "commit": {"sha": "0123456789abcdef0123456789abcdef01234567", "message": "gen"},
+            "measures": _measuresR(6, 54, 60, 90.0),
+            "report_versions": ["SLPS_034.46"],
+            "report_categories": [{"id": _cid, "name": _cid, "measures": _m}
+                                  for _cid, _m in _catR.items()],
+        })
+        _parsedR = _dcR.parse_report(_reportR, "SLPS_034.46")
+        check(_parsedR.get("code") == {"counts": (540, 600), "percent": 90.0}
+              and _parsedR.get("functions") == {"counts": (54, 60), "percent": 90.0}
+              and _parsedR.get("commit") == "0123456789abcdef0123456789abcdef01234567"
+              and _parsedR.get("parts") == [
+                  {"label": "Executable, game code", "matched": 10, "total": 10},
+                  {"label": "The 2 overlays", "matched": 14, "total": 20},
+                  {"label": "The stages (3)", "matched": 30, "total": 30}],
+              "R13 a report's own numbers come through as the panel's figures (its published "
+              "percentages, its counts, the commit it was generated from), and its categories are "
+              "grouped into the rows the table breaks other versions down under - under those labels, "
+              "with the stage count this tree's own stage list carries",
+              _jsonR.dumps(_parsedR.get("parts"))[:200] + f" · {_parsedR.get('functions')}")
+
+        # ...and the honest degradations. A report that cannot be grouped from this tree - an overlay
+        # the report does not carry, a stage unit count that contradicts the tree's list, rows that
+        # do not add up to the report's own total - yields NO rows (its figures are still read), and
+        # text that is not a report yields nothing at all. Neither ever produces a number of ours.
+        _gapsR: list[str] = []
+
+        def _report_withR(**changes) -> dict:
+            raw = _jsonR.loads(_reportR)
+            for key, value in changes.items():
+                if key == "drop":
+                    raw["report_categories"] = [c for c in raw["report_categories"]
+                                               if c["id"] != value]
+                elif key == "cat":
+                    for c in raw["report_categories"]:
+                        if c["id"] == value[0]:
+                            c["measures"] = _measuresR(*value[1])
+                else:
+                    raw["measures"] = value
+            return raw
+
+        _casesR = {
+            "a report missing an overlay the tree names":
+                (_report_withR(drop="fieldstg"), False),
+            "a stage unit count the tree's list contradicts":
+                (_report_withR(cat=("stages", (4, 30, 30, 100.0))), False),
+            "rows that do not add up to the report's total":
+                (_report_withR(measures=_measuresR(6, 55, 60, 91.6)), False),
+            "the real report": (_jsonR.loads(_reportR), True),
+        }
+        for _name, (_raw, _want) in _casesR.items():
+            _got = bool(_dcR.report_parts("SLPS_034.46", _raw))
+            if _got != _want:
+                _gapsR.append(_name)
+        _junkR = [_dcR.parse_report(t, "SLPS_034.46") for t in
+                  ("", "<svg><text>Code</text></svg>", "{}", "[]", "not json at all",
+                   _jsonR.dumps({"measures": {"matched_functions": 1, "total_functions": 1}}))]
+        check(not _gapsR and not any(_junkR),
+              "R14 a report whose rows cannot be derived from this tree - a missing overlay, a stage "
+              "count that contradicts the tree's list, rows that do not sum to the report's total - "
+              "yields NO rows rather than a guess, and text that is not a report yields nothing",
+              ", ".join(_gapsR) if _gapsR else f"{len(_casesR)} cases, {len(_junkR)} non-reports")
+
+        # R15-R16 which of the two a version's figures come from, end to end. The report is asked for
+        # first and preferred where it can be read; a report that cannot be read falls back to the
+        # badge images the README row links, which is how a version with no report still shows its
+        # own percentage (and then no per-part rows, since badges carry no breakdown).
+        _pref_callsR: list[str] = []
+
+        def _report_servedR(url, timeout=None):
+            _pref_callsR.append(url)
+            return _reportR if url.endswith(".json") else _badge_codeR
+
+        _dcR._FIGURE_MEMORY.clear()
+        _prefR = _dcR.published_figures("SLPS_034.46", fetch=_report_servedR, now=3000.0,
+                                        cache_file=_rtree / "figures-cache-3.json")
+        _dcR._FIGURE_MEMORY.clear()                   # a fresh process: the file alone serves it
+        _againR = _dcR.published_figures("SLPS_034.46", fetch=_report_servedR, now=3001.0,
+                                         cache_file=_rtree / "figures-cache-3.json")
+        check(_prefR.get("report_url", "").endswith("/SLPS_034.46.json")
+              and _prefR.get("functions") == {"counts": (54, 60), "percent": 90.0}
+              and len(_prefR.get("parts") or []) == 3
+              and _pref_callsR == ["https://decomp.dev/Other-Org/other_repo/SLPS_034.46.json"]
+              and _againR.get("parts") == _prefR.get("parts"),
+              "R15 a version's figures come from its decomp.dev report when one can be read - one "
+              "request, for the report itself, with the counted rows in the result - and the report "
+              "is cached like any other figure, rows and all",
+              f"{_pref_callsR} -> {sorted(_prefR)} · cached rows={len(_againR.get('parts') or [])}")
+
+        _fb_callsR: list[str] = []
+
+        def _no_reportR(url, timeout=None):
+            _fb_callsR.append(url)
+            if url.endswith(".json"):
+                raise OSError("404: no report")
+            return _badge_codeR
+
+        _dcR._FIGURE_MEMORY.clear()
+        _fbR = _dcR.published_figures("SLPS_034.46", fetch=_no_reportR, now=3100.0,
+                                      cache_file=_rtree / "figures-cache-4.json")
+        check(set(_fbR) == {"code", "data"} and "report_url" not in _fbR and "parts" not in _fbR
+              and _fb_callsR[:1] == ["https://decomp.dev/Other-Org/other_repo/SLPS_034.46.json"]
+              and sum(1 for u in _fb_callsR if ".svg" in u) == 2,
+              "R16 where the report cannot be read the badge SVGs its README row links are still the "
+              "fallback - the figures are the project's own, and no row is invented for them",
+              f"{_fb_callsR} -> {sorted(_fbR)}")
     finally:
+        if _rtree is not None:
+            _shutilR.rmtree(_rtree, ignore_errors=True)
         _dcR.ROOT = _real_root
         _shutilR.rmtree(_rroot, ignore_errors=True)
 except Exception as _exc:  # noqa: BLE001
-    check(False, "R1-R5 decomp data-layer checks raised", f"{type(_exc).__name__}: {_exc}")
+    check(False, "R1-R12 decomp data-layer checks raised", f"{type(_exc).__name__}: {_exc}")
 
 # --- S. the editor pane's pixels: the IDE claims a widget walk cannot confirm --------------------
 # A widget walk proves the widgets exist; it cannot prove the caret's line is banded, that the
@@ -1300,7 +2170,7 @@ try:
     for _ in range(5):
         _app6.processEvents()
     _d6 = _win6.decomp
-    _d6.open_path("src/stgdglab/stgdglab_4.c", 690)
+    _d6.open_path("src/cardgame/card_battle/battle.c", 690)
     for _ in range(5):
         _app6.processEvents()
     _v = _d6.view
@@ -1373,7 +2243,7 @@ try:
     # spacing around it is checked as a number. Ink runs inside a tab are the name's glyphs, then the
     # X, then the tab's own border, so the gaps are the last name glyph to the X, and the X to the
     # border. They should read as evenly spaced, not one squeezed against an edge.
-    _d6.open_path("src/main/system.c")
+    _d6.open_path("src/menus/digimon_lab/lab.c")
     for _ in range(4):
         _app6.processEvents()
     _bar6 = _d6.tabs
@@ -1459,6 +2329,16 @@ try:
     check(_win7.windowTitle() == _pathsT.APP_NAME == "DW3 Recompiled+",
           "T1 the app is named DW3 Recompiled+ in its title bar",
           f"{_win7.windowTitle()!r}")
+
+    # The version the window shows must be the version the package declares. They drifted apart
+    # once: the 0.2.0 -> 0.2.1 bump moved __init__ and left the status line reading 0.2.0, and
+    # nothing compared the two. So pin the RENDERED line, not merely the two constants.
+    from dmw3launcher import __version__ as _pkgT                        # noqa: PLC0415
+    from dmw3launcher.ui.main_window import VERSION as _shownT           # noqa: PLC0415
+    _statusT = _win7.statusBar().currentMessage()
+    check(_shownT == _pkgT and f"{_pathsT.APP_NAME} {_pkgT}," in _statusT,
+          "T1b the version in the status line is the version the package declares",
+          f"package {_pkgT!r}, window {_shownT!r}, status {_statusT!r}")
 
     _mine = _win7.windowIcon().pixmap(64, 64).toImage()
     _fallback = theme.generated_icon().scaled(64, 64).toImage()
@@ -1597,40 +2477,54 @@ try:
         _app.processEvents()
     _vplay = _vwin.play
 
-    check("Europe" in _vplay.btn_play_eu.text() and "USA" in _vplay.btn_play_us.text(),
-          "V1 the Play tab offers one button per regional build",
-          f"{_vplay.btn_play_eu.text()!r} / {_vplay.btn_play_us.text()!r}")
+    check("Europe" in _vplay.btn_play_eu.text() and "USA" in _vplay.btn_play_us.text()
+          and "Japan" in _vplay.btn_play_jp.text(),
+          "V1 the Play tab offers one button per regional build (USA, Europe, Japan)",
+          f"{_vplay.btn_play_eu.text()!r} / {_vplay.btn_play_us.text()!r} / "
+          f"{_vplay.btn_play_jp.text()!r}")
     _vsizes = {(b.width(), b.height())
-               for b in (_vplay.btn_play_us, _vplay.btn_play_eu, _vplay.btn_stop)}
-    check(len(_vsizes) == 1, "V2 the two Play buttons and Stop share one size", str(sorted(_vsizes)))
+               for b in (_vplay.btn_play_us, _vplay.btn_play_eu, _vplay.btn_play_jp,
+                         _vplay.btn_stop)}
+    check(len(_vsizes) == 1, "V2 the Play buttons and Stop share one size", str(sorted(_vsizes)))
 
     # Wider, not just equal: the old fixed 150px clipped "Play (Europe)". The width is derived from
     # the label's own metric at the #primary sheet's font plus the sheet's padding, so a Play label
-    # must be COVERED by its button. Europe is the widest label, so covering it proves USA fits too.
+    # must be COVERED by its button. Europe is the widest label, so covering it proves USA and
+    # Japan fit too.
     _vpad = 2 * getattr(_vplay, "PRIMARY_PAD_X", 28)
     _veu = _vplay.btn_play_eu
     _vneed = _veu.fontMetrics().horizontalAdvance(_veu.text()) + _vpad
     _vclipped = [(b.text(), b.width(), b.sizeHint().width())
-                 for b in (_vplay.btn_play_us, _vplay.btn_play_eu, _vplay.btn_stop)
+                 for b in (_vplay.btn_play_us, _vplay.btn_play_eu, _vplay.btn_play_jp,
+                           _vplay.btn_stop)
                  if b.width() < b.sizeHint().width()]
     check(not _vclipped and _veu.width() >= _vneed
           and _vplay.btn_play_us.width() == _veu.width(),
           "V3 each Play label (Europe widest) fits its button with the sheet's own padding",
           f"clipped={_vclipped}; Europe needs {_vneed} of {_veu.width()}px")
-    check(_vplay.btn_play_us.x() < _vplay.btn_play_eu.x()
+    check(_vplay.btn_play_us.x() < _vplay.btn_play_eu.x() < _vplay.btn_play_jp.x()
           and _vplay.btn_play is _vplay.btn_play_us,
-          "V4 the Play tab lays the USA button before Europe, and btn_play is the USA button",
-          f"us.x={_vplay.btn_play_us.x()} eu.x={_vplay.btn_play_eu.x()}")
-    check([b.region for b in _vb.BUILDS] == [_vb.REGION_US, _vb.REGION_EU],
-          "V5 the build list leads with USA, Europe second (one order for the whole UI)",
+          "V4 the Play tab lays the USA button before Europe before Japan, and btn_play is USA",
+          f"us.x={_vplay.btn_play_us.x()} eu.x={_vplay.btn_play_eu.x()} "
+          f"jp.x={_vplay.btn_play_jp.x()}")
+    check([b.region for b in _vb.BUILDS] == [_vb.REGION_US, _vb.REGION_EU, _vb.REGION_JP],
+          "V5 the build list leads with USA, Europe second and Japan third (one order everywhere)",
           str([b.region for b in _vb.BUILDS]))
     check(_vb.build_dir(_vb.REGION_EU) == _vb.builds_dir() / "EUR"
           and _vb.build_dir(_vb.REGION_US) == _vb.builds_dir() / "USA"
+          and _vb.build_dir(_vb.REGION_JP) == _vb.builds_dir() / "JP"
           and _vb.exe_path(_vb.REGION_EU).name == "Digimon_World_2003_Recompiled.exe"
-          and _vb.exe_path(_vb.REGION_US).name == "Digimon_World_3_Recompiled.exe",
+          and _vb.exe_path(_vb.REGION_US).name == "Digimon_World_3_Recompiled.exe"
+          and _vb.exe_path(_vb.REGION_JP).name == "Digimon_World_3_Japan_Recompiled.exe",
           "V6 each region resolves its own folder and executable",
-          f"{_vb.build_dir(_vb.REGION_EU).name}/{_vb.build_dir(_vb.REGION_US).name} "
-          f"{_vb.exe_path(_vb.REGION_EU).name}/{_vb.exe_path(_vb.REGION_US).name}")
+          f"{_vb.build_dir(_vb.REGION_EU).name}/{_vb.build_dir(_vb.REGION_US).name}/"
+          f"{_vb.build_dir(_vb.REGION_JP).name} "
+          f"{_vb.exe_path(_vb.REGION_EU).name}/{_vb.exe_path(_vb.REGION_US).name}/"
+          f"{_vb.exe_path(_vb.REGION_JP).name}")
+    check(_vb.known_region(_vb.REGION_US) and _vb.known_region(_vb.REGION_EU)
+          and _vb.known_region(_vb.REGION_JP)
+          and not _vb.known_region(disc.REGION_UNKNOWN),
+          "V6b known_region covers exactly the three buildable regions (USA, Europe, Japan)")
 
     # V7-V9 the disc line is rewritten through tomlkit, on a synthetic file that HAS comments
     _vd = _mkdtemp("hermes-verify-builds-")
@@ -1746,6 +2640,7 @@ try:
     from dmw3launcher import builds as _wbuilds                                   # noqa: PLC0415
 
     _wus, _weu = _wbuilds.BUILDS[0], _wbuilds.BUILDS[1]
+    _wjp = _wbuilds.BUILDS[2]                # Japan: the third buildable region
 
     # the report shape and its two states, in the tool's own terms
     _wempty = _bd.ToolChain()
@@ -1789,9 +2684,11 @@ try:
     check(_wprobe.samefile(paths.launcher_root()),
           "W6c ...and that short path is the SAME directory, not a copy", str(_wprobe))
     check(_bd.expected_exe_name(_wus.title) == _wus.exe_name.rsplit(".", 1)[0]
-          and _bd.expected_exe_name(_weu.title) == _weu.exe_name.rsplit(".", 1)[0],
-          "W7 the builder predicts the runtime's exe name the way CMake does",
-          f"{_bd.expected_exe_name(_wus.title)} / {_bd.expected_exe_name(_weu.title)}")
+          and _bd.expected_exe_name(_weu.title) == _weu.exe_name.rsplit(".", 1)[0]
+          and _bd.expected_exe_name(_wjp.title) == _wjp.exe_name.rsplit(".", 1)[0],
+          "W7 the builder predicts the runtime's exe name the way CMake does (all three regions)",
+          f"{_bd.expected_exe_name(_wus.title)} / {_bd.expected_exe_name(_weu.title)} / "
+          f"{_bd.expected_exe_name(_wjp.title)}")
 
     # PRE-FLIGHT GATES THE BUILD. With a disc selected but no compiler, Build is disabled and
     # start_build() refuses instead of launching a long job. This is the whole point of the check.
@@ -2241,6 +3138,20 @@ default_enabled = false
               "Z19 the package's plugin source is staged into the build's mods_src/",
               str([p.name for p in _zstaged]))
 
+        # 8b. the Japanese build is NOT moddable, and saying so is what keeps a mod from either
+        # bricking the launch (the runtime refuses a package that does not target the loaded game id)
+        # or, for a package that targeted every game, writing USA/Europe bytes into Japanese memory.
+        check(not _zm.supports_region(builds.REGION_JP)
+              and _zm.supports_region(builds.REGION_US) and _zm.supports_region(builds.REGION_EU)
+              and _zm.moddable_regions() == (builds.REGION_US, builds.REGION_EU),
+              "Z19b mods are offered for USA and Europe only, never the Japanese region",
+              str(_zm.moddable_regions()))
+        _zjpref = _zb.relink_mod(builds.REGION_JP, _zstaged, _zquiet)
+        check((not _zjpref.ok) and "Japan" in _zjpref.message
+              and "address table" in _zjpref.message,
+              "Z19c a relink for the Japanese region is REFUSED with the reason, never compiled",
+              _zjpref.message.replace("\n", " ")[:90])
+
         # 9. the refusals: no project tree, and a package that ships no source
         _znoproj = _zb.relink_mod(builds.REGION_EU, _zstaged, _zquiet)
         check((not _znoproj.ok) and "Play tab" in _znoproj.message
@@ -2305,6 +3216,21 @@ default_enabled = false
               f"{_ztab.combo_feature.count()} entries")
         check(all(_t in _ztab.guide.toPlainText() for _t in ("card1.mcd", "orig-stock")),
               "Z30 the tab's rules still carry the folder-mod rules it ships")
+
+        # 10b. through the TAB, the Japanese build is refused: Install is disabled, install()
+        # declines with the reason, and the head line says the build is not moddable. This is the
+        # guard that stops a mod ever reaching Builds/JP/mods through the launcher.
+        _zjptab = _ZTab({"version": 1, "editor_root": None})
+        _zjptab.region = builds.REGION_JP
+        _zjptab.package = _zpkg
+        _zjptab.refresh()
+        check(not _zjptab.btn_install.isEnabled() and not _zjptab.install()
+              and "not moddable" in _zjptab.head.text()
+              and _zjptab.lbl_state.objectName() == "err",
+              "Z30b the Mods tab refuses the Japanese build (install disabled, install() declines)",
+              _zjptab.lbl_state.text()[:80])
+        check(not _zm.state_path(builds.build_dir(builds.REGION_JP)).is_file(),
+              "Z30c ...and nothing was written into the Japanese build's mods folder")
 
         # the switches, through the tab, against the temp build
         _ztab.set_enabled(True)

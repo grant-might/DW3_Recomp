@@ -4,7 +4,7 @@
 |---|---|---|---|
 | 🇪🇺 Europe (`SLES_039.36`) | [![Code](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=code&version=SLES_039.36&label=Code)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLES_039.36) | [![Data](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=data&version=SLES_039.36&label=Data)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLES_039.36) | [![Functions](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=functions&version=SLES_039.36&label=Functions)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLES_039.36) |
 | 🇺🇸 USA (`SLUS_014.36`) | [![Code](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=code&version=SLUS_014.36&label=Code)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLUS_014.36) | [![Data](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=data&version=SLUS_014.36&label=Data)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLUS_014.36) | [![Functions](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=functions&version=SLUS_014.36&label=Functions)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLUS_014.36) |
-| 🇯🇵 Japan (`SLPS_034.46`) | the shared C, not on decomp.dev yet | | |
+| 🇯🇵 Japan (`SLPS_034.46`) | [![Code](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=code&version=SLPS_034.46&label=Code)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLPS_034.46) | [![Data](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=data&version=SLPS_034.46&label=Data)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLPS_034.46) | [![Functions](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=functions&version=SLPS_034.46&label=Functions)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLPS_034.46) |
 
 [![Executable](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=code&version=SLES_039.36&category=game&label=Europe%20executable)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLES_039.36?category=game)
 [![Stages](https://decomp.dev/ReGame-Labs/dw3_decomp.svg?mode=shield&measure=code&version=SLES_039.36&category=stages&label=Europe%20stages)](https://decomp.dev/ReGame-Labs/dw3_decomp/SLES_039.36?category=stages)
@@ -24,8 +24,8 @@ game's executable, its overlays and its stages. The European release,
 version: the build's default and the one decomp.dev shows first. The USA
 release, *Digimon World 3* (`SLUS_014.36`), builds from the same C and
 matches byte for byte too. The Japanese release, *Digimon World 3:
-Aratanaru Bouken no Tobira* (`SLPS_034.46`), builds byte for byte from
-splat's assembly so far, split and named after the USA version.
+Aratanaru Bouken no Tobira* (`SLPS_034.46`), builds from the same C and
+matches byte for byte as well.
 
 This repository does not contain any game data. You need your own copy of the
 game to build it.
@@ -51,10 +51,11 @@ above are always current:
 | **Total** | **Europe** | **3,606 / 3,606** | **100.00 %** | **100.00 %** |
 | | **USA** | **3,380 / 3,380** | **100.00 %** | **100.00 %** |
 
-- The game's code and data are all C in the European and USA versions: the
-  executable, the 21 overlays and all the stages.
-- The Japanese version builds from splat's assembly so far, split into the
-  USA version's files and named after it: its C is the next step.
+- The game's code and data are all C in the three versions: the executable,
+  the 21 overlays and all the stages.
+- The Japanese version builds from the same C too: it is the European
+  version without its languages and PAL video, with the USA disc's file
+  numbers.
 - The PsyQ libraries are Sony's code, not the game's: the build takes them
   from the original as splat's disassembly and the progress leaves them out.
 - [docs/status.md](docs/status.md) has the details of each part, how the

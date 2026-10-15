@@ -680,6 +680,9 @@ _MOD_BLOCK_END = "# --- end DW3 launcher mod block ---"
 
 REGION_DEFINES = {builds.REGION_EU: "DW3_GAME_REGION_EU",
                   builds.REGION_US: "DW3_GAME_REGION_US"}
+# Japan is deliberately absent. A mod patch targets a region's OWN addresses, and no published
+# package carries a Japanese table, so there is no define to give a Japanese build; `relink_mod`
+# refuses one rather than compile a mod against the wrong region's addresses.
 
 
 def region_define(region: str) -> str:
@@ -839,6 +842,13 @@ def relink_mod(region: str, sources, log) -> ModRelinkResult:
     resolves `mods` from, so the two halves always land in the same folder.
     """
     spec = builds.spec(region)
+    if region not in REGION_DEFINES:
+        return ModRelinkResult(
+            False, region, None,
+            f"Mods are keyed to a region's own game addresses, and there is no {spec.label} "
+            f"address table: a package that patches USA or Europe addresses would write the wrong "
+            f"bytes into a {spec.label} game. Mods are not built for the {spec.label} build, so "
+            f"relinking it is refused.")
     if not has_project(region):
         return ModRelinkResult(
             False, region, None,
@@ -911,10 +921,10 @@ class BuildResult:
 def build(region: str, image: pathlib.Path, log) -> BuildResult:
     """Recompile `image` into a native build, start to finish. Nothing is refused for its region.
 
-    Europe and USA are first-class (they land in `Builds/EUR` / `Builds/USA`, where the two Play
-    buttons find them). Any other disc is still attempted, the recompiler is the authority on
-    whether it can be built, and, if it builds, lands in `Builds/OTHER` with an honest note that
-    the two regional Play buttons do not cover it.
+    USA, Europe and Japan are first-class (they land in `Builds/USA`, `Builds/EUR` and `Builds/JP`,
+    where the Play buttons find them). Any other disc is still attempted, the recompiler is the
+    authority on whether it can be built, and, if it builds, lands in `Builds/OTHER` with an honest
+    note that the regional Play buttons do not cover it.
 
     `log` receives one line at a time; the caller runs this off the UI thread.
     """
@@ -927,7 +937,7 @@ def build(region: str, image: pathlib.Path, log) -> BuildResult:
     tc = preflight()
     if not tc.ok:
         return BuildResult(False, region, None, tc.summary() + "\n\n" + tc.hint())
-    known = region in (builds.REGION_EU, builds.REGION_US)
+    known = builds.known_region(region)
     serial = disc.serial_of_image(image)
     if known:
         spec = builds.spec(region)
@@ -961,8 +971,9 @@ def build(region: str, image: pathlib.Path, log) -> BuildResult:
         log(f"== {label} build ready: {exe} ==")
         return BuildResult(True, region, exe, f"{label} build ready.")
     log(f"== build ready at {exe} ==")
-    log("   note: this disc is not Europe or USA, so the two Play buttons do not list it, "
-        "run the exe from its folder, or move it under Builds/ where you want it.")
+    log("   note: this disc is not one of the regional builds (USA, Europe, Japan), so the Play "
+        "buttons do not list it, run the exe from its folder, or move it under Builds/ where you "
+        "want it.")
     return BuildResult(True, region, exe,
                        f"Built a {label} disc, but it is not on a Play button.")
 

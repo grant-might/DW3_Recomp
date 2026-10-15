@@ -39,7 +39,7 @@ TITLE_FRAME_END = 0x0200
 RECORD_BASE = 0x0200            # MemCardFile, payload-absolute
 MAGIC_OFFSET = 0x0204           # s32 "DMW3"
 MAGIC = b"DMW3"
-VERSION_OFFSET = 0x0202         # u8: 3 = USA, 4 = EUR (MEMCARD_SAVE_VERSION)
+VERSION_OFFSET = 0x0202         # u8: MEMCARD_SAVE_VERSION (3 = USA, 4 = EUR and JPN)
 H_CHECKSUM = 0x0200             # u8: XOR8 over [0x0204, 0x02D4)
 H_LAST = 0x0201                 # u8: the slot last saved to (0..2)
 H_VERSION = VERSION_OFFSET      # u8
@@ -255,6 +255,28 @@ DV_FORM_MARKER_NAMES = {  # reverse of DV_FORM_MARKERS (marker -> form name)
 # in these fields.
 PARTY_MIN_BY_REGION = {"USA": 3, "EUR": 3}
 PARTY_ROOKIE_IDS = (3, 4, 5, 6, 7, 8, 9, 10)   # names == DIGI_ROSTER_NAMES
+
+
+# ---- the releases, and the version byte each one writes --------------------
+#
+# OBSERVED, not assumed. A save's MEMCARD_SAVE_VERSION (0x0202) is what the release that wrote the
+# card stamps into it, and each release's own disc carries that store in its memory-card code: the
+# instruction immediately after the 'DMW3' magic is written into the card's info section reads
+#     addiu $2, $0, <n>        ; n = MEMCARD_SAVE_VERSION
+#     sb    $2, 2($info)       ; infoBuf->version
+# which the three retail Japanese/USA/European discs hold as:
+#
+#   Digimon World 3 (USA)      SLUS_014.36   3
+#   Digimon World 2003 (EUR)   SLES_039.36   4
+#   Digimon World 3 (Japan)    SLPS_034.46   4
+#
+# So JAPAN WRITES 4, the same byte Europe does - a Japanese card and a European one cannot be told
+# apart by this field at all. That is why the region is not read from it alone: the card's own save
+# ENTRY names the release (memcard.DMW3_PREFIXES: BASLUS-01436 / BESLES-03936 / BISLPS-03446), and
+# `set_card_region` carries that in. The version byte stays the fallback for a payload read without
+# its card, where 4 can only mean "Europe or Japan" and is reported as Europe.
+SAVE_VERSION_BY_REGION = {"USA": 3, "EUR": 4, "JPN": 4}
+REGION_BY_VERSION = {3: "USA", 4: "EUR"}
 
 
 def party_min_for_region(region: str) -> int:
@@ -722,6 +744,10 @@ class DMW3Save:
                 "no 'DMW3' tag at 0x0204 - not a Digimon World 3 save"
             )
         self._region_override: str | None = None
+        # The release the CARD itself names (its save entry's product code), set by
+        # `set_card_region` when the editor opens a card. Kept apart from the manual override so a
+        # Japanese card (which writes Europe's version 4) is still read as Japan.
+        self._card_region: str | None = None
 
     # ---- identity -------------------------------------------------------
     @property
@@ -730,7 +756,7 @@ class DMW3Save:
 
     @property
     def version(self) -> int:
-        """MEMCARD_SAVE_VERSION byte at 0x0202 (3 = USA, 4 = EUR)."""
+        """MEMCARD_SAVE_VERSION byte at 0x0202 (3 = USA; 4 = EUR and JPN)."""
         return self._buf[VERSION_OFFSET]
 
     @property
@@ -745,18 +771,36 @@ class DMW3Save:
 
     @property
     def region_guess(self) -> str:
+        """Which release this save is read as.
+
+        In order: a manual choice from the ROM-region selector, the release the CARD's own save
+        entry names (Japan included - its version byte is Europe's, so the entry is the only thing
+        that tells the two apart), then the version byte for a payload read on its own.
+        """
         if self._region_override:
             return self._region_override
-        return {3: "USA", 4: "EUR"}.get(self.version, f"unknown (v{self.version})")
+        if self._card_region:
+            return self._card_region
+        return REGION_BY_VERSION.get(self.version, f"unknown (v{self.version})")
+
+    def set_card_region(self, region: str | None) -> None:
+        """Record the release the card's own save entry names ("USA", "EUR", "JPN"; None to forget).
+
+        Called when a card is opened, before any page is bound, so `region_guess` answers with what
+        the card really is instead of what its version byte happens to look like. Anything other
+        than a known release is dropped rather than trusted: an unrecognised entry must not become
+        a region.
+        """
+        self._card_region = region if region in SAVE_VERSION_BY_REGION else None
 
     def force_region(self, region: str) -> None:
-        """Override the auto-detected region ("USA" or "EUR").
+        """Override the auto-detected region: "USA", "EUR" or "JPN".
 
         Used by the ROM-region selector for cards whose version field is
         missing/unusual or to re-interpret an existing card. The payload
         itself is untouched — every page re-reads this via region_guess.
         """
-        if region not in ("USA", "EUR"):
+        if region not in SAVE_VERSION_BY_REGION:
             raise SaveError(f"unsupported region override {region!r}")
         self._region_override = region
 

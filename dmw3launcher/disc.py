@@ -1,10 +1,11 @@
 """Disc intake: read the player's own disc image and route it to the right regional build.
 
 The launcher ships no game code, so this module reads the disc's OWN boot data and names its region
-(SLES*/SCES* = PAL Europe, SLUS*/SCUS* = NTSC-U USA). Both regions are first-class: nothing here
-refuses a disc for its region. The check is a plausibility readout, never a gate on what the player
-may build; a .iso or a .cue that points at a missing .bin is called out because it cannot work, and
-everything else is handed to the recompiler, which is the real judge.
+(SLES*/SCES* = PAL Europe, SLUS*/SCUS* = NTSC-U USA, SLPS*/SCPS*/SLPM* = NTSC-J Japan). Every
+region is first-class: nothing here refuses a disc for its region. The check is a plausibility
+readout, never a gate on what the player may build; a .iso or a .cue that points at a missing .bin
+is called out because it cannot work, and everything else is handed to the recompiler, which is the
+real judge.
 """
 from __future__ import annotations
 
@@ -78,7 +79,7 @@ def serial_of_image(image: pathlib.Path) -> str:
 
 
 def region_of_image(image: pathlib.Path) -> str:
-    """Classify an image by its own serial: SLES*/SCES* = PAL, SLUS*/SCUS* = NTSC-U.
+    """Classify an image by its own serial: SLES*/SCES* = PAL, SLUS*/SCUS* = NTSC-U, SLPS* = NTSC-J.
 
     Returns REGION_UNKNOWN when there is no serial to read; nothing is refused on that basis, it
     only means the router cannot name the region up front.
@@ -136,9 +137,9 @@ def verify(image: pathlib.Path) -> DiscCheck:
     region = region_of_serial(serial)
     if region == REGION_UNKNOWN:
         return DiscCheck(True, REGION_UNKNOWN,
-                         "This image carries no PAL or NTSC-U serial in its first sectors. It can "
-                         "still be built; the recompiler is the judge. Pick the .bin/.cue that came "
-                         "off your own Digimon World 3 disc if you meant to.")
+                         "This image carries no PAL, NTSC-U or NTSC-J serial in its first "
+                         "sectors. It can still be built; the recompiler is the judge. Pick the "
+                         ".bin/.cue that came off your own Digimon World 3 disc if you meant to.")
     return DiscCheck(True, region, f"Readable raw disc image; its serial ({serial}) is a {region} disc.")
 
 
