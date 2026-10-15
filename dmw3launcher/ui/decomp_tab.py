@@ -1,7 +1,7 @@
 """The Decompilation tab: a read-only view of the 100% complete decomp tree.
 
 Read-only is the contract, not a slogan: this module opens files for reading and never writes,
-creates or deletes anything, and the tab exposes no edit action. `verify_launcher.py` proves it by
+creates or deletes anything, and the tab exposes no edit action. `tools/verify_launcher.py` proves it by
 hashing the real tree before and after the tab is driven.
 
 The progress panel copies the shape decomp.dev uses - one big percentage, a code bar and a data

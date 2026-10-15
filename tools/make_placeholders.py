@@ -4,7 +4,7 @@ Placeholders are deliberately tasteful (launcher palette, dashed accent border, 
 size printed on the image) so the app looks intentional as a wireframe and you can see exactly
 which slot each file fills. Replace them one at a time; nothing breaks in between.
 
-    .\.venv\Scripts\python.exe make_placeholders.py
+    .\.venv\Scripts\python.exe tools\make_placeholders.py
 
 Writes into assets/. Existing files are only overwritten if --force is given.
 """
@@ -18,7 +18,7 @@ from PySide6.QtCore import QBuffer, QByteArray, QRect, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # the repository root, above tools/
 ASSETS = ROOT / "assets"
 
 BG = QColor("#1e2230")

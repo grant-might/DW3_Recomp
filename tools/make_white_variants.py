@@ -11,7 +11,7 @@ pixel; every other run is treated as the word and repainted white, keeping its a
 anti-aliasing survives). The result is written next to the original as `tab_<tab>_white.png`; the
 original is never modified, and an existing copy is only replaced with --force.
 
-    .\\.venv\\Scripts\\python.exe make_white_variants.py [--force]
+    .\\.venv\\Scripts\\python.exe tools\\make_white_variants.py [--force]
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import sys
 from PySide6.QtGui import QColor, QImage
 from PySide6.QtWidgets import QApplication
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # the repository root, above tools/
 ASSETS = ROOT / "assets"
 TABS = ("play", "memcard", "mods", "decomp", "settings")
 GAP = 3            # columns of transparency that separate two runs

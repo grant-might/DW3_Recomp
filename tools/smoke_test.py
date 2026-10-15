@@ -6,7 +6,7 @@ import pathlib
 import sys
 import traceback
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # the repository root, above tools/
 sys.path.insert(0, str(ROOT))
 
 from PySide6.QtWidgets import QApplication  # noqa: E402

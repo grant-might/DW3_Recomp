@@ -19,7 +19,7 @@ import sys
 import tempfile
 import threading
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # the repository root, above tools/
 sys.path.insert(0, str(ROOT))
 
 # Some detail strings quote the UI verbatim, and the Play buttons carry a "▶" glyph. A cp1252

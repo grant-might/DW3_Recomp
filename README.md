@@ -193,10 +193,10 @@ title-bar X, or Alt+F4) is the way out.
 
 ## Dev
 
-`verify_launcher.py` is the project's own gate. Run it after any change:
+`tools/verify_launcher.py` is the project's own gate. Run it after any change:
 
 ```
-.venv\Scripts\python.exe verify_launcher.py
+.venv\Scripts\python.exe tools\verify_launcher.py
 ```
 
-or `make test`. `smoke_test.py` builds the whole UI headlessly and names any tab that fails.
+or `make test`. `tools\smoke_test.py` builds the whole UI headlessly and names any tab that fails.

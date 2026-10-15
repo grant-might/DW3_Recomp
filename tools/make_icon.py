@@ -4,8 +4,8 @@ Windows wants the small sizes as their own frames; a single scaled frame looks s
 and in Explorer's small views. This embeds one PNG per size (allowed in ICO since Vista, and exact
 on the round trip) at the set the launcher expects: 16, 24, 32, 48, 64, 128 and 256.
 
-    .\\.venv\\Scripts\\python.exe make_icon.py            # from assets/icon.png
-    .\\.venv\\Scripts\\python.exe make_icon.py --force    # rewrite even if icon.ico is newer
+    .\\.venv\\Scripts\\python.exe tools\\make_icon.py            # from assets/icon.png
+    .\\.venv\\Scripts\\python.exe tools\\make_icon.py --force    # rewrite even if icon.ico is newer
 
 Source of truth is the PNG you supply (assets/`icon.png`, usually 512x512). The .ico is a
 derived artefact: delete it and `theme.app_icon()` falls back to the PNG, so nothing breaks.
@@ -19,7 +19,7 @@ import sys
 from PySide6.QtCore import QBuffer, QByteArray, Qt
 from PySide6.QtGui import QImage
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # the repository root, above tools/
 ASSETS = ROOT / "assets"
 SIZES = (256, 128, 64, 48, 32, 24, 16)
 

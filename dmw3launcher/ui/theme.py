@@ -200,7 +200,7 @@ def tab_images(height: int = TAB_ART_H) -> dict[str, QPixmap]:
     """The four tab images, scaled to one art height and made readable as a set.
 
     The supplied art draws its word in near-black, which is invisible on this launcher's dark
-    themes. `make_white_variants.py` bakes a `tab_<tab>_white.png` in which the word is already
+    themes. `tools/make_white_variants.py` bakes a `tab_<tab>_white.png` in which the word is already
     white and the icon is untouched; that copy is preferred whenever the chrome is dark (i.e. the
     palette's text colour is light), so nothing is repainted at run time. Without a baked copy the
     art as supplied is used and the ink-lift is the safety net. On a light theme the original

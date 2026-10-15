@@ -3,7 +3,7 @@
 # The launcher ships NO game code and NO game data. Everything derived from the player's own disc
 # - the recompiled sources, the extracted game executables, the disc images themselves and every
 # build artefact - is produced at run time and must never be committed. These rules enforce that;
-# `verify_launcher.py` section X re-checks the patterns and the shipped engine's BIOS exception.
+# `tools/verify_launcher.py` section X re-checks the patterns and the shipped engine's BIOS exception.
 
 # --- build output: the tree root `build/` (generated sources, CMake tree) and Builds/ (the
 #     finished regional runtimes the Play tab makes) --------------------------------
