@@ -33,6 +33,35 @@ CHECK_COLS = 2      # toggles sit in a grid: five of them are three rows, not fi
 # Heights are left to the widgets: pinning a fixed height was rewritten by the layout (Qt resizes a
 # fixed-size widget when it squeezes the row), so the constant asserted something it did not hold.
 
+# One plain-language hint per control in the Video & Performance group, shown as its tooltip. The
+# file-routed knobs are keyed by (section, key); the env-only ones by their environment variable.
+PERF_HINTS = {
+    ("video", "vsync"):
+        "Who clocks the frame. Driver vsync is tear-free but only runs on a ~60 Hz panel; immediate "
+        "gives the lowest display latency (may tear); adaptive is the driver's own choice.",
+    ("video", "frame_interpolation_fps"):
+        "The rate frame interpolation aims for when the Video group's interpolation toggle is on "
+        "(Display refresh = the monitor's rate).",
+    ("video", "low_latency_input"):
+        "Re-read the controller just before the frame is shown, so the next frame sees fresh input "
+        "instead of input about one frame old.",
+    ("video", "rewind_interval"):
+        "Frames between rewind snapshots. Smaller means finer rewind steps; larger uses less memory.",
+    ("video", "rewind_depth"):
+        "How many rewind snapshots to keep, i.e. how far back you can rewind.",
+}
+ENV_HINTS = {
+    "PSX_SMOOTH_60FPS":
+        "Blend repeated frames so software-rendered 30 Hz content looks smoother; the game's own "
+        "timing is untouched.",
+    "PSX_FRAME_BLEND":
+        "Average the last two frames shown, the way a CRT's phosphor hid the PS1's buffer flicker.",
+    "PSX_REWIND":
+        "Keep the rewind history at all. Turn it off to save memory if you never use rewind.",
+    "PSX_REWIND_FMV_INTERVAL":
+        "Frames between rewind snapshots while a movie is playing.",
+}
+
 
 def palette_icon(pal: dict, width: int = 30, height: int = 14) -> QIcon:
     """A theme's colours as a tiny stripe, for a dropdown entry: the choice is visible while picking."""
@@ -99,6 +128,9 @@ class SettingsTab(QWidget):
         self.region: str = builds.default_region()
         self._widgets: dict[tuple[str, str], QWidget] = {}
         self._mapped: set[tuple[str, str]] = set()   # combos whose value lives in itemData
+        # Env-only presentation knobs (no settings.toml key): keyed by env variable name and kept
+        # out of self._widgets so they are never written into the runtime's settings file.
+        self._env_widgets: dict[str, QWidget] = {}
         self._ed_theme = None            # the save editor's theme module, when it is importable
         self._ed_theme_error = ""
 
@@ -165,6 +197,48 @@ class SettingsTab(QWidget):
         self._checks("video", st.VIDEO_BOOLS, video_form)
         v.addWidget(self.g_video)
 
+        # Video & Performance: the pacing / latency / rewind knobs. The first block the runtime
+        # reads from THIS build's settings.toml (route: the settings file); the second has no
+        # settings.toml key at all and reaches the game on the launched process's environment
+        # (route: environment). Interpolation's own on/off toggle stays in the Video group above;
+        # its target rate pairs with it here.
+        self.g_perf, perf_form = self._group("Video & Performance")
+        self._value_combo("video", "vsync", "Frame pacing", st.VSYNC_CHOICES, perf_form)
+        self._value_combo("video", "frame_interpolation_fps", "Interpolation target",
+                          st.INTERP_FPS_CHOICES, perf_form)
+        self._checks("video", st.PERF_BOOLS, perf_form)
+        self._value_combo("video", "rewind_interval", "Rewind interval",
+                          st.REWIND_INTERVAL_CHOICES, perf_form)
+        self._value_combo("video", "rewind_depth", "Rewind depth",
+                          st.REWIND_DEPTH_CHOICES, perf_form)
+        self._env_checks(perf_form)
+        self._env_combo(perf_form)
+        perf_hint = QLabel("Frame pacing decides who clocks the frame: driver vsync only runs on a "
+                           "~60 Hz panel, so on a 120/144 Hz screen the runtime keeps its own "
+                           "59.94 Hz pacer and ignores the display's rate. Low-latency input "
+                           "re-reads the pad just before the frame is shown. Rewind keeps a ring "
+                           "of recent states (F8 / View / L3); its interval and depth are saved in "
+                           "settings.toml, while the three toggles below have no settings key and "
+                           "are passed to the game when it starts.")
+        perf_hint.setObjectName("dim")
+        perf_hint.setWordWrap(True)
+        perf_form.addRow(perf_hint)
+        reset_row = QHBoxLayout()
+        self.btn_perf_reset = QPushButton("Reset this section to defaults")
+        self.btn_perf_reset.clicked.connect(self._reset_video_perf)
+        reset_row.addWidget(self.btn_perf_reset)
+        reset_row.addStretch(1)
+        perf_form.addRow(reset_row)
+        for (sect, key), hint in PERF_HINTS.items():
+            w = self._widgets.get((sect, key))
+            if w is not None:
+                w.setToolTip(hint)
+        for name, hint in ENV_HINTS.items():
+            w = self._env_widgets.get(name)
+            if w is not None:
+                w.setToolTip(hint)
+        v.addWidget(self.g_perf)
+
         self.g_audio, audio_form = self._group("Audio")
         self._checks("audio", st.AUDIO_BOOLS, audio_form)
         v.addWidget(self.g_audio)
@@ -229,6 +303,7 @@ class SettingsTab(QWidget):
             self.combo_region.blockSignals(True)
             self.combo_region.setCurrentIndex(index)
             self.combo_region.blockSignals(False)
+        self._perf_defaults()
         self.reload()
 
     # ------------------------------------------------------------------ appearance
@@ -365,12 +440,100 @@ class SettingsTab(QWidget):
         form.addRow(self._label(label), w)
         self._widgets[(sect, key)] = w
 
+    # ------------------------------------------------------------------ env-only controls
+    # These have no settings.toml key at all, so they live in self._env_widgets and are written to
+    # the launcher's own config, then exported on the launched process's environment.
+    def _env_checks(self, form: QFormLayout) -> None:
+        host = QWidget()
+        grid = QGridLayout(host)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(theme.CARD_GAP)
+        grid.setVerticalSpacing(theme.ROW_GAP)
+        for i, (name, label) in enumerate(st.ENV_BOOLS):
+            cb = QCheckBox(label)
+            grid.addWidget(cb, i // CHECK_COLS, i % CHECK_COLS)
+            self._env_widgets[name] = cb
+        form.addRow(self._label(""), host)
+
+    def _env_combo(self, form: QFormLayout) -> None:
+        for name, label, opts in st.ENV_INT_CHOICES:
+            w = theme.ComboBox()
+            w.addItems(list(opts))
+            w.setFixedWidth(FIELD_W)
+            form.addRow(self._label(label), w)
+            self._env_widgets[name] = w
+
     # ------------------------------------------------------------------ data
     def _pick_region(self) -> None:
         self.region = self.combo_region.currentData() or builds.default_region()
         self.reload()
 
+    # ---------------------------------------------------------- Video & Performance defaults
+    def _perf_defaults(self) -> None:
+        """Put the section's file-backed widgets at the runtime's own defaults.
+
+        Used before the first load (so a settings.toml that does not mention a key still shows the
+        value the engine would use) and by Reset. Every value here reproduces today's behaviour.
+        """
+        for (sect, key), value in st.VIDEO_PERF_DEFAULTS.items():
+            w = self._widgets.get((sect, key))
+            if w is None:
+                continue
+            if isinstance(w, QCheckBox):
+                w.setChecked(bool(value))
+            elif isinstance(w, QComboBox):
+                i = w.findData(value)
+                if i < 0:
+                    i = w.findText(str(value))
+                if i >= 0:
+                    w.setCurrentIndex(i)
+            elif isinstance(w, QSpinBox):
+                w.setValue(int(value))
+
+    def _env_defaults(self) -> None:
+        """Put the env-only widgets at the runtime's own defaults."""
+        for name, w in self._env_widgets.items():
+            if isinstance(w, QCheckBox):
+                w.setChecked(bool(st.ENV_BOOL_DEFAULTS.get(name, False)))
+        for name, default in st.ENV_INT_DEFAULTS.items():
+            w = self._env_widgets.get(name)
+            if isinstance(w, QComboBox):
+                i = w.findText(str(default))
+                if i >= 0:
+                    w.setCurrentIndex(i)
+
+    def _reload_env(self) -> None:
+        """Show the env-only knobs saved for this build, over the defaults."""
+        self._env_defaults()
+        saved = st.load_env(self.region)
+        for name, w in self._env_widgets.items():
+            if name not in saved:
+                continue
+            value = str(saved[name])
+            if isinstance(w, QCheckBox):
+                w.setChecked(value not in ("0", "", "false", "False"))
+            elif isinstance(w, QComboBox):
+                i = w.findText(value)
+                if i >= 0:
+                    w.setCurrentIndex(i)
+
+    def _env_values(self) -> dict[str, str]:
+        values: dict[str, str] = {}
+        for name, w in self._env_widgets.items():
+            if isinstance(w, QCheckBox):
+                values[name] = "1" if w.isChecked() else "0"
+            elif isinstance(w, QComboBox):
+                values[name] = w.currentText()
+        return values
+
+    def _reset_video_perf(self) -> None:
+        """Restore every control in the section to its default and write that out."""
+        self._perf_defaults()
+        self._env_defaults()
+        self.apply()
+
     def reload(self) -> None:
+        self._reload_env()
         p = builds.settings_toml(self.region)
         label = builds.spec(self.region).label
         if not builds.build_status(self.region)[0]:
@@ -438,8 +601,9 @@ class SettingsTab(QWidget):
             if isinstance(w, QCheckBox):
                 updates[(sect, key)] = bool(w.isChecked())
             elif isinstance(w, QComboBox):
-                # a size combo stores the width, not the label the player reads
-                updates[(sect, key)] = (int(w.currentData()) if (sect, key) in self._mapped
+                # a mapped combo stores the runtime's own value (an int, or the vsync string) in
+                # itemData; the rest store the label the player reads
+                updates[(sect, key)] = (w.currentData() if (sect, key) in self._mapped
                                         else w.currentText())
             elif isinstance(w, QSpinBox):
                 updates[(sect, key)] = int(w.value())
@@ -448,6 +612,13 @@ class SettingsTab(QWidget):
         except Exception as exc:  # noqa: BLE001
             QMessageBox.critical(self, "Could not write settings",
                                  f"{exc}\n\nIs tomlkit installed? (pip install tomlkit)")
+            return
+        # The env-only knobs live in the launcher's own config, never in the runtime's settings.toml.
+        try:
+            st.save_env(self.region, self._env_values())
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(self, "Could not save performance settings",
+                                 f"{exc}\n\nIs the launcher folder writable?")
             return
         self.lbl_note.setText("applied")
         QMessageBox.information(self, "Settings", "Written to settings.toml. Start the game "

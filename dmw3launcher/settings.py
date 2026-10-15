@@ -68,6 +68,123 @@ LOAD_CHOICES = (
 # The author's own note on this one: 512 hung the game, 96 is the safe step, and it is the knob to
 # LOWER when something wedges.
 LOAD_STEPS = ("96", "64", "48", "32")
+
+# ---------------------------------------------------------------- Video & performance
+# The pacing / latency / rewind knobs, split by WHERE the runtime reads them.
+#
+# Everything below was confirmed against the engine, not guessed:
+#   * engine/framework/recompiler/src/config_loader.cpp load_user_settings() parses the [video]
+#     keys `vsync`, `low_latency_input`, `frame_interpolation_fps`, `rewind_depth`,
+#     `rewind_interval` from a build's own settings.toml;
+#   * engine/framework/runtime/src/main.cpp (the `[video]` block seeded into the internal launcher
+#     and the env parser after it) applies them. The four LATENCY knobs also have an environment
+#     override that WINS over the file: PSX_VSYNC, PSX_LOW_LATENCY_INPUT, PSX_FRAME_INTERPOLATION,
+#     PSX_FRAME_INTERPOLATION_FPS (main.cpp ~L11149-11162).
+#   * a few presentation knobs exist ONLY as environment variables — no settings.toml key at all —
+#     so those are stored in the launcher's own config and put on the launched process's
+#     environment instead (see ENV_* below and builds.launch).
+#
+# `vsync` is a STRING in the file: "on" (tear-free) / "immediate" (lowest display latency) /
+# "adaptive". The runtime's rule (main.cpp present_vsync_owns_cadence, ~L2510): driver vsync only
+# clocks a ~60 Hz panel; on any other refresh the wall-clock 59.94 Hz pacer owns cadence and the
+# swap interval is forced off, so a 120/144 Hz panel does NOT run the sim fast.
+VSYNC_CHOICES = (
+    ("Driver vsync (tear-free)", "on"),
+    ("Immediate (lowest latency)", "immediate"),
+    ("Adaptive", "adaptive"),
+)
+INTERP_FPS_CHOICES = (
+    ("Display refresh", 0),
+    ("90 FPS", 90),
+    ("120 FPS", 120),
+    ("144 FPS", 144),
+)
+# UI offers these exact steps; the runtime snaps any other value to the nearest one it knows.
+REWIND_DEPTH_CHOICES = (
+    ("50 snaps (~12.5 s)", 50),
+    ("100 snaps (~25 s)", 100),
+    ("150 snaps (~37.5 s)", 150),
+    ("200 snaps (~50 s)", 200),
+)
+REWIND_INTERVAL_CHOICES = (
+    ("Every 15 frames", 15),
+    ("Every 12 frames", 12),
+    ("Every 8 frames", 8),
+    ("Every 4 frames", 4),
+    ("Every frame", 1),
+)
+# Defaults that reproduce today's behaviour exactly (the runtime's own defaults) so a player who
+# never opens the section sees no change.
+VIDEO_PERF_DEFAULTS = {
+    ("video", "vsync"): "on",
+    ("video", "low_latency_input"): True,
+    ("video", "frame_interpolation_fps"): 0,
+    ("video", "rewind_depth"): 50,
+    ("video", "rewind_interval"): 15,
+}
+# Toggles the runtime reads from settings.toml [video]. low_latency_input re-samples the pad after
+# the wall-clock pacer (just before present) so the next CPU frame reads fresh input; the engine
+# default is on.
+PERF_BOOLS = (
+    ("low_latency_input", "Low-latency input"),
+)
+
+# Env-only presentation knobs: the runtime reads these from the environment and has NO settings.toml
+# key for them (grep confirms), so the launcher stores them in its own config and exports them at
+# launch. Each is (env name, plain-language label). PSX_REWIND=0 disables the rewind ring entirely
+# (psx_rewind.c rewind_wanted); PSX_FRAME_BLEND and PSX_SMOOTH_60FPS default off; the FMV interval
+# defaults to 4. Setting the default values explicitly is behaviour-identical to leaving them unset.
+ENV_BOOLS = (
+    ("PSX_SMOOTH_60FPS", "Smooth 60 FPS"),
+    ("PSX_FRAME_BLEND", "Blend adjacent frames"),
+    ("PSX_REWIND", "Rewind"),
+)
+ENV_BOOL_DEFAULTS = {
+    "PSX_SMOOTH_60FPS": False,
+    "PSX_FRAME_BLEND": False,
+    "PSX_REWIND": True,
+}
+ENV_INT_CHOICES = (
+    ("PSX_REWIND_FMV_INTERVAL", "Rewind FMV interval", ("4", "8", "12", "16")),
+)
+ENV_INT_DEFAULTS = {
+    "PSX_REWIND_FMV_INTERVAL": "4",
+}
+
+# The launcher's own config (launcher.json) keeps the env-only knobs, keyed by build region, under
+# this key. It is the launcher's file, not the runtime's, so nothing here reaches settings.toml.
+VIDEO_PERF_ENV_KEY = "video_perf_env"
+
+
+def load_env(region: str) -> dict[str, str]:
+    """The env-only presentation knobs saved for one build region. Never raises."""
+    try:
+        from . import paths
+        cfg = paths.load_config()
+    except Exception:  # noqa: BLE001 - a broken config must not take the tab down
+        return {}
+    table = cfg.get(VIDEO_PERF_ENV_KEY) or {}
+    values = table.get(region) or {}
+    return {str(k): str(v) for k, v in dict(values).items()}
+
+
+def save_env(region: str, values: dict[str, object]) -> None:
+    """Persist the env-only knobs for one build region into the launcher's own config."""
+    from . import paths
+    cfg = paths.load_config()
+    table = dict(cfg.get(VIDEO_PERF_ENV_KEY) or {})
+    table[str(region)] = {str(k): str(v) for k, v in values.items()}
+    cfg[VIDEO_PERF_ENV_KEY] = table
+    paths.save_config(cfg)
+
+
+def env_for_launch(region: str) -> dict[str, str]:
+    """The environment to export for a launch of `region`, or {} when nothing is configured.
+
+    builds.launch merges this onto the child's environment, so a control the player never touched
+    adds nothing and changes nothing.
+    """
+    return load_env(region)
 CONTROLLER_FIELDS = (
     ("p1_device", "Player 1 device"),
     ("p1_mode", "Player 1 mode"),
