@@ -63,18 +63,16 @@ the disc.
 run.bat
 ```
 
-or
-
-```
-.venv\Scripts\python.exe main.py
-```
-
-To set the environment up first:
+The first run creates a `.venv` beside the launcher and installs `requirements.txt`, then starts the
+launcher; every run after that goes straight in. If you would rather set it up yourself:
 
 ```
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python.exe main.py
 ```
+
+Python 3 is required, from https://www.python.org/downloads/.
 
 Then use the **Play** tab.
 
