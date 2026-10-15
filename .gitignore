@@ -76,9 +76,13 @@ Thumbs.db
 patches/*.bps
 
 # --- documentation screenshots -----------------------------------------------------
-# The README embeds its screenshots from GitHub's attachment store, so these PNGs are
-# kept out of version control. They stay on disk so the owner can re-upload them.
-docs/images/
+# The README's screenshots are committed, so the README renders from the repository
+# alone. Anything else dropped in this folder stays ignored.
+docs/images/*
+!docs/images/play-tab.png
+!docs/images/memory-card-tab.png
+!docs/images/decompilation-tab.png
+!docs/images/settings-tab.png
 
 # placeholder artwork kept aside during re-skinning; not shipped
 *.bak

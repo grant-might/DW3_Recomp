@@ -13,22 +13,22 @@ region.
 
 ## Screenshots
 
-![The Play tab, with a disc image routed to its region](https://github.com/user-attachments/assets/44e1c7db-240e-4f75-ad9a-ff475aa28ee6)
+![The Play tab, with a disc image routed to its region](docs/images/play-tab.png)
 
 The Play tab is the builder. Point it at your own disc image and it names the region from the
 disc's own serial, then recompiles it into `Builds/USA`, `Builds/EUR` or `Builds/JP`.
 
-![The Memory Card tab, listing the cards it found](https://github.com/user-attachments/assets/3737e81b-66d2-4812-9cf5-aab402840a37)
+![The Memory Card tab, listing the cards it found](docs/images/memory-card-tab.png)
 
 The Memory Card tab lists every card it finds, including each build's own `card1.mcd` and
 `card2.mcd`, and opens one in the embedded save editor.
 
-![The Decompilation tab browsing the decompilation tree](https://github.com/user-attachments/assets/75d322ad-5aed-408e-8e27-61f2f8330d4a)
+![The Decompilation tab browsing the decompilation tree](docs/images/decompilation-tab.png)
 
 The Decompilation tab is a read-only browser over the decompilation tree, with the project's
 published progress shown above it.
 
-![The Settings tab](https://github.com/user-attachments/assets/83926aa5-98c7-42e5-b423-fcb6215a8b7b)
+![The Settings tab](docs/images/settings-tab.png)
 
 The Settings tab reads and writes a build's own `settings.toml` and keeps its comments and
 unknown keys.
