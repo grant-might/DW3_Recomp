@@ -15,12 +15,14 @@ Replace or add them one at a time: nothing breaks in between, and a missing file
 | `tab_mods.png` | 320 × 80 | 160 × 40 | 4:1 | as above |
 | `tab_decomp.png` | 320 × 80 | 160 × 40 | 4:1 | as above. Sits between MODS and SETTINGS in the bar. |
 | `tab_settings.png` | 320 × 80 | 160 × 40 | 4:1 | as above |
-| `header_bar.png` | 1280 × 72 | *not used, see below* | 17.8:1 | You asked for the header to stay blank, so this one is **not installed**. Your file is untouched in the project root and switching it back on is one copy. |
+| `header_bar.png` | 1280 × 72 | *not used, see below* | 17.8:1 | You asked for the header to stay blank, so this one is **not installed**. Your file is untouched at `assets/source/header_bar.png` and switching it back on is one copy. |
 | `play_banner.png` | 1150 × 220 | fit to the content width | 5.23:1 | Hero strip at the top of the Play tab. Drawn fit-to-width, so nothing is cropped and the height follows the width. |
 
-These arrived in the project root named `logo.png`, `play_tab.png`, `memory_tab.png`, `mods_tab.png`,
-`decomp_tab.png`, `settings_tab.png`, `header_bar.png` and `banner.png`, and were copied to the slot
-names above (`banner.png` → `play_banner.png`). **The originals are still in the root, untouched.**
+These arrived in the project root and were copied to the slot names above (`banner.png` →
+`play_banner.png`). They live here now, in `assets/`, and the root copies are gone: every one of them
+was byte-identical to its slot file, and loose images in the repository root only cluttered the front
+page. The exception is `header_bar.png`, which is deliberately not installed and is kept at
+`assets/source/header_bar.png`.
 
 Five word-images are what set the tab bar's width: at 160 × 40 each plus the bar's own margins the row
 needs **990 px**, so the window's minimum width is 1060 px. A sixth tab would need roughly 190 px more
@@ -83,8 +85,8 @@ other backups it is gitignored and does not ship.
 ### `header_bar.png`: removed at your request, and the header is blank without it
 
 The header is now a **flat panel in the theme's panel tone** with the logo and the two buttons on it
-and nothing behind them; to put your header art back, copy the `header_bar.png` that is still in the
-project root into `assets/`. When present it is drawn scaled-to-fill and centre-cropped, so its outer
+and nothing behind them; to put your header art back, copy `assets/source/header_bar.png` into
+`assets/`. When present it is drawn scaled-to-fill and centre-cropped, so its outer
 edges can be cut as the window changes shape, keep detail in the middle band.
 
 Author art at **2× the listed size** and let the launcher downscale, it looks sharper on the

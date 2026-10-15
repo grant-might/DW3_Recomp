@@ -4,10 +4,10 @@ Windows wants the small sizes as their own frames; a single scaled frame looks s
 and in Explorer's small views. This embeds one PNG per size (allowed in ICO since Vista, and exact
 on the round trip) at the set the launcher expects: 16, 24, 32, 48, 64, 128 and 256.
 
-    .\\.venv\\Scripts\\python.exe make_icon.py            # from icon.png in the project root
+    .\\.venv\\Scripts\\python.exe make_icon.py            # from assets/icon.png
     .\\.venv\\Scripts\\python.exe make_icon.py --force    # rewrite even if icon.ico is newer
 
-Source of truth is the PNG you supply (project root `icon.png`, usually 512x512). The .ico is a
+Source of truth is the PNG you supply (assets/`icon.png`, usually 512x512). The .ico is a
 derived artefact: delete it and `theme.app_icon()` falls back to the PNG, so nothing breaks.
 """
 from __future__ import annotations
@@ -57,12 +57,10 @@ def build(source: pathlib.Path, target: pathlib.Path, sizes: tuple[int, ...] = S
 
 def main() -> int:
     force = "--force" in sys.argv
-    source = ROOT / "icon.png"
+    # assets/icon.png is the master: the app ships it, and the root copy is gone.
+    source = ASSETS / "icon.png"
     if not source.is_file():
-        # assets/icon.png is the copy the app ships; the root one is the author's master.
-        source = ASSETS / "icon.png"
-    if not source.is_file():
-        raise SystemExit("no icon.png to build from (project root or assets/)")
+        raise SystemExit("no icon.png to build from (assets/icon.png)")
     target = ASSETS / "icon.ico"
     if target.is_file() and not force and target.stat().st_mtime >= source.stat().st_mtime:
         print(f"kept    : {target.name} is newer than {source.name} (use --force to rebuild)")
