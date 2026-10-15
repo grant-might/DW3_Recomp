@@ -1,0 +1,81 @@
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A4F3C; // type:func
+startStage = 0x800A5048; // type:func
+stepAnimation = 0x800A50A8; // type:func
+drawStageEffect = 0x800A51C8; // type:func
+isOnScreen = 0x800A52B0; // type:func
+updateStageEffect = 0x800A5374; // type:func
+createStageEffect = 0x800A5604; // type:func
+setupStage = 0x800A579C; // type:func
+effectClutFrames = 0x800A5C0C; // size:0x18
+effectFrames = 0x800A5C24; // size:0x58
+stageFuncs = 0x800A6118; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A5F74;
+stageSlots = 0x800A6028;
+stageImages = 0x800A5EA8;
+stageActors = 0x800A5F68;
+stageBattles = 0x800A5E8C;
+stageEvents = 0x800A611C;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script1020 = 0x800A5890;
+script1030 = 0x800A590C;
+script1040 = 0x800A5988;
+script1041 = 0x800A5AB4;
+script1050 = 0x800A5AF8;
+area0Battle0 = 0x800A5C7C;
+area0Battle1 = 0x800A5C88;
+area0Battle2 = 0x800A5C94;
+area0Battle3 = 0x800A5CA0;
+area0Battle4 = 0x800A5CAC;
+area0Battle5 = 0x800A5CB8;
+area0Battle6 = 0x800A5CC4;
+area0Battle7 = 0x800A5CD0;
+area0Battles = 0x800A5CDC;
+area1Battle0 = 0x800A5D00;
+area1Battle1 = 0x800A5D0C;
+area1Battle2 = 0x800A5D18;
+area1Battle3 = 0x800A5D24;
+area1Battle4 = 0x800A5D30;
+area1Battle5 = 0x800A5D3C;
+area1Battle6 = 0x800A5D48;
+area1Battle7 = 0x800A5D54;
+area1Battles = 0x800A5D60;
+area2Battle0 = 0x800A5D84;
+area2Battle1 = 0x800A5D90;
+area2Battle2 = 0x800A5D9C;
+area2Battle3 = 0x800A5DA8;
+area2Battle4 = 0x800A5DB4;
+area2Battle5 = 0x800A5DC0;
+area2Battle6 = 0x800A5DCC;
+area2Battle7 = 0x800A5DD8;
+area2Battles = 0x800A5DE4;
+area3Battle0 = 0x800A5E08;
+area3Battle1 = 0x800A5E14;
+area3Battle2 = 0x800A5E20;
+area3Battle3 = 0x800A5E2C;
+area3Battle4 = 0x800A5E38;
+area3Battle5 = 0x800A5E44;
+area3Battle6 = 0x800A5E50;
+area3Battle7 = 0x800A5E5C;
+area3Battles = 0x800A5E68;
+actor0Conditions = 0x800A5F28;
+actor1Conditions = 0x800A5F34;
+actor0 = 0x800A5F40;
+actor1 = 0x800A5F54;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+drawBackground = 0x800A4CA4; // type:func
+updateBackground = 0x800A4E08; // type:func
+createBackground = 0x800A4F10; // type:func
+endEvent1020 = 0x800A5660; // type:func
+endEvent1030 = 0x800A56AC; // type:func
+endEvent1040 = 0x800A56F8; // type:func
+endEvent1041 = 0x800A5724; // type:func
+endEvent1050 = 0x800A5750; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateStageSpots = 0x800A5BD0;

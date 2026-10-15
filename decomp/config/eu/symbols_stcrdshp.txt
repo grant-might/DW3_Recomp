@@ -1,0 +1,61 @@
+// STCRDSHP.PRO: the card packs; its own symbols, which only its splat config reads
+
+// STCRDSHP's data, in its order
+STCRDSHP_slotCards = 0x80089288; // size:0x1EC0
+STCRDSHP_slotCards123 = 0x8008B148; // size:0x40
+STCRDSHP_slotCards124 = 0x8008B188; // size:0x1580
+STCRDSHP_packs = 0x8008C708; // size:0x3F0
+STCRDSHP_glowRows = 0x8008CAF8; // size:0x18
+STCRDSHP_cursorRows = 0x8008CB10; // size:0x18
+STCRDSHP_titles = 0x8008CB28; // size:0x58
+STCRDSHP_funcs = 0x8008CB80; // size:0x20
+STCRDSHP_shopCards = 0x8008CBA0; // size:0x180
+STCRDSHP_prices = 0x8008CD20; // size:0xB4
+STCRDSHP_stocks = 0x8008CDD4; // size:0x12C
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+STCRDSHP_createPackOpenWindows = 0x8008300C; // type:func
+STCRDSHP_showPackPage = 0x800832C8; // type:func
+STCRDSHP_showPack = 0x800835B8; // type:func
+STCRDSHP_showPackCard = 0x80083780; // type:func
+STCRDSHP_drawPackOpen = 0x80083BA8; // type:func
+STCRDSHP_listPacks = 0x800843C0; // type:func
+STCRDSHP_runPackOpen = 0x800844B8; // type:func
+STCRDSHP_updatePackOpen = 0x800852CC; // type:func
+STCRDSHP_createPackOpen = 0x8008536C; // type:func
+STCRDSHP_startFader = 0x800853B4; // type:func
+STCRDSHP_drawFader = 0x8008543C; // type:func
+STCRDSHP_updateFader = 0x80085580; // type:func
+STCRDSHP_createFader = 0x80085634; // type:func
+STCRDSHP_loadIcons = 0x80085678; // type:func
+STCRDSHP_setCards = 0x80085730; // type:func
+STCRDSHP_hideCards = 0x80085788; // type:func
+STCRDSHP_drawCards = 0x800857B0; // type:func
+STCRDSHP_drawTurningSlots = 0x80085BAC; // type:func
+STCRDSHP_updateHiding = 0x80085CD8; // type:func
+STCRDSHP_updateGrid = 0x80085DA0; // type:func
+STCRDSHP_createGrid = 0x80085FDC; // type:func
+STCRDSHP_createBuyWindows = 0x80086074; // type:func
+STCRDSHP_showBuyCard = 0x8008627C; // type:func
+STCRDSHP_drawBuy = 0x8008674C; // type:func
+STCRDSHP_runBuy = 0x80086DC4; // type:func
+STCRDSHP_updateBuy = 0x80087A2C; // type:func
+STCRDSHP_createBuy = 0x80087B84; // type:func
+STCRDSHP_updateScene = 0x80087BDC; // type:func
+STCRDSHP_start = 0x80087CD4; // type:func
+STCRDSHP_createShopWindows = 0x80087D00; // type:func
+STCRDSHP_showTitle = 0x80087E8C; // type:func
+STCRDSHP_showOptions = 0x80087FAC; // type:func
+STCRDSHP_drawShop = 0x800880C4; // type:func
+STCRDSHP_runShop = 0x8008838C; // type:func
+STCRDSHP_showMoney = 0x80088AFC; // type:func
+STCRDSHP_updateShop = 0x80088B50; // type:func
+STCRDSHP_createShop = 0x80088CA0; // type:func
+STCRDSHP_loadFiles = 0x80088E24; // type:func
+STCRDSHP_filesLoading = 0x80088EF4; // type:func
+STCRDSHP_startFade = 0x80088FB4; // type:func
+STCRDSHP_updateFade = 0x80089048; // type:func
+STCRDSHP_startLerp = 0x800890B4; // type:func
+STCRDSHP_updateLerp = 0x800890F4; // type:func
+STCRDSHP_getStock = 0x80089160; // type:func
+STCRDSHP_getPrice = 0x8008923C; // type:func

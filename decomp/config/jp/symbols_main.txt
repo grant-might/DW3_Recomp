@@ -1,0 +1,44 @@
+// The executable's own symbols, which splat doesn't give the overlays
+
+// the memory map (mk/version/<version>.mk), which the Makefile gives the
+// linker: where the executable loads the overlays, and the stages and other
+// sub-overlays (OVERLAY_ADDRESS and SUB_OVERLAY_ADDRESS)
+OVERLAY_VRAM = 0x80082A60; // defined:True
+STAGE_VRAM = 0x800A5770; // defined:True
+
+// where the heap begins, after the overlays, which the linker gives the
+// executable (tools/link_heap.py): HEAP_START points at it
+HEAP_BASE = 0x800AB000; // defined:True
+
+// the mode overlays' symbols the executable uses, which it links against
+// (the Makefile's CHILDREN_main): their entry points (MODE_ENTRY_POINTS) and
+// FIELDSTG's functions and data game/events.c uses
+FIELDSTG_start = 0x80087300; // defined:True
+STDWTITL_start = 0x80082DB8; // defined:True
+STDGNAME_start = 0x80082E34; // defined:True
+FIGHTSTG_start = 0x80086F10; // defined:True
+CARDGAME_start = 0x80095988; // defined:True
+STCRDDEK_start = 0x80083098; // defined:True
+STCRDSHP_start = 0x800879B4; // defined:True
+STGTRAIN_start = 0x80083870; // defined:True
+STITSHOP_start = 0x800830C8; // defined:True
+STGMCARD_start = 0x80082B78; // defined:True
+STCRDABM_start = 0x80083980; // defined:True
+STFGTREP_start = 0x80082D1C; // defined:True
+STPLNMET_start = 0x80082EC8; // defined:True
+STSTATUS_start = 0x80083404; // defined:True
+SHOCKTST_start = 0x80082C48; // defined:True
+STGDGLAB_createScene = 0x80082DF0; // defined:True
+CNTY_SEL_start = 0x80082C3C; // defined:True
+SOUNDTST_start = 0x800841C0; // defined:True
+STAGSLCT_start = 0x80084D48; // defined:True
+FIELDSTG_leaveField = 0x8008B4CC; // defined:True
+FIELDSTG_startListedEvent = 0x8008BD00; // defined:True
+FIELDSTG_openInn = 0x8008BD5C; // defined:True
+FIELDSTG_battleFuncs = 0x8009B3B8; // defined:True
+
+// the data's names, from its C (the build matches)
+ZERO_VECTOR = 0x8004D9CC; // size:0x10
+DOUBLE_WIDTH_MATRIX = 0x8004D9FC; // size:0x20
+DOUBLE_HEIGHT_MATRIX = 0x8004DA1C; // size:0x20
+DOUBLE_SIZE_MATRIX = 0x8004DA3C; // size:0x20

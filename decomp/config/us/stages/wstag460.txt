@@ -1,0 +1,59 @@
+updateTileSoloFrames1 = 0x800A6168; // size:0x34
+updateWandererFrames0 = 0x800A6298; // size:0x2C
+updateWandererFrames1 = 0x800A62C4; // size:0x30
+
+// the names the stages share (the same code or data in each)
+stepTileAnimation = 0x800A4EBC; // type:func
+stepTileAnimation2 = 0x800A5248; // type:func
+stepTileAnimation3 = 0x800A56A8; // type:func
+updateStage = 0x800A5E70; // type:func
+startStage = 0x800A5EE0; // type:func
+setupStage = 0x800A5F74; // type:func
+stageFuncs = 0x800A6594; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A6414;
+stageSlots = 0x800A6534;
+stageImages = 0x800A6340;
+stageActors = 0x800A6408;
+stageEvents = 0x800A6598;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script370 = 0x800A6060;
+actor0Talks = 0x800A63C0;
+actor1Conditions = 0x800A63D8;
+actor0 = 0x800A63E0;
+actor1 = 0x800A63F4;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateCommand830 = 0x800A4CA4; // type:func
+handleCommand830 = 0x800A4E54; // type:func
+createCommand830 = 0x800A4E8C; // type:func
+updateTileSolo = 0x800A4FDC; // type:func
+fadeOutTileSolo = 0x800A51D0; // type:func
+createTileSolo = 0x800A51EC; // type:func
+createTileSoloTask = 0x800A521C; // type:func
+updateTileDuo = 0x800A5368; // type:func
+fadeOutTileDuo = 0x800A5630; // type:func
+createTileDuo = 0x800A564C; // type:func
+createTileDuoTask = 0x800A567C; // type:func
+isFarFromHome = 0x800A57C8; // type:func
+getAngle = 0x800A5804; // type:func
+moveWanderer = 0x800A5974; // type:func
+updateWanderer = 0x800A5AF0; // type:func
+fadeOutWanderer = 0x800A5DCC; // type:func
+createWanderer = 0x800A5DE8; // type:func
+createWandererTask = 0x800A5E18; // type:func
+endEvent370 = 0x800A5F3C; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateTileSoloFrames0 = 0x800A6128;
+updateTileDuoFrames0_0 = 0x800A619C;
+updateTileDuoFrames1_0 = 0x800A61DC;
+updateTileDuoFrames0_1 = 0x800A6210;
+updateTileDuoFrames1_1 = 0x800A6250;
+updateTileDuoFrames0 = 0x800A6284;
+updateTileDuoFrames1 = 0x800A628C;
+tileDuoObjectFrames = 0x800A6294;
+wandererSpeeds = 0x800A62F4;
+angleTangents = 0x800A62FC;

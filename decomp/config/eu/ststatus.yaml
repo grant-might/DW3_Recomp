@@ -1,0 +1,84 @@
+# Digimon World 2003, Europe (SLES-03936): ststatus
+name: ststatus
+sha1: 1dea5c72f3f4187261298d0d7a1e1c7a06fadffe
+options:
+  basename: ststatus
+  target_path: disks/eu/AAA/PRO/STSTATUS.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/ststatus
+  src_path: src/menus/field_menu
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/ststatus.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_ststatus.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_ststatus.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_ststatus.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: ststatus
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, card_screen]
+      - [0x19C, .rodata, demo_screen]
+      - [0x284, .rodata, equip_panel]
+      - [0x358, .rodata, digivolve_panel]
+      - [0x468, .rodata, status_screen]
+      - [0x588, .rodata, item_screen]
+      - [0x748, .rodata, item_list]
+      - [0x75C, .rodata, tech_screen]
+      - [0x840, .rodata, sort_screen]
+      - [0x8A8, c, card_screen]
+      - [0x22A4, c, demo_screen]
+      - [0x37E8, c, equip_panel]
+      - [0x568C, c, digivolve_panel]
+      - [0x8870, c, status_screen]
+      - [0xBC9C, c, item_screen]
+      - [0xF1E4, c, item_list]
+      - [0x10A3C, c, tech_screen]
+      - [0x138E0, c, sort_screen]
+      - [0x155E4, c, map_screen]
+      - [0x16780, c, menu]
+      - [0x172AC, c, helpers]
+      # each object's data
+      - [0x17AD4, .data, card_screen]
+      - [0x17AE8, .data, demo_screen]
+      - [0x17AFC, .data, equip_panel]
+      - [0x17B4C, .data, digivolve_panel]
+      - [0x17B80, .data, status_screen]
+      - [0x17BE0, .data, item_screen]
+      - [0x17C8C, .data, tech_screen]
+      - [0x17CB4, .data, sort_screen]
+      - [0x17CC8, .data, helpers]
+  - [0x18A48]

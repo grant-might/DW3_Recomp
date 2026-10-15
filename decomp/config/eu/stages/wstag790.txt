@@ -1,0 +1,26 @@
+// names from the C of the modules this version builds (tools/version_symbols.py)
+updateTileGroup = 0x800A5DF4; // type:func
+handleCommand809 = 0x800A60D0; // type:func
+createCommand809 = 0x800A6108; // type:func
+updateFrameTask = 0x800A6138; // type:func
+handleCommand808 = 0x800A6224; // type:func
+createCommand808 = 0x800A625C; // type:func
+script4 = 0x800A6454;
+stageImages = 0x800A6714;
+actor1Conditions = 0x800A67B4;
+actor3Conditions = 0x800A67BC;
+actor0 = 0x800A67C4;
+actor1 = 0x800A67D8;
+actor2 = 0x800A67EC;
+actor3 = 0x800A6800;
+stageActors = 0x800A6814;
+stageObjects = 0x800A6828;
+stageEvents = 0x800A6984;
+func_80084B80 = 0x800853F8;
+func_80088C9C = 0x80089548;
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A628C; // type:func
+startStage = 0x800A631C; // type:func
+setupStage = 0x800A6378; // type:func
+stageFuncs = 0x800A6980; // size:0x4

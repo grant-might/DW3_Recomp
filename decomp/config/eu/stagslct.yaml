@@ -1,0 +1,56 @@
+# Digimon World 2003, Europe (SLES-03936): stagslct
+name: stagslct
+sha1: 535f40ad6a545f2867646ad925481c42a11c3ad7
+options:
+  basename: stagslct
+  target_path: disks/eu/AAA/PRO/STAGSLCT.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stagslct
+  src_path: src/debug/stage_select
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stagslct.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stagslct.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stagslct.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stagslct.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stagslct
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, stage_select]
+      - [0x1D1C, c, stage_select]
+      - [0x3220, .data, stage_select]
+  - [0x44FC]

@@ -1,0 +1,76 @@
+# Digimon World 3, USA (SLUS-01436): stdwtitl
+name: stdwtitl
+sha1: 386e24d70f729d02edb945878733f7622e6eff27
+options:
+  basename: stdwtitl
+  target_path: disks/us/AAA/PRO/STDWTITL.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/stdwtitl
+  src_path: src/menus/title
+  build_path: build/us
+
+  ld_script_path: build/us/generated/stdwtitl.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_stdwtitl.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_stdwtitl.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_stdwtitl.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stdwtitl
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, splash]
+      - [0x18, .rodata, menu]
+      - [0x2C, .rodata, title]
+      - [0x50, rodata, libpress]
+      # the modules (src/menus/title/), in the order they link
+      - [0xA0, c, scene]
+      - [0x384, c, logo]
+      - [0x768, c, movie]
+      - [0x11B8, c, glint]
+      - [0x1774, c, splash]
+      - [0x1A48, c, title_loader]
+      - [0x1BB8, c, slides]
+      - [0x24D0, c, menu]
+      - [0x2E60, c, edge_fade]
+      - [0x31E8, c, background]
+      - [0x39C0, c, title]
+      - [0x4218, asm, libpress]
+      - [0x48A8, asm, libpress_vlc2]
+      - [0x4C28, asm, libpress_build]
+      - [0x4D0C, .data, data/stdwtitl]
+      - [0x4E60, .data, data/title]
+      - [0x5328, data, libpress]
+      - [0x62B8, .data, data/movie]
+  - [0x6314]

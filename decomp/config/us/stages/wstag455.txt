@@ -1,0 +1,69 @@
+updateTileTaskFrames = 0x800A5234; // size:0x44
+
+// the names the stages share (the same code or data in each)
+stepAnimationOnce = 0x800A4CA8; // type:func
+updateStage = 0x800A4F04; // type:func
+startStage = 0x800A4F98; // type:func
+setupStage = 0x800A5020; // type:func
+stageFuncs = 0x800A5F98; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A55C0;
+stageSlots = 0x800A5F50;
+stageImages = 0x800A54A4;
+stageActors = 0x800A55B4;
+stageColor = 0x800A4CA4;
+stageBattles = 0x800A5488;
+stageEvents = 0x800A5F9C;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script360 = 0x800A5150;
+area0Battle0 = 0x800A5278;
+area0Battle1 = 0x800A5284;
+area0Battle2 = 0x800A5290;
+area0Battle3 = 0x800A529C;
+area0Battle4 = 0x800A52A8;
+area0Battle5 = 0x800A52B4;
+area0Battle6 = 0x800A52C0;
+area0Battle7 = 0x800A52CC;
+area0Battles = 0x800A52D8;
+area1Battle0 = 0x800A52FC;
+area1Battle1 = 0x800A5308;
+area1Battle2 = 0x800A5314;
+area1Battle3 = 0x800A5320;
+area1Battle4 = 0x800A532C;
+area1Battle5 = 0x800A5338;
+area1Battle6 = 0x800A5344;
+area1Battle7 = 0x800A5350;
+area1Battles = 0x800A535C;
+area2Battle0 = 0x800A5380;
+area2Battle1 = 0x800A538C;
+area2Battle2 = 0x800A5398;
+area2Battle3 = 0x800A53A4;
+area2Battle4 = 0x800A53B0;
+area2Battle5 = 0x800A53BC;
+area2Battle6 = 0x800A53C8;
+area2Battle7 = 0x800A53D4;
+area2Battles = 0x800A53E0;
+area3Battle0 = 0x800A5404;
+area3Battle1 = 0x800A5410;
+area3Battle2 = 0x800A541C;
+area3Battle3 = 0x800A5428;
+area3Battle4 = 0x800A5434;
+area3Battle5 = 0x800A5440;
+area3Battle6 = 0x800A544C;
+area3Battle7 = 0x800A5458;
+area3Battles = 0x800A5464;
+actor1Talk0Conditions = 0x800A5524;
+actor1Talk1Conditions = 0x800A552C;
+actor1Talk1Actions = 0x800A5538;
+actor1Talk2Conditions = 0x800A5540;
+actor1Talks = 0x800A554C;
+actor0Conditions = 0x800A557C;
+actor0 = 0x800A558C;
+actor1 = 0x800A55A0;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateTileTask = 0x800A4D80; // type:func
+createCommand828 = 0x800A4ED4; // type:func
+endEvent360 = 0x800A4FF4; // type:func

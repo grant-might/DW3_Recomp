@@ -1,0 +1,75 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stdwtitl
+name: stdwtitl
+sha1: 346d38b77fe2c45ce9e4e86b260af24b9d17b17b
+options:
+  basename: stdwtitl
+  target_path: disks/jp/AAA/PRO/STDWTITL.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stdwtitl
+  src_path: src/menus/title
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stdwtitl.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stdwtitl.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stdwtitl.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stdwtitl.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stdwtitl
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, splash]
+      - [0x18, .rodata, menu]
+      - [0x2C, .rodata, title]
+      - [0x50, rodata, libpress]
+      - [0xA0, c, scene]
+      - [0x384, c, logo]
+      - [0x768, c, movie]
+      - [0x11F0, c, glint]
+      - [0x17AC, c, splash]
+      - [0x1A80, c, title_loader]
+      - [0x1BF0, c, slides]
+      - [0x2508, c, menu]
+      - [0x2E98, c, edge_fade]
+      - [0x3220, c, background]
+      - [0x39F8, c, title]
+      - [0x4270, asm, libpress]
+      - [0x4900, asm, libpress_vlc2]
+      - [0x4C80, asm, libpress_build]
+      - [0x4D64, .data, data/stdwtitl]
+      - [0x4EC4, .data, data/title]
+      - [0x538C, data, libpress]
+      - [0x631C, .data, data/movie]
+  - [0x6378]

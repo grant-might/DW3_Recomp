@@ -1,0 +1,9 @@
+/* addresses CARDGAME uses that none of its objects defines */
+
+/* without it, ld makes a symbol plus a number outside the sections absolute,
+   and it wouldn't move with the symbol */
+LD_FEATURE("SANE_EXPR")
+
+/* the marked slots per side: bytes 2 and 3 of CARDGAME_slotMoveCounts
+   (data/cardgame_3.c), a symbol of its own */
+CARDGAME_markedCounts = CARDGAME_slotMoveCounts + 2;

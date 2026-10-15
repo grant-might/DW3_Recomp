@@ -1,0 +1,83 @@
+# Digimon World 3, USA (SLUS-01436): ststatus
+name: ststatus
+sha1: 472f0d2543b64c9e0410cdf33d82e783afc4f348
+options:
+  basename: ststatus
+  target_path: disks/us/AAA/PRO/STSTATUS.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/ststatus
+  src_path: src/menus/field_menu
+  build_path: build/us
+
+  ld_script_path: build/us/generated/ststatus.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_ststatus.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_ststatus.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_ststatus.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: ststatus
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      - [0x0, .rodata, card_screen]
+      - [0x19C, .rodata, demo_screen]
+      - [0x284, .rodata, equip_panel]
+      - [0x358, .rodata, digivolve_panel]
+      - [0x468, .rodata, status_screen]
+      - [0x588, .rodata, item_screen]
+      - [0x748, .rodata, item_list]
+      - [0x75C, .rodata, tech_screen]
+      - [0x840, .rodata, sort_screen]
+      - [0x8A8, c, card_screen]
+      - [0x2278, c, demo_screen]
+      - [0x3790, c, equip_panel]
+      - [0x55F4, c, digivolve_panel]
+      - [0x8710, c, status_screen]
+      - [0xBAB0, c, item_screen]
+      - [0xEF18, c, item_list]
+      - [0x10738, c, tech_screen]
+      - [0x13534, c, sort_screen]
+      - [0x151FC, c, map_screen]
+      - [0x16338, c, menu]
+      - [0x16E28, c, helpers]
+      # each object's data
+      - [0x17650, .data, card_screen]
+      - [0x17664, .data, demo_screen]
+      - [0x17678, .data, equip_panel]
+      - [0x176C8, .data, digivolve_panel]
+      - [0x176FC, .data, status_screen]
+      - [0x1775C, .data, item_screen]
+      - [0x17808, .data, tech_screen]
+      - [0x17830, .data, sort_screen]
+      - [0x17844, .data, helpers]
+  - [0x185C4]

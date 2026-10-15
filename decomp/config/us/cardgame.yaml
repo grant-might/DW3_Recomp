@@ -1,0 +1,94 @@
+# Digimon World 3, USA (SLUS-01436): cardgame
+name: cardgame
+sha1: 882601c1b0dd9a1e43f4eb5335885e6856691763
+options:
+  basename: cardgame
+  target_path: disks/us/AAA/PRO/CARDGAME.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/cardgame
+  src_path: src/cardgame/card_battle
+  build_path: build/us
+
+  ld_script_path: build/us/generated/cardgame.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_cardgame.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_cardgame.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_cardgame.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: cardgame
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      - [0x0, .rodata, effect_script]
+      - [0x5BC, .rodata, questions]
+      - [0x5FC, .rodata, hand_pick]
+      - [0x6CC, .rodata, table_view]
+      - [0x7BC, .rodata, card_choice]
+      - [0x86C, .rodata, slot_effects]
+      - [0x88C, .rodata, pile_effects]
+      - [0x8CC, .rodata, round]
+      - [0x9E8, .rodata, battle_steps]
+      - [0xA38, .rodata, deck_choice]
+      - [0xA48, .rodata, windows]
+      - [0xA78, .rodata, panels]
+      - [0xA90, .rodata, sprites]
+      - [0xAC0, .rodata, screen]
+      - [0xAE8, .rodata, battle]
+      - [0xE4C, .rodata, computer]
+      - [0x117C, c, effect_script]
+      - [0x3130, c, play_checks]
+      - [0x33D8, c, questions]
+      - [0x3FE4, c, hand_pick]
+      - [0x70B0, c, table_view]
+      - [0x8C8C, c, card_choice]
+      - [0xAA24, c, slot_effects]
+      - [0xC244, c, pile_effects]
+      - [0xE700, c, round]
+      - [0x11D88, c, battle_steps]
+      - [0x129A8, c, scene]
+      - [0x12C04, c, deck_choice]
+      - [0x136FC, c, windows]
+      - [0x146BC, c, message_window]
+      - [0x15438, c, panels]
+      - [0x16B08, c, sprites]
+      - [0x186B4, c, screen]
+      - [0x1A04C, c, preloader]
+      - [0x1A1E0, c, battle]
+      - [0x1FD94, c, fader]
+      - [0x201A0, c, computer]
+      # each object's data; the variables at the end of the third object's
+      # (data/cardgame_3) are the second object's too
+      - [0x218B0, .data, effect_script]
+      - [0x22300, .data, data/cardgame_2]
+      - [0x223F4, .data, data/cardgame_3]
+  - [0x2285C]

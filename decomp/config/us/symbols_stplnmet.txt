@@ -1,0 +1,79 @@
+// STPLNMET.PRO's own symbols
+
+STPLNMET_centerLayer = 0x800826F0; // type:func
+STPLNMET_updateScene = 0x80082764; // type:func
+STPLNMET_start = 0x800828B0; // type:func
+STPLNMET_loadScroll = 0x80082AA8; // type:func
+STPLNMET_setScrollLayer = 0x80082B30; // type:func
+STPLNMET_createScroll = 0x80082B3C; // type:func
+STPLNMET_startTween = 0x800834F8; // type:func
+STPLNMET_updateTween = 0x8008358C; // type:func
+STPLNMET_createNameWindows = 0x800835F8; // type:func
+STPLNMET_drawKeyboard = 0x80083AEC; // type:func
+STPLNMET_updateKeyboard = 0x80084418; // type:func
+STPLNMET_updateNameEntry = 0x80085028; // type:func
+STPLNMET_setNameVram = 0x8008512C; // type:func
+STPLNMET_setName = 0x80085138; // type:func
+STPLNMET_getName = 0x800851CC; // type:func
+STPLNMET_createNameEntry = 0x8008538C; // type:func
+STPLNMET_createScreen = 0x8008779C; // type:func
+STPLNMET_loadFiles = 0x800877D8; // type:func
+STPLNMET_filesLoading = 0x80087878; // type:func
+STPLNMET_startFade = 0x80087900; // type:func
+STPLNMET_updateFade = 0x80087994; // type:func
+STPLNMET_startLerp = 0x80087A00; // type:func
+STPLNMET_updateLerp = 0x80087A40; // type:func
+STPLNMET_updateScroll = 0x800828DC; // type:func
+STPLNMET_updateSparkles = 0x80082B80; // type:func
+STPLNMET_createSparkles = 0x80082D5C; // type:func
+STPLNMET_updateShine = 0x80082D88; // type:func
+STPLNMET_createShine = 0x80082EE0; // type:func
+STPLNMET_updateWelcome = 0x80082F0C; // type:func
+STPLNMET_createWelcome = 0x800834C0; // type:func
+STPLNMET_showNameWindows = 0x800837E8; // type:func
+STPLNMET_closeNameEntry = 0x800852CC; // type:func
+STPLNMET_hideNameEntry = 0x800852D8; // type:func
+STPLNMET_createConfirmWindows = 0x80085434; // type:func
+STPLNMET_showConfirmWindows = 0x800855DC; // type:func
+STPLNMET_drawConfirm = 0x80085834; // type:func
+STPLNMET_runConfirm = 0x80085F0C; // type:func
+STPLNMET_hideConfirm = 0x80086370; // type:func
+STPLNMET_closeConfirm = 0x800863DC; // type:func
+STPLNMET_updateConfirm = 0x800863E8; // type:func
+STPLNMET_createConfirm = 0x80086490; // type:func
+STPLNMET_createChoiceWindows = 0x800864F0; // type:func
+STPLNMET_showChoiceWindows = 0x800866C0; // type:func
+STPLNMET_drawChoice = 0x80086944; // type:func
+STPLNMET_runChoice = 0x80086C74; // type:func
+STPLNMET_hideChoice = 0x80086EE0; // type:func
+STPLNMET_updateChoice = 0x80086F30; // type:func
+STPLNMET_createChoice = 0x80086FC0; // type:func
+STPLNMET_createTabs = 0x80087014; // type:func
+STPLNMET_showTabs = 0x800870EC; // type:func
+STPLNMET_stepScreen = 0x80087194; // type:func
+STPLNMET_drawTitle = 0x80087568; // type:func
+STPLNMET_updateScreen = 0x80087630; // type:func
+STPLNMET_nameStyle = 0x80088DE4; // size:0x18
+
+// the screen's helpers, and the partners the player chooses from
+STPLNMET_funcs = 0x80089058; // size:0x20
+STPLNMET_nameAnims = 0x80088DFC; // size:0xE0
+STPLNMET_bigKeys = 0x80088EDC; // size:0x3C
+STPLNMET_keyArrowCluts = 0x80088F18; // size:0x18
+STPLNMET_partnerAnims = 0x80088F54; // size:0xE0
+STPLNMET_partnerChoices = 0x80089034; // size:0x24
+
+// the name font and the keyboard
+STPLNMET_nameGlyphs = 0x80087B9C; // size:0x9E2
+STPLNMET_nameIcons = 0x80088580; // size:0x4E6
+STPLNMET_keyPagesJp = 0x80088A68; // size:0x24
+STPLNMET_keyCharsJp = 0x80088A8C; // size:0x276
+STPLNMET_keyPages = 0x80088D04; // size:0xC
+STPLNMET_keyChars = 0x80088D10; // size:0xD2
+STPLNMET_keyboard = 0x80089078; // size:0xC
+
+// the scrolls' ends, the sparkle's frames, the partner choice's cursor and the tabs
+STPLNMET_scrollEnds = 0x80087AAC; // size:0x8
+STPLNMET_sparkleFrames = 0x80087AB4; // size:0xE8
+STPLNMET_choiceArrowCluts = 0x80088F30; // size:0x18
+STPLNMET_tabX = 0x80088F48; // size:0xC

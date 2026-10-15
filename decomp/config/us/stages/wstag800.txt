@@ -1,0 +1,113 @@
+updateTilePair16Frames2 = 0x800A64CC; // size:0x2C
+updateTileOnceFrames_0 = 0x800A6514; // size:0x4C
+updateTileOnceFrames_1 = 0x800A6560; // size:0x4C
+
+// the names the stages share (the same code or data in each)
+stepTileAnimation = 0x800A4CA4; // type:func
+stepTileAnimation2 = 0x800A50E8; // type:func
+updateStage = 0x800A5748; // type:func
+startStage = 0x800A5890; // type:func
+stepAnimation = 0x800A58EC; // type:func
+drawStageEffect = 0x800A5A0C; // type:func
+isOnScreen = 0x800A5AF4; // type:func
+updateStageEffect = 0x800A5BB8; // type:func
+createStageEffect = 0x800A5E48; // type:func
+setupStage = 0x800A5F88; // type:func
+effectClutFrames = 0x800A65EC; // size:0x18
+effectFrames = 0x800A6604; // size:0x58
+stageFuncs = 0x800A6D44; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A6AF0;
+stageSlots = 0x800A6C6C;
+stageImages = 0x800A6888;
+stageActors = 0x800A6AD0;
+stageBattles = 0x800A686C;
+stageEvents = 0x800A6D48;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script850 = 0x800A609C;
+script870 = 0x800A6184;
+script871 = 0x800A620C;
+script1506 = 0x800A646C;
+area0Battle0 = 0x800A665C;
+area0Battle1 = 0x800A6668;
+area0Battle2 = 0x800A6674;
+area0Battle3 = 0x800A6680;
+area0Battle4 = 0x800A668C;
+area0Battle5 = 0x800A6698;
+area0Battle6 = 0x800A66A4;
+area0Battle7 = 0x800A66B0;
+area0Battles = 0x800A66BC;
+area1Battle0 = 0x800A66E0;
+area1Battle1 = 0x800A66EC;
+area1Battle2 = 0x800A66F8;
+area1Battle3 = 0x800A6704;
+area1Battle4 = 0x800A6710;
+area1Battle5 = 0x800A671C;
+area1Battle6 = 0x800A6728;
+area1Battle7 = 0x800A6734;
+area1Battles = 0x800A6740;
+area2Battle0 = 0x800A6764;
+area2Battle1 = 0x800A6770;
+area2Battle2 = 0x800A677C;
+area2Battle3 = 0x800A6788;
+area2Battle4 = 0x800A6794;
+area2Battle5 = 0x800A67A0;
+area2Battle6 = 0x800A67AC;
+area2Battle7 = 0x800A67B8;
+area2Battles = 0x800A67C4;
+area3Battle0 = 0x800A67E8;
+area3Battle1 = 0x800A67F4;
+area3Battle2 = 0x800A6800;
+area3Battle3 = 0x800A680C;
+area3Battle4 = 0x800A6818;
+area3Battle5 = 0x800A6824;
+area3Battle6 = 0x800A6830;
+area3Battle7 = 0x800A683C;
+area3Battles = 0x800A6848;
+actor0Talk0Actions = 0x800A6958;
+actor1Talk0Actions = 0x800A6964;
+actor2Talk0Actions = 0x800A6970;
+actor3Talk0Actions = 0x800A697C;
+actor4Talk0Actions = 0x800A6984;
+actor0Talks = 0x800A6990;
+actor1Talks = 0x800A69A8;
+actor2Talks = 0x800A69C0;
+actor3Talks = 0x800A69D8;
+actor4Talks = 0x800A69F0;
+actor0Conditions = 0x800A6A08;
+actor1Conditions = 0x800A6A10;
+actor2Conditions = 0x800A6A18;
+actor3Conditions = 0x800A6A20;
+actor4Conditions = 0x800A6A28;
+actor5Conditions = 0x800A6A30;
+actor6Conditions = 0x800A6A3C;
+actor0 = 0x800A6A44;
+actor1 = 0x800A6A58;
+actor2 = 0x800A6A6C;
+actor3 = 0x800A6A80;
+actor4 = 0x800A6A94;
+actor5 = 0x800A6AA8;
+actor6 = 0x800A6ABC;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateTilePair16 = 0x800A4DC4; // type:func
+handleCommand837 = 0x800A5038; // type:func
+createTilePair16 = 0x800A5084; // type:func
+createTilePair16Done = 0x800A50B4; // type:func
+updateTileOnce = 0x800A5208; // type:func
+createCommand839 = 0x800A53D4; // type:func
+drawTimer = 0x800A5404; // type:func
+updateTimer = 0x800A554C; // type:func
+createTimer = 0x800A571C; // type:func
+endEvent850 = 0x800A5EA4; // type:func
+endEvent870 = 0x800A5EF0; // type:func
+endEvent871 = 0x800A5F3C; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateTilePair16Frames0 = 0x800A64C0;
+updateTilePair16Frames1 = 0x800A64F8;
+updateTileOnceFrames = 0x800A65AC;
+timerDigitX = 0x800A65B4;
+updateStageSpots = 0x800A65BC;

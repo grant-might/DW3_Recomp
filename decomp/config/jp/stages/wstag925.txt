@@ -1,0 +1,10 @@
+// names from eu: the European version's extra stage, whose functions the
+// Japanese one has in the same order
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A57F4; // type:func
+endEvent1600 = 0x800A5850; // type:func
+setupStage = 0x800A589C; // type:func
+stepAnimationOnce = 0x800A5988; // type:func
+resetTileEffect = 0x800A5A60; // type:func
+updateTileEffect = 0x800A5A98; // type:func
+createCommand855 = 0x800A5D24; // type:func

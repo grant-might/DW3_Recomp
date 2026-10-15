@@ -1,0 +1,77 @@
+// WSTAG281.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A57B8; // type:func
+setupStage = 0x800A5814; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageImages = 0x800A58F8;
+actor0Talks = 0x800A5A48;
+actor1Talks = 0x800A5A60;
+actor2Talks = 0x800A5A78;
+actor3Talks = 0x800A5A90;
+actor4Talks = 0x800A5AA8;
+actor5Talks = 0x800A5AC0;
+actor6Talks = 0x800A5AD8;
+actor7Talks = 0x800A5AF0;
+actor8Talks = 0x800A5B08;
+actor9Talks = 0x800A5B20;
+actor10Talks = 0x800A5B38;
+actor11Talks = 0x800A5B50;
+actor12Talks = 0x800A5B68;
+actor13Talks = 0x800A5B80;
+actor14Talks = 0x800A5B98;
+actor15Talks = 0x800A5BB0;
+actor16Talks = 0x800A5BC8;
+actor18Talks = 0x800A5BE0;
+actor19Talks = 0x800A5BF8;
+actor20Talks = 0x800A5C10;
+actor21Talks = 0x800A5C28;
+actor0Conditions = 0x800A5C40;
+actor1Conditions = 0x800A5C4C;
+actor2Conditions = 0x800A5C54;
+actor3Conditions = 0x800A5C60;
+actor4Conditions = 0x800A5C68;
+actor5Conditions = 0x800A5C70;
+actor6Conditions = 0x800A5C7C;
+actor7Conditions = 0x800A5C84;
+actor8Conditions = 0x800A5C90;
+actor9Conditions = 0x800A5C9C;
+actor10Conditions = 0x800A5CA4;
+actor11Conditions = 0x800A5CB0;
+actor12Conditions = 0x800A5CB8;
+actor13Conditions = 0x800A5CC4;
+actor14Conditions = 0x800A5CCC;
+actor15Conditions = 0x800A5CD8;
+actor18Conditions = 0x800A5CE0;
+actor19Conditions = 0x800A5CEC;
+actor20Conditions = 0x800A5CF4;
+actor21Conditions = 0x800A5D00;
+actor0 = 0x800A5D08;
+actor1 = 0x800A5D1C;
+actor2 = 0x800A5D30;
+actor3 = 0x800A5D44;
+actor4 = 0x800A5D58;
+actor5 = 0x800A5D6C;
+actor6 = 0x800A5D80;
+actor7 = 0x800A5D94;
+actor8 = 0x800A5DA8;
+actor9 = 0x800A5DBC;
+actor10 = 0x800A5DD0;
+actor11 = 0x800A5DE4;
+actor12 = 0x800A5DF8;
+actor13 = 0x800A5E0C;
+actor14 = 0x800A5E20;
+actor15 = 0x800A5E34;
+actor16 = 0x800A5E48;
+actor17 = 0x800A5E5C;
+actor18 = 0x800A5E70;
+actor19 = 0x800A5E84;
+actor20 = 0x800A5E98;
+actor21 = 0x800A5EAC;
+stageActors = 0x800A5EC0;
+stageObjects = 0x800A5F1C;
+stageSlots = 0x800A60F0;
+stageFuncs = 0x800A6168; // size:0x4

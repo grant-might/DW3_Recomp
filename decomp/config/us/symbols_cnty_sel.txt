@@ -1,0 +1,46 @@
+// CNTY_SEL.PRO: the country select screen
+
+// Root task: loads the screen once its sound bank is in, then starts the menu
+CNTY_SEL_tickScreen = 0x80082480; // type:func
+// Entry point (last entry of D_80055418)
+CNTY_SEL_start = 0x80082624; // type:func
+
+// Background: scrolls, and fades the screen out when it gets state 2
+CNTY_SEL_drawBackground = 0x80082688; // type:func
+CNTY_SEL_getFadeLevel = 0x8008275C; // type:func
+CNTY_SEL_drawFade = 0x80082798; // type:func
+CNTY_SEL_tickBackground = 0x8008291C; // type:func
+CNTY_SEL_startBackgroundTask = 0x80082A70; // type:func
+
+// Highlighted option: blinks, and flashes when it gets state 2
+CNTY_SEL_stepAnimation = 0x80082A9C; // type:func
+CNTY_SEL_drawCursor = 0x80082B74; // type:func
+CNTY_SEL_setCursorSelection = 0x80082C0C; // type:func
+CNTY_SEL_tickCursor = 0x80082C14; // type:func
+CNTY_SEL_startCursorTask = 0x80082D2C; // type:func
+
+// Panels: each one opens (and then closes) by scaling when it gets state 2
+CNTY_SEL_getTopPanelScale = 0x80082D64; // type:func
+CNTY_SEL_drawTopPanel = 0x80082DC8; // type:func
+CNTY_SEL_tickTopPanel = 0x80082E74; // type:func
+CNTY_SEL_startTopPanelTask = 0x80082F9C; // type:func
+CNTY_SEL_getRightPanelScale = 0x80082FC8; // type:func
+CNTY_SEL_drawRightPanel = 0x8008302C; // type:func
+CNTY_SEL_tickRightPanel = 0x800830D8; // type:func
+CNTY_SEL_startRightPanelTask = 0x80083200; // type:func
+CNTY_SEL_getLeftPanelScale = 0x8008322C; // type:func
+CNTY_SEL_drawLeftPanel = 0x80083298; // type:func
+CNTY_SEL_tickLeftPanel = 0x80083358; // type:func
+CNTY_SEL_startLeftPanelTask = 0x80083484; // type:func
+
+// Menu: runs the screen and reads the pad
+CNTY_SEL_tickMenu = 0x800834B0; // type:func
+CNTY_SEL_startMenuTask = 0x80083AFC; // type:func
+
+CNTY_SEL_screenRect = 0x80083B28; // size:0x8
+CNTY_SEL_vramRect = 0x80083B30; // size:0x8
+CNTY_SEL_fadeRect = 0x80083B38; // size:0x8
+CNTY_SEL_cursorFlash = 0x80083B40; // size:0x14
+CNTY_SEL_topPanelTweens = 0x80083B54; // size:0x10
+CNTY_SEL_rightPanelTweens = 0x80083B64; // size:0x10
+CNTY_SEL_leftPanelTweens = 0x80083B74; // size:0x18

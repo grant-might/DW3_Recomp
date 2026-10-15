@@ -1,0 +1,56 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stcrdabm
+name: stcrdabm
+sha1: bed01ce7c83ba314791e67d731b4ded396e12150
+options:
+  basename: stcrdabm
+  target_path: disks/jp/AAA/PRO/STCRDABM.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stcrdabm
+  src_path: src/cardgame/album
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stcrdabm.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stcrdabm.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stcrdabm.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stcrdabm.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stcrdabm
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, album]
+      - [0xD8, c, album]
+      - [0x2D20, .data, album]
+  - [0x2D50]

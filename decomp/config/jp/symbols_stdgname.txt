@@ -1,0 +1,50 @@
+// STDGNAME.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+STDGNAME_updateScene = 0x80082D3C; // type:func
+STDGNAME_start = 0x80082E34; // type:func
+STDGNAME_startFader = 0x80082E60; // type:func
+STDGNAME_drawFader = 0x80082EE8; // type:func
+STDGNAME_updateFader = 0x8008302C; // type:func
+STDGNAME_createFader = 0x800830E0; // type:func
+STDGNAME_startTween = 0x80083128; // type:func
+STDGNAME_updateTween = 0x800831BC; // type:func
+STDGNAME_createNameWindows = 0x80083228; // type:func
+STDGNAME_showNameWindows = 0x80083418; // type:func
+STDGNAME_drawKeyboard = 0x8008371C; // type:func
+STDGNAME_updateKeyboard = 0x80084048; // type:func
+STDGNAME_updateNameEntry = 0x80084D8C; // type:func
+STDGNAME_setNameVram = 0x80084E8C; // type:func
+STDGNAME_setName = 0x80084E98; // type:func
+STDGNAME_getName = 0x80084F2C; // type:func
+STDGNAME_closeNameEntry = 0x8008502C; // type:func
+STDGNAME_createNameEntry = 0x80085038; // type:func
+STDGNAME_showMenuWindow = 0x800850E0; // type:func
+STDGNAME_drawMenu = 0x80085254; // type:func
+STDGNAME_runMenu = 0x80085828; // type:func
+STDGNAME_updateMenu = 0x80085A9C; // type:func
+STDGNAME_createMenu = 0x80085DFC; // type:func
+STDGNAME_stepScreen = 0x80085E3C; // type:func
+STDGNAME_drawBackground = 0x80086020; // type:func
+STDGNAME_updateScreen = 0x80086114; // type:func
+STDGNAME_fadeOutScreen = 0x80086224; // type:func
+STDGNAME_createScreen = 0x80086268; // type:func
+STDGNAME_loadFiles = 0x800862A8; // type:func
+STDGNAME_filesLoading = 0x80086350; // type:func
+STDGNAME_startFade = 0x800863C0; // type:func
+STDGNAME_updateFade = 0x80086454; // type:func
+STDGNAME_nameStyle = 0x80087708;
+STDGNAME_nameAnims = 0x80087720;
+STDGNAME_bigKeys = 0x80087800;
+STDGNAME_keyArrowCluts = 0x8008783C;
+STDGNAME_menuSprites = 0x80087854;
+STDGNAME_menuSlots = 0x800879F8;
+STDGNAME_menuWindows = 0x80087A28;
+STDGNAME_menuAnims = 0x80087AE8;
+STDGNAME_funcs = 0x80087BC8;
+STDGNAME_keyboard = 0x80088AC4;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+STDGNAME_keyPagesJp = 0x8008738C; // size:0x24
+STDGNAME_keyCharsJp = 0x800873B0; // size:0x276

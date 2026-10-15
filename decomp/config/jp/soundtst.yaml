@@ -1,0 +1,56 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): soundtst
+name: soundtst
+sha1: 084447a2c9af5953fb2a2464ed3c56022f72bd31
+options:
+  basename: soundtst
+  target_path: disks/jp/AAA/PRO/SOUNDTST.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/soundtst
+  src_path: src/debug/sound_test
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/soundtst.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_soundtst.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_soundtst.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_soundtst.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: soundtst
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, sound_test]
+      - [0x16C0, c, sound_test]
+      - [0x20C4, .data, sound_test]
+  - [0x2D98]

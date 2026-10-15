@@ -1,0 +1,87 @@
+updateMoverFrames0 = 0x800A62AC; // size:0x28
+updateMoverFrames1 = 0x800A62D4; // size:0x10
+updateMoverFrames2 = 0x800A62E4; // size:0xC0
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A5DC0; // type:func
+startStage = 0x800A5E84; // type:func
+setupStage = 0x800A5F2C; // type:func
+stageFuncs = 0x800A6694; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A665C;
+stageImages = 0x800A65D0;
+stageActors = 0x800A6654;
+stageEvents = 0x800A6698;
+stageBattles = 0x800A65B4;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script150 = 0x800A5FE0;
+script151 = 0x800A615C;
+area0Battle0 = 0x800A63A4;
+area0Battle1 = 0x800A63B0;
+area0Battle2 = 0x800A63BC;
+area0Battle3 = 0x800A63C8;
+area0Battle4 = 0x800A63D4;
+area0Battle5 = 0x800A63E0;
+area0Battle6 = 0x800A63EC;
+area0Battle7 = 0x800A63F8;
+area0Battles = 0x800A6404;
+area1Battle0 = 0x800A6428;
+area1Battle1 = 0x800A6434;
+area1Battle2 = 0x800A6440;
+area1Battle3 = 0x800A644C;
+area1Battle4 = 0x800A6458;
+area1Battle5 = 0x800A6464;
+area1Battle6 = 0x800A6470;
+area1Battle7 = 0x800A647C;
+area1Battles = 0x800A6488;
+area2Battle0 = 0x800A64AC;
+area2Battle1 = 0x800A64B8;
+area2Battle2 = 0x800A64C4;
+area2Battle3 = 0x800A64D0;
+area2Battle4 = 0x800A64DC;
+area2Battle5 = 0x800A64E8;
+area2Battle6 = 0x800A64F4;
+area2Battle7 = 0x800A6500;
+area2Battles = 0x800A650C;
+area3Battle0 = 0x800A6530;
+area3Battle1 = 0x800A653C;
+area3Battle2 = 0x800A6548;
+area3Battle3 = 0x800A6554;
+area3Battle4 = 0x800A6560;
+area3Battle5 = 0x800A656C;
+area3Battle6 = 0x800A6578;
+area3Battle7 = 0x800A6584;
+area3Battles = 0x800A6590;
+actor0 = 0x800A6640;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+stepFallBody = 0x800A4CB8; // type:func
+drawFaller = 0x800A4DAC; // type:func
+updateFaller = 0x800A4E6C; // type:func
+createCommand816 = 0x800A50F4; // type:func
+createCommand817 = 0x800A5128; // type:func
+createCommand818 = 0x800A5160; // type:func
+createCommand819 = 0x800A5198; // type:func
+createCommand820 = 0x800A51D0; // type:func
+createCommand821 = 0x800A5208; // type:func
+createCommand822 = 0x800A5240; // type:func
+createCommand823 = 0x800A5278; // type:func
+createCommand824 = 0x800A52B0; // type:func
+createCommand825 = 0x800A52E8; // type:func
+stepMoverBody = 0x800A5320; // type:func
+updateMover = 0x800A541C; // type:func
+handleCommand811 = 0x800A5850; // type:func
+createCommand811 = 0x800A595C; // type:func
+createMover = 0x800A5990; // type:func
+drawScroller = 0x800A59C8; // type:func
+updateScroller = 0x800A5B50; // type:func
+handleCommand812 = 0x800A5D4C; // type:func
+createScroller = 0x800A5D84; // type:func
+endEvent150 = 0x800A5EE0; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateFallerParams_0 = 0x800A61E4;
+updateFallerParams_1 = 0x800A61F8;
+updateFallerParams = 0x800A620C;

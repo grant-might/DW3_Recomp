@@ -1,0 +1,99 @@
+
+// the names the stages share (the same code or data in each)
+stepAnimationOnce = 0x800A4CA4; // type:func
+updateStage = 0x800A50B4; // type:func
+startStage = 0x800A52E8; // type:func
+stepAnimation = 0x800A5344; // type:func
+drawStageEffect = 0x800A5464; // type:func
+isOnScreen = 0x800A554C; // type:func
+updateStageEffect = 0x800A5610; // type:func
+createStageEffect = 0x800A58A0; // type:func
+setupStage = 0x800A59CC; // type:func
+effectClutFrames = 0x800A6124; // size:0x18
+effectFrames = 0x800A613C; // size:0x58
+stageFuncs = 0x800A670C; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A65C8;
+stageSlots = 0x800A66C4;
+stageImages = 0x800A6194;
+stageActors = 0x800A658C;
+stageEvents = 0x800A6710;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script820 = 0x800A5AC0;
+script860 = 0x800A5CB0;
+script883 = 0x800A5DE4;
+script884 = 0x800A5F14;
+script886 = 0x800A5F80;
+script1245 = 0x800A5FE8;
+actor0Talk0Conditions = 0x800A6244;
+actor0Talk0Actions = 0x800A624C;
+actor0Talk1Conditions = 0x800A6254;
+actor0Talk2Conditions = 0x800A6260;
+actor0Talk2Actions = 0x800A6270;
+actor0Talk3Conditions = 0x800A627C;
+actor1Talk0Actions = 0x800A628C;
+actor2Talk0Actions = 0x800A6294;
+actor0Talks = 0x800A629C;
+actor1Talks = 0x800A62D8;
+actor2Talks = 0x800A62F0;
+actor3Talks = 0x800A6308;
+actor4Talks = 0x800A6320;
+actor5Talks = 0x800A6338;
+actor6Talks = 0x800A6350;
+actor7Talks = 0x800A6368;
+actor8Talks = 0x800A6380;
+actor9Talks = 0x800A6398;
+actor10Talks = 0x800A63B0;
+actor11Talks = 0x800A63C8;
+actor12Talks = 0x800A63E0;
+actor13Talks = 0x800A63F8;
+actor0Conditions = 0x800A6410;
+actor3Conditions = 0x800A641C;
+actor4Conditions = 0x800A6424;
+actor5Conditions = 0x800A642C;
+actor6Conditions = 0x800A6434;
+actor7Conditions = 0x800A643C;
+actor8Conditions = 0x800A6444;
+actor9Conditions = 0x800A644C;
+actor10Conditions = 0x800A6454;
+actor11Conditions = 0x800A645C;
+actor12Conditions = 0x800A6464;
+actor13Conditions = 0x800A646C;
+actor0 = 0x800A6474;
+actor1 = 0x800A6488;
+actor2 = 0x800A649C;
+actor3 = 0x800A64B0;
+actor4 = 0x800A64C4;
+actor5 = 0x800A64D8;
+actor6 = 0x800A64EC;
+actor7 = 0x800A6500;
+actor8 = 0x800A6514;
+actor9 = 0x800A6528;
+actor10 = 0x800A653C;
+actor11 = 0x800A6550;
+actor12 = 0x800A6564;
+actor13 = 0x800A6578;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+resetTileEffect = 0x800A4D7C; // type:func
+updateTileEffect = 0x800A4DB4; // type:func
+handleCommand846 = 0x800A5034; // type:func
+createTileEffect = 0x800A5084; // type:func
+endEvent820 = 0x800A58FC; // type:func
+endEvent860 = 0x800A590C; // type:func
+endEvent883 = 0x800A5938; // type:func
+endEvent884 = 0x800A5964; // type:func
+endEvent886 = 0x800A5990; // type:func
+endEvent1245 = 0x800A59A0; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateTileEffectFrames_0 = 0x800A605C;
+updateTileEffectFrames_2 = 0x800A6070;
+updateTileEffectFrames_1 = 0x800A60C0;
+updateTileEffectFrames = 0x800A6100;
+tileEffectSortY = 0x800A610C;
+tileEffectY = 0x800A6110;
+tileEffectPlaces = 0x800A6114;
+updateStageSpots = 0x800A6118;

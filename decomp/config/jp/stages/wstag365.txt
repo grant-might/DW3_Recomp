@@ -1,0 +1,53 @@
+// WSTAG365.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A57B8; // type:func
+setupStage = 0x800A5814; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageImages = 0x800A58F0;
+actor10Talk0Conditions = 0x800A5980;
+actor10Talk0Actions = 0x800A5988;
+actor10Talk1Conditions = 0x800A5994;
+actor0Talks = 0x800A599C;
+actor1Talks = 0x800A59B4;
+actor2Talks = 0x800A59CC;
+actor3Talks = 0x800A59E4;
+actor4Talks = 0x800A59FC;
+actor5Talks = 0x800A5A14;
+actor6Talks = 0x800A5A2C;
+actor7Talks = 0x800A5A44;
+actor8Talks = 0x800A5A5C;
+actor9Talks = 0x800A5A74;
+actor10Talks = 0x800A5A8C;
+actor11Talks = 0x800A5AB0;
+actor0Conditions = 0x800A5AC8;
+actor1Conditions = 0x800A5AD0;
+actor2Conditions = 0x800A5AD8;
+actor3Conditions = 0x800A5AE0;
+actor4Conditions = 0x800A5AE8;
+actor5Conditions = 0x800A5AF0;
+actor6Conditions = 0x800A5AF8;
+actor7Conditions = 0x800A5B00;
+actor8Conditions = 0x800A5B08;
+actor9Conditions = 0x800A5B10;
+actor10Conditions = 0x800A5B18;
+actor11Conditions = 0x800A5B24;
+actor0 = 0x800A5B2C;
+actor1 = 0x800A5B40;
+actor2 = 0x800A5B54;
+actor3 = 0x800A5B68;
+actor4 = 0x800A5B7C;
+actor5 = 0x800A5B90;
+actor6 = 0x800A5BA4;
+actor7 = 0x800A5BB8;
+actor8 = 0x800A5BCC;
+actor9 = 0x800A5BE0;
+actor10 = 0x800A5BF4;
+actor11 = 0x800A5C08;
+stageActors = 0x800A5C1C;
+stageObjects = 0x800A5C50;
+stageSlots = 0x800A5D4C;
+stageFuncs = 0x800A5D7C; // size:0x4

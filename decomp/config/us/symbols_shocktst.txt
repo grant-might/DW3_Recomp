@@ -1,0 +1,30 @@
+// SHOCKTST.PRO: the debug vibration test (scene 0x900, "STDLSK")
+SHOCKTST_updateScene = 0x80082538; // type:func
+SHOCKTST_start = 0x80082630; // type:func
+SHOCKTST_highlight = 0x8008265C; // type:func
+SHOCKTST_selectPattern = 0x800827FC; // type:func
+SHOCKTST_showPattern = 0x80082A0C; // type:func
+SHOCKTST_showTimers = 0x80082AC4; // type:func
+SHOCKTST_playPattern = 0x80082B58; // type:func
+SHOCKTST_playAllPatterns = 0x80082D8C; // type:func
+SHOCKTST_moveCursor = 0x80082E58; // type:func
+SHOCKTST_editValue = 0x800832C4; // type:func
+SHOCKTST_editRow = 0x8008354C; // type:func
+SHOCKTST_updateEditor = 0x8008363C; // type:func
+SHOCKTST_loadPatterns = 0x80083A78; // type:func
+SHOCKTST_createEditor = 0x80083B04; // type:func
+SHOCKTST_convertText = 0x80083B88; // type:func
+SHOCKTST_updateLoader = 0x80083EAC; // type:func
+SHOCKTST_createLoader = 0x80084134; // type:func
+
+SHOCKTST_STR_SLOW = 0x80082478;
+SHOCKTST_STR_FAST = 0x80082484;
+SHOCKTST_STR_PLAY_PATTERN = 0x80082490;
+SHOCKTST_PATH_DLSKDATA_TXT = 0x800824BC;
+SHOCKTST_STR_VIBRATION_TEST = 0x80082500;
+SHOCKTST_STR_CROSS_STOP = 0x80082510;
+SHOCKTST_STR_START_BACK = 0x80082524;
+SHOCKTST_menuRows = 0x80084160; // size:0x60
+SHOCKTST_numberFormats = 0x800841C0; // size:0xC0
+SHOCKTST_motorNames = 0x80084280; // size:0x8
+SHOCKTST_textPath = 0x80084288; // size:0x4

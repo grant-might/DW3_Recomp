@@ -1,0 +1,59 @@
+# Digimon World 3, USA (SLUS-01436): wfightmn
+name: wfightmn
+sha1: 282918640a4cb1b3f1911eeb88981d8f4d73533f
+options:
+  basename: wfightmn
+  target_path: disks/us/AAA/PRO/WFIGHTMN.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/wfightmn
+  src_path: src/battle/normal_battle
+  build_path: build/us
+
+  ld_script_path: build/us/generated/wfightmn.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_wfightmn.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_wfightmn.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_wfightmn.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: wfightmn
+    type: code
+    start: 0x0
+    vram: 0x800A4CA4
+    vram_symbol: STAGE_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      - [0x0, .rodata, loader]
+      - [0x1C, .rodata, menu]
+      - [0xEC, c, loader]
+      - [0x624, c, setup]
+      - [0xE28, c, menu]
+      - [0x4218, c, techs]
+      - [0x4EB4, .data, data/wfightmn_2]
+  - [0x5078]

@@ -1,0 +1,76 @@
+name: docker
+# Builds the Dockerfile's image and checks that every version builds and
+# matches inside it, whenever the image or what it installs changes.
+on:
+  push:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - tools/docker.sh
+      - tools/dl_deps.sh
+      - tools/deps.sha256
+      - requirements.txt
+      - Makefile
+      - .github/workflows/docker.yaml
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - tools/docker.sh
+      - tools/dl_deps.sh
+      - tools/deps.sha256
+      - requirements.txt
+      - Makefile
+      - .github/workflows/docker.yaml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  docker:
+    # it needs the original executable and overlays, as build.yaml's build
+    # job does
+    if: >-
+      github.repository == 'ReGame-Labs/dw3_decomp' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # each version's files are in a folder named after it in the
+        # dependencies repository, as in build.yaml
+        include:
+          - version: us
+            exe: SLUS_014.36
+          - version: eu
+            exe: SLES_039.36
+          - version: jp
+            exe: SLPS_034.46
+    name: docker (${{ matrix.version }})
+    env:
+      VERSION: ${{ matrix.version }}
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        submodules: recursive
+        persist-credentials: false
+
+    - uses: actions/checkout@v5
+      with:
+        repository: ReGame-Labs/dw3_decomp_dependencies
+        ssh-key: ${{ secrets.DW3_DEPENDENCIES_SSH_KEY }}
+        path: dependencies
+        persist-credentials: false
+
+    - run: |
+        mkdir -p "disks/$VERSION/AAA"
+        cp "dependencies/$VERSION/$EXE" "disks/$VERSION/"
+        cp -r "dependencies/$VERSION/AAA/PRO" "disks/$VERSION/AAA/"
+        rm -rf dependencies
+      env:
+        EXE: ${{ matrix.exe }}
+
+    # tools/docker.sh passes VERSION on to make and the tools
+    - run: tools/docker.sh make generate
+    - run: tools/docker.sh sh -c 'make -j$(nproc)'
+    - run: tools/docker.sh make compare

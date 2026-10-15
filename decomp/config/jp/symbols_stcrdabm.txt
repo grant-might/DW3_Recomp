@@ -1,0 +1,35 @@
+// STCRDABM.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+STCRDABM_startFader = 0x80082B38; // type:func
+STCRDABM_drawFader = 0x80082BC0; // type:func
+STCRDABM_updateFader = 0x80082D04; // type:func
+STCRDABM_createFader = 0x80082DB8; // type:func
+STCRDABM_loadIcons = 0x80082DFC; // type:func
+STCRDABM_setPage = 0x80082EC4; // type:func
+STCRDABM_hideCards = 0x80082EFC; // type:func
+STCRDABM_drawCards = 0x80082F24; // type:func
+STCRDABM_drawTurningSlots = 0x8008336C; // type:func
+STCRDABM_pageHasCards = 0x800834E4; // type:func
+STCRDABM_updateHiding = 0x80083530; // type:func
+STCRDABM_updateGrid = 0x800835F8; // type:func
+STCRDABM_createGrid = 0x80083828; // type:func
+STCRDABM_updateScene = 0x80083888; // type:func
+STCRDABM_start = 0x80083980; // type:func
+STCRDABM_createWindows = 0x800839AC; // type:func
+STCRDABM_showPageInfo = 0x80083BC4; // type:func
+STCRDABM_showCardInfo = 0x80083E38; // type:func
+STCRDABM_drawAlbum = 0x80084264; // type:func
+STCRDABM_findPageCards = 0x8008492C; // type:func
+STCRDABM_runAlbum = 0x8008499C; // type:func
+STCRDABM_updateAlbum = 0x800852A4; // type:func
+STCRDABM_createAlbum = 0x800853D0; // type:func
+STCRDABM_loadFiles = 0x8008540C; // type:func
+STCRDABM_filesLoading = 0x800854EC; // type:func
+STCRDABM_startFade = 0x800855D4; // type:func
+STCRDABM_updateFade = 0x80085668; // type:func
+STCRDABM_startLerp = 0x800856D4; // type:func
+STCRDABM_updateLerp = 0x80085714; // type:func
+STCRDABM_cursorBlink = 0x80085780;
+STCRDABM_funcs = 0x80085798;
+// end of the names from us

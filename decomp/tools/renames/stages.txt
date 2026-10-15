@@ -1,0 +1,24 @@
+# The stages' renames (tools/renames.py), in the order they were made
+
+# GAME fields only the stages use (include/engine/game_state.h)
+GAME.unk26DC GAME.altTriggers
+GAME.unk26E8 GAME.dark
+
+# The European WSTAG780 end of event 1500, which the USA one has none of
+func_800A7644 endEvent1500
+
+# The list menus' window sprites, by the number of options (5 to 8)
+updateListMenuCountFrames listWindowFrames
+updateEvent1602CountFrames event1602WindowFrames
+updateEvent1604CountFrames event1604WindowFrames
+updateEvent1616CountFrames event1616WindowFrames
+updateEvent1618CountFrames event1618WindowFrames
+
+# The frames of WSTAG460's pair of map objects
+tileDuoRecordFrames tileDuoObjectFrames
+# WSTAG331's lists by their use: the found Super Charge's actions, the USA
+# sign's talks and the European Kail's conditions (D_800A5D2C, the USA
+# Kail's conditions but the European Kurt's talks, is renamed by hand)
+D_800A5840 superChargeActions
+D_800A5AA4 signTalks
+D_800A6F88 kailConditions

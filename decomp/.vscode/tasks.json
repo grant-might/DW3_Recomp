@@ -1,0 +1,120 @@
+{
+  "version": "2.0.0",
+  // make runs the Python of the README's environment, .venv, without
+  // activating it (the dev container has its own on the PATH)
+  "options": {
+    "env": {
+      "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+    }
+  },
+  "tasks": [
+    {
+      "label": "Build (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu -j$(nproc)",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Compare (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu -j$(nproc) compare",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Lint (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu lint",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "objdiff (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu -j$(nproc) objdiff",
+      "problemMatcher": []
+    },
+    {
+      "label": "Report (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu -j$(nproc) report",
+      "problemMatcher": []
+    },
+    {
+      "label": "Regenerate (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu regenerate",
+      "problemMatcher": []
+    },
+    {
+      "label": "compile_commands (eu)",
+      "type": "shell",
+      "command": "make VERSION=eu compile_commands",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build (us)",
+      "type": "shell",
+      "command": "make VERSION=us -j$(nproc)",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Compare (us)",
+      "type": "shell",
+      "command": "make VERSION=us -j$(nproc) compare",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Lint (us)",
+      "type": "shell",
+      "command": "make VERSION=us lint",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "objdiff (us)",
+      "type": "shell",
+      "command": "make VERSION=us -j$(nproc) objdiff",
+      "problemMatcher": []
+    },
+    {
+      "label": "Report (us)",
+      "type": "shell",
+      "command": "make VERSION=us -j$(nproc) report",
+      "problemMatcher": []
+    },
+    {
+      "label": "Regenerate (us)",
+      "type": "shell",
+      "command": "make VERSION=us regenerate",
+      "problemMatcher": []
+    },
+    {
+      "label": "compile_commands (us)",
+      "type": "shell",
+      "command": "make VERSION=us compile_commands",
+      "problemMatcher": []
+    },
+    {
+      "label": "Format this file",
+      "type": "shell",
+      "command": "make format FILES=${relativeFile}",
+      "problemMatcher": []
+    },
+    {
+      "label": "Format check",
+      "type": "shell",
+      "command": "make format-check",
+      "problemMatcher": []
+    }
+  ]
+}

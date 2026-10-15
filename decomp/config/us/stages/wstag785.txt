@@ -1,0 +1,56 @@
+updateTileSetFrames1 = 0x800A5FD4; // size:0x3C
+updateTileSetFrames2 = 0x800A6010; // size:0x34
+updateTileSetFrames3 = 0x800A6044; // size:0x1C
+updateTileSetFrames0 = 0x800A6060; // size:0x1C
+
+// the names the stages share (the same code or data in each)
+stepAnimation = 0x800A4CA8; // type:func
+updateStage = 0x800A54D0; // type:func
+startStage = 0x800A5574; // type:func
+setupStage = 0x800A55E0; // type:func
+stageFuncs = 0x800A6494; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A62C0;
+stageImages = 0x800A607C;
+stageActors = 0x800A628C;
+stageColor = 0x800A4CA4;
+stageEvents = 0x800A6498;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script1 = 0x800A56CC;
+script3 = 0x800A5EBC;
+actor0Conditions = 0x800A613C;
+actor1Conditions = 0x800A6144;
+actor2Conditions = 0x800A614C;
+actor3Conditions = 0x800A6154;
+actor4Conditions = 0x800A615C;
+actor5Conditions = 0x800A6164;
+actor6Conditions = 0x800A616C;
+actor7Conditions = 0x800A6174;
+actor8Conditions = 0x800A617C;
+actor9Conditions = 0x800A6184;
+actor10Conditions = 0x800A618C;
+actor11Conditions = 0x800A6194;
+actor0 = 0x800A619C;
+actor1 = 0x800A61B0;
+actor2 = 0x800A61C4;
+actor3 = 0x800A61D8;
+actor4 = 0x800A61EC;
+actor5 = 0x800A6200;
+actor6 = 0x800A6214;
+actor7 = 0x800A6228;
+actor8 = 0x800A623C;
+actor9 = 0x800A6250;
+actor10 = 0x800A6264;
+actor11 = 0x800A6278;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateTileSet = 0x800A4DC8; // type:func
+createTileSet = 0x800A5068; // type:func
+createCommand835 = 0x800A509C; // type:func
+drawActorMark = 0x800A50CC; // type:func
+updateActorMark = 0x800A5178; // type:func
+createCommand807 = 0x800A53D4; // type:func
+handleCommand807 = 0x800A5404; // type:func
+endEvent1 = 0x800A55D0; // type:func

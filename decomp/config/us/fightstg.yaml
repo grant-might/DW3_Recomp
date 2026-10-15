@@ -1,0 +1,148 @@
+# Digimon World 3, USA (SLUS-01436): fightstg
+name: fightstg
+sha1: e0605a184bff15e3b25887033d593f9564aac286
+options:
+  basename: fightstg
+  target_path: disks/us/AAA/PRO/FIGHTSTG.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/fightstg
+  src_path: src/battle/battle_mode
+  build_path: build/us
+
+  ld_script_path: build/us/generated/fightstg.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_fightstg.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_fightstg.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_fightstg.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: fightstg
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      - [0x0, .rodata, model_mesh]
+      - [0x1C, .rodata, stage]
+      - [0x38, .rodata, entrance]
+      - [0x58, .rodata, shot_camera]
+      - [0x80, .rodata, hit_effect]
+      - [0x88, .rodata, enemy_turn]
+      - [0x118, .rodata, digimon_change]
+      - [0x16C, .rodata, face]
+      - [0x188, .rodata, battle_script]
+      - [0x210, .rodata, first_tech]
+      - [0x234, .rodata, item]
+      - [0x32C, .rodata, tech_action]
+      - [0x38C, .rodata, enemy_attack]
+      - [0x3A4, .rodata, action_events]
+      - [0x42C, .rodata, player_turn]
+      - [0x474, .rodata, message]
+      - [0x534, .rodata, events]
+      - [0x584, .rodata, tech_effects]
+      - [0x608, c, model_mesh]
+      - [0x352C, c, stage]
+      - [0x3D38, c, entrance]
+      - [0x43A8, c, start]
+      - [0x44C4, c, shot_camera]
+      - [0x4EE8, c, models]
+      - [0x5428, c, hit_effect]
+      - [0x56CC, c, enemy_turn]
+      - [0x654C, c, sprite_anim]
+      - [0x6A44, c, effect_model]
+      - [0x6CB0, c, sprite_effect]
+      - [0x7010, c, digimon_change]
+      - [0x7B74, c, fader]
+      - [0x7E28, c, lights]
+      - [0x8450, c, face]
+      - [0x8968, c, battle_script]
+      - [0x9C74, c, first_tech]
+      - [0xA4A8, c, item]
+      - [0xBF80, c, counterattack]
+      - [0xC6B0, c, tech_action]
+      - [0xDC50, c, one_hp_turn]
+      - [0xDE48, c, enemy_attack]
+      - [0xE4C0, c, action_events]
+      - [0xEB18, c, fighter_camera]
+      - [0xED80, c, battle_camera]
+      - [0xF610, c, player_turn]
+      - [0xFDA4, c, white_flash]
+      - [0x10094, c, hud]
+      - [0x10C3C, c, command_menu]
+      - [0x10F2C, c, partner_view]
+      - [0x111D8, c, digivolve_menu]
+      - [0x117B4, c, partner_info]
+      - [0x12364, c, item_menu]
+      - [0x12D4C, c, tech_menu]
+      - [0x13D94, c, switch_menu]
+      - [0x148A4, c, switch_in_menu]
+      - [0x157CC, c, message]
+      - [0x16FFC, c, confused_menu]
+      - [0x178DC, c, cursor]
+      - [0x17E40, c, move]
+      - [0x183E8, c, battle_sound]
+      - [0x18568, c, battle_table]
+      - [0x18634, c, events]
+      - [0x199D4, c, battle]
+      - [0x19E4C, c, tech_effects]
+      - [0x1B118, c, speed]
+      - [0x1B22C, c, draw]
+      - [0x1B684, c, fighter_info]
+      - [0x1B984, c, stats]
+      - [0x1C304, c, damage]
+      - [0x1CF24, c, rolls]
+      - [0x1E6C8, c, boosts]
+      - [0x1EAA4, c, interp]
+      - [0x1EC00, c, camera_task]
+      # each module's data, then the zeros that end the file (in model_mesh.c)
+      - [0x1EDF0, .data, stage]
+      - [0x1EE10, .data, shot_camera]
+      - [0x1EE88, .data, models]
+      - [0x1EEA8, .data, effect_model]
+      - [0x1F4CC, .data, sprite_effect]
+      - [0x1FCA4, .data, item]
+      - [0x1FD24, .data, tech_action]
+      - [0x1FDB0, .data, hud]
+      - [0x1FE0C, .data, command_menu]
+      - [0x1FE2C, .data, digivolve_menu]
+      - [0x1FE4C, .data, partner_info]
+      - [0x1FE74, .data, item_menu]
+      - [0x1FED4, .data, switch_in_menu]
+      - [0x1FF24, .data, confused_menu]
+      - [0x1FF94, .data, cursor]
+      - [0x1FF9C, .data, move]
+      - [0x1FFCC, .data, battle_sound]
+      - [0x20140, .data, events]
+      - [0x20D2C, .data, battle]
+      - [0x20FAC, .data, damage]
+      - [0x20FD0, .data, boosts]
+      - [0x20FD8, .data, interp]
+      - [0x20FE4, .data, model_mesh]
+  - [0x210B8]

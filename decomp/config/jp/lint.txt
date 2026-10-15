@@ -1,0 +1,19 @@
+# What a modern GCC warns about in the C (tools/lint.py --update): the
+# file, the function, the warning and its message, one per line
+# checked: address bool-compare cast-function-type char-subscripts comment dangling-else default empty-body enum-compare enum-conversion ignored-qualifiers implicit-fallthrough implicit-function-declaration implicit-int incompatible-pointer-types int-conversion int-in-bool-context logical-not-parentheses memset-transposed-args misleading-indentation missing-braces missing-declarations missing-parameter-type missing-prototypes multistatement-macros nested-externs old-style-declaration override-init parentheses redundant-decls return-type sequence-point shift-negative-value sizeof-pointer-div sizeof-pointer-memaccess switch tautological-compare type-limits uninitialized unused-but-set-variable unused-function unused-label unused-local-typedefs unused-value unused-variable
+src/engine/file/cd_reader.c: cdSyncCallback: [cast-function-type] cast between incompatible function types from 'void (*)(s32,  u_char *)' {aka 'void (*)(int,  unsigned char *)'} to 'void (*)(u_char,  u_char *)' {aka 'void (*)(unsigned char,  unsigned char *)'}
+src/engine/file/cd_reader.c: startCdRead: [cast-function-type] cast between incompatible function types from 'void (*)(s32,  u_char *)' {aka 'void (*)(int,  unsigned char *)'} to 'void (*)(u_char,  u_char *)' {aka 'void (*)(unsigned char,  unsigned char *)'}
+src/engine/system/heap.c: (file scope): [cast-function-type] cast between incompatible function types from 'void (*)(s32,  s32)' {aka 'void (*)(int,  int)'} to 'void * (*)(s32,  s32)' {aka 'void * (*)(int,  int)'}
+src/engine/system/heap.c: (file scope): [cast-function-type] cast between incompatible function types from 'void (*)(s8 *, s8,  s32)' {aka 'void (*)(signed char *, signed char,  int)'} to 'void (*)(void *, s32,  s32)' {aka 'void (*)(void *, int,  int)'}
+src/engine/text/text_tools.c: measureText: [cast-function-type] cast between incompatible function types from 's16 (*)()' {aka 'short int (*)()'} to 's32 (*)()' {aka 'int (*)()'}
+src/battle/battle_mode/enemy_turn.c: (file scope): [missing-prototypes] no previous prototype for 'FIGHTSTG_startEnemyTurn'
+src/battle/battle_mode/hit_effect.c: (file scope): [missing-prototypes] no previous prototype for 'FIGHTSTG_startHitEffect'
+src/battle/battle_mode/one_hp_turn.c: (file scope): [missing-prototypes] no previous prototype for 'FIGHTSTG_startOneHpTurn'
+include/engine/file.h: (file scope): [redundant-decls] redundant redeclaration of 'CD_SECTOR_HEADER'
+include/engine/menu.h: (file scope): [redundant-decls] redundant redeclaration of 'FIELD_MENU_CHOICE'
+src/battle/battle_mode/item.c: FIGHTSTG_updateItem: [unused-variable] unused variable 'unused'
+src/debug/battle_test/battle_test.c: WFIGHTTS_battleTest: [unused-variable] unused variable 'unused'
+src/debug/battle_test/battle_test.c: WFIGHTTS_effectList: [unused-variable] unused variable 'x'
+src/debug/battle_test/battle_test.c: WFIGHTTS_motionList: [unused-variable] unused variable 'x'
+src/engine/text/talk_box.c: drawTalkBoxArrow: [unused-variable] unused variable 'unused'
+src/menus/field_menu/status_screen.c: STSTATUS_runStatusChoice: [unused-variable] unused variable 'unused'

@@ -1,0 +1,92 @@
+// WFIGHTMN.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+WFIGHTMN_loadFiles = 0x800A585C; // type:func
+WFIGHTMN_createLoader = 0x800A5D68; // type:func
+WFIGHTMN_createLayers = 0x800A5D94; // type:func
+WFIGHTMN_initFighters = 0x800A6004; // type:func
+WFIGHTMN_rollAmbush = 0x800A61A0; // type:func
+WFIGHTMN_checkEquip = 0x800A6274; // type:func
+WFIGHTMN_checkParty = 0x800A630C; // type:func
+WFIGHTMN_markFought = 0x800A6344; // type:func
+WFIGHTMN_markPicked = 0x800A646C; // type:func
+WFIGHTMN_updateMenu = 0x800A6598; // type:func
+WFIGHTMN_cancelBlast = 0x800A6C7C; // type:func
+WFIGHTMN_runCommand = 0x800A6D6C; // type:func
+WFIGHTMN_digivolve = 0x800A7108; // type:func
+WFIGHTMN_tag = 0x800A722C; // type:func
+WFIGHTMN_pairTech = 0x800A745C; // type:func
+WFIGHTMN_endBattle = 0x800A7554; // type:func
+WFIGHTMN_runAway = 0x800A7938; // type:func
+WFIGHTMN_endAutoRecover = 0x800A7A6C; // type:func
+WFIGHTMN_recover = 0x800A7BB4; // type:func
+WFIGHTMN_clearField = 0x800A7DAC; // type:func
+WFIGHTMN_takeDamage = 0x800A7E24; // type:func
+WFIGHTMN_cureStatus = 0x800A80C4; // type:func
+WFIGHTMN_endBoost = 0x800A8220; // type:func
+WFIGHTMN_runConfusedCommand = 0x800A8344; // type:func
+WFIGHTMN_endRestriction = 0x800A841C; // type:func
+WFIGHTMN_blast = 0x800A8548; // type:func
+WFIGHTMN_endBlast = 0x800A87E4; // type:func
+WFIGHTMN_knockOut = 0x800A88DC; // type:func
+WFIGHTMN_endSpecial = 0x800A8ED8; // type:func
+WFIGHTMN_digidevolve = 0x800A8F94; // type:func
+WFIGHTMN_showWon = 0x800A9110; // type:func
+WFIGHTMN_bringLastEnemy = 0x800A91E0; // type:func
+WFIGHTMN_restoreEnemy = 0x800A9564; // type:func
+WFIGHTMN_runTurn = 0x800A9608; // type:func
+WFIGHTMN_start = 0x800A9944; // type:func
+WFIGHTMN_recordTech = 0x800A99C0; // type:func
+WFIGHTMN_chargeGauge = 0x800A9A64; // type:func
+WFIGHTMN_startTech = 0x800A9B44; // type:func
+WFIGHTMN_setIdleMotion = 0x800AA344; // type:func
+WFIGHTMN_countHit = 0x800AA464; // type:func
+WFIGHTMN_endWeakness = 0x800AA4F4; // type:func
+WFIGHTMN_limitDamage = 0x800AA544; // type:func
+WFIGHTMN_screen = 0x800AA65C;
+WFIGHTMN_effectVisuals = 0x800AA664;
+WFIGHTMN_elementVisuals = 0x800AA6B8;
+WFIGHTMN_states = 0x800AA738;
+WFIGHTMN_actionEffects = 0x800AA7A4;
+// end of the names from us
+
+// FIGHTSTG's, which the overlay gets from fightstg_syms.ld or undefined_syms_wfightmn.txt
+FIGHTSTG_startCameraShots = 0x800A1FCC; // defined:True version-only
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+FIGHTSTG_createStage = 0x80086758; // defined:True
+FIGHTSTG_startEntrance = 0x80086DB0; // defined:True
+FIGHTSTG_createModels = 0x80087E04; // defined:True
+FIGHTSTG_startHitEffect = 0x800880FC; // defined:True
+FIGHTSTG_startEnemyTurn = 0x800889B0; // defined:True
+FIGHTSTG_startDigimonChange = 0x8008A5A4; // defined:True
+FIGHTSTG_createFader = 0x8008A85C; // defined:True
+FIGHTSTG_createLights = 0x8008AE68; // defined:True
+FIGHTSTG_createBattleScript = 0x8008C6C0; // defined:True
+FIGHTSTG_startCameraTurn = 0x8008C8F4; // defined:True
+FIGHTSTG_startFirstTech = 0x8008D12C; // defined:True
+FIGHTSTG_startItem = 0x8008EBFC; // defined:True
+FIGHTSTG_startTechAction = 0x800909F4; // defined:True
+FIGHTSTG_startOneHpTurn = 0x80090C08; // defined:True
+FIGHTSTG_startEnemyAttack = 0x8009129C; // defined:True
+FIGHTSTG_createBattleCamera = 0x800923C8; // defined:True
+FIGHTSTG_startPlayerTurn = 0x80092B00; // defined:True
+FIGHTSTG_setPlayerTurnStep = 0x80092B30; // defined:True
+FIGHTSTG_isPlayerChoosing = 0x80092B94; // defined:True
+FIGHTSTG_createMessage = 0x80099E1C; // defined:True
+FIGHTSTG_queuePlayerTurn = 0x8009C024; // defined:True
+FIGHTSTG_queueEnemyTurn = 0x8009C060; // defined:True
+FIGHTSTG_endBattle = 0x8009C09C; // defined:True
+FIGHTSTG_queueRunAway = 0x8009C0E0; // defined:True
+FIGHTSTG_queueRecovery = 0x8009C20C; // defined:True
+FIGHTSTG_queueBlast = 0x8009CA38; // defined:True
+FIGHTSTG_queueBlastEnd = 0x8009CA68; // defined:True
+FIGHTSTG_queueKnockOut = 0x8009CABC; // defined:True
+FIGHTSTG_queueSpecialEnd = 0x8009CB18; // defined:True
+FIGHTSTG_weakenEnemy = 0x8009CBD4; // defined:True
+FIGHTSTG_endEnemyWeakness = 0x8009CC54; // defined:True
+FIGHTSTG_battleTableFunc = 0x800A335C; // size:0x4
+FIGHTSTG_events = 0x800A33C8; // size:0xB1C type:s32
+FIGHTSTG_action = 0x800A3F54; // size:0x6C
+FIGHTSTG_battle = 0x800A3FC0; // size:0xF8
+FIGHTSTG_battleFuncs = 0x800A40E0; // FIGHTSTG's function table (BattleFuncs) defined:True

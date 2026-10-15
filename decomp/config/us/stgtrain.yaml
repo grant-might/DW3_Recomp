@@ -1,0 +1,70 @@
+# Digimon World 3, USA (SLUS-01436): stgtrain
+name: stgtrain
+sha1: 54f80f3cc813dddfdf9865e2ad26a0a44beb2769
+options:
+  basename: stgtrain
+  target_path: disks/us/AAA/PRO/STGTRAIN.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/stgtrain
+  src_path: src/menus/gym
+  build_path: build/us
+
+  ld_script_path: build/us/generated/stgtrain.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_stgtrain.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_stgtrain.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_stgtrain.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgtrain
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, screen]
+      - [0xD4, .rodata, result]
+      - [0x1A0, .rodata, session]
+      - [0x270, .rodata, menu]
+      # the modules (src/menus/gym/), in the order they link
+      - [0x3A8, c, sprite]
+      - [0xC80, c, scene]
+      - [0xE3C, c, screen]
+      - [0x3498, c, result]
+      - [0x5344, c, session]
+      - [0x68B4, c, actor]
+      - [0x7450, c, menu]
+      - [0x8964, c, files]
+      # each module's data
+      - [0x92E4, .data, screen]
+      - [0x93C4, .data, result]
+      - [0x9598, .data, files]
+  - [0xA3C8]

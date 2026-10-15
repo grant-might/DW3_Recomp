@@ -1,0 +1,95 @@
+// the names the stages share (the same code or data in each)
+stepLoopingAnimation = 0x800A5250; // type:func
+updateStage = 0x800A6390; // type:func
+startStage = 0x800A6474; // type:func
+setupStage = 0x800A6508; // type:func
+stageFuncs = 0x800A80B4; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A8034;
+stageImages = 0x800A7CDC;
+stageActors = 0x800A7FEC;
+stageEvents = 0x800A80B8;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script0 = 0x800A6644;
+script684 = 0x800A69F8;
+script742 = 0x800A6B20;
+script885 = 0x800A6C58;
+script971 = 0x800A6CB0;
+script1500 = 0x800A6EC0;
+actor6Talks = 0x800A7E1C;
+actor0Conditions = 0x800A7E40;
+actor1Conditions = 0x800A7E48;
+actor2Conditions = 0x800A7E50;
+actor3Conditions = 0x800A7E58;
+actor4Conditions = 0x800A7E60;
+actor5Conditions = 0x800A7E68;
+actor12Conditions = 0x800A7E70;
+actor13Conditions = 0x800A7E78;
+actor14Conditions = 0x800A7E80;
+actor15Conditions = 0x800A7E88;
+actor16Conditions = 0x800A7E90;
+actor0 = 0x800A7E98;
+actor1 = 0x800A7EAC;
+actor2 = 0x800A7EC0;
+actor3 = 0x800A7ED4;
+actor4 = 0x800A7EE8;
+actor5 = 0x800A7EFC;
+actor6 = 0x800A7F10;
+actor7 = 0x800A7F24;
+actor8 = 0x800A7F38;
+actor9 = 0x800A7F4C;
+actor10 = 0x800A7F60;
+actor11 = 0x800A7F74;
+actor12 = 0x800A7F88;
+actor13 = 0x800A7F9C;
+actor14 = 0x800A7FB0;
+actor15 = 0x800A7FC4;
+actor16 = 0x800A7FD8;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+drawFlyer = 0x800A4CA4; // type:func
+updateFlyer = 0x800A4D84; // type:func
+createFlyer = 0x800A4F20; // type:func
+drawGlow = 0x800A4FF4; // type:func
+updateGlow = 0x800A508C; // type:func
+createCommand802 = 0x800A5220; // type:func
+drawEffect = 0x800A5344; // type:func
+updateEffect = 0x800A53F0; // type:func
+createEffect = 0x800A553C; // type:func
+stepTileLoopAnimation = 0x800A5574; // type:func
+updateTileLoop2 = 0x800A5668; // type:func
+createTileLoop2 = 0x800A57D8; // type:func
+updateEffectSet = 0x800A5804; // type:func
+createEffectSet = 0x800A589C; // type:func
+releaseFlyers = 0x800A58C8; // type:func
+drawFlyerGate = 0x800A5A10; // type:func
+updateFlyerGate = 0x800A5C88; // type:func
+handleCommand800 = 0x800A5E04; // type:func
+createCommand800 = 0x800A5E50; // type:func
+drawByteAnims = 0x800A5E80; // type:func
+updateByteAnims = 0x800A6174; // type:func
+handleCommand801 = 0x800A6314; // type:func
+createCommand801 = 0x800A6360; // type:func
+endEvent0 = 0x800A64D0; // type:func
+endEvent885 = 0x800A64DC; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+flyerFrames = 0x800A726C;
+flyerStarts = 0x800A7274;
+updateEffectSpots_4 = 0x800A72B4;
+updateEffectSpots_0 = 0x800A72C0;
+updateEffectSpots = 0x800A72CC;
+updateTileLoop2Frames_0 = 0x800A731C;
+updateTileLoop2Frames_1 = 0x800A7374;
+updateTileLoop2Frames = 0x800A73C4;
+drawByteAnimsTextures = 0x800A73CC;
+drawByteAnimsQuads = 0x800A78FC;
+byteAnims_0 = 0x800A7BCC;
+byteAnims_1 = 0x800A7BE8;
+byteAnims_2 = 0x800A7BF8;
+byteAnims_3 = 0x800A7C38;
+byteAnims_4 = 0x800A7C54;
+byteAnims_5 = 0x800A7C64;
+byteAnims = 0x800A7CC0;

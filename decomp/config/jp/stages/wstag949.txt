@@ -1,0 +1,7 @@
+// names from eu: the European version's extra stage, whose functions the
+// Japanese one has in the same order
+updateFarSprites = 0x800A5774; // type:func
+createFarSprites = 0x800A58C8; // type:func
+updateStage = 0x800A58F4; // type:func
+startStage = 0x800A5958; // type:func
+setupStage = 0x800A59B4; // type:func

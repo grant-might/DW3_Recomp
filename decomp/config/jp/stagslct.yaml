@@ -1,0 +1,56 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stagslct
+name: stagslct
+sha1: 47752b2516c9274e26c8e295e146e02f16f519e2
+options:
+  basename: stagslct
+  target_path: disks/jp/AAA/PRO/STAGSLCT.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stagslct
+  src_path: src/debug/stage_select
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stagslct.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stagslct.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stagslct.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stagslct.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stagslct
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, stage_select]
+      - [0x2284, c, stage_select]
+      - [0x3724, .data, stage_select]
+  - [0x4CD0]

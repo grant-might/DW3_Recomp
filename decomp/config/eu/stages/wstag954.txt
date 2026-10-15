@@ -1,0 +1,77 @@
+updateTileAnimsFrames = 0x800A61A4; // size:0x8C
+
+// the names the stages share (the same code or data in each)
+stepLoopingAnimation = 0x800A5DE0; // type:func
+updateTileAnims = 0x800A5ED4; // type:func
+createTileAnims = 0x800A5FA8; // type:func
+updateStage = 0x800A5FD4; // type:func
+startStage = 0x800A6038; // type:func
+setupStage = 0x800A6094; // type:func
+stageFuncs = 0x800A6610; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A6458;
+stageSlots = 0x800A64D8;
+stageImages = 0x800A6230;
+stageActors = 0x800A6444;
+stageBattles = 0x800A6824;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+actor2Talk0Conditions = 0x800A62C0;
+actor2Talk0Actions = 0x800A62CC;
+actor2Talk1Conditions = 0x800A62D8;
+actor2Talk1Actions = 0x800A62E4;
+actor2Talk2Conditions = 0x800A62F4;
+actor2Talk2Actions = 0x800A6300;
+actor2Talk3Conditions = 0x800A6308;
+actor2Talk3Actions = 0x800A6314;
+actor3Talk0Conditions = 0x800A631C;
+actor3Talk1Conditions = 0x800A6324;
+actor3Talk1Actions = 0x800A6330;
+actor3Talk2Conditions = 0x800A633C;
+actor0Talks = 0x800A6348;
+actor1Talks = 0x800A6360;
+actor2Talks = 0x800A6378;
+actor3Talks = 0x800A63B4;
+actor1Conditions = 0x800A63E4;
+actor2Conditions = 0x800A63EC;
+actor0 = 0x800A63F4;
+actor1 = 0x800A6408;
+actor2 = 0x800A641C;
+actor3 = 0x800A6430;
+area0Battle0 = 0x800A6614;
+area0Battle1 = 0x800A6620;
+area0Battle2 = 0x800A662C;
+area0Battle3 = 0x800A6638;
+area0Battle4 = 0x800A6644;
+area0Battle5 = 0x800A6650;
+area0Battle6 = 0x800A665C;
+area0Battle7 = 0x800A6668;
+area0Battles = 0x800A6674;
+area1Battle0 = 0x800A6698;
+area1Battle1 = 0x800A66A4;
+area1Battle2 = 0x800A66B0;
+area1Battle3 = 0x800A66BC;
+area1Battle4 = 0x800A66C8;
+area1Battle5 = 0x800A66D4;
+area1Battle6 = 0x800A66E0;
+area1Battle7 = 0x800A66EC;
+area1Battles = 0x800A66F8;
+area2Battle0 = 0x800A671C;
+area2Battle1 = 0x800A6728;
+area2Battle2 = 0x800A6734;
+area2Battle3 = 0x800A6740;
+area2Battle4 = 0x800A674C;
+area2Battle5 = 0x800A6758;
+area2Battle6 = 0x800A6764;
+area2Battle7 = 0x800A6770;
+area2Battles = 0x800A677C;
+area3Battle0 = 0x800A67A0;
+area3Battle1 = 0x800A67AC;
+area3Battle2 = 0x800A67B8;
+area3Battle3 = 0x800A67C4;
+area3Battle4 = 0x800A67D0;
+area3Battle5 = 0x800A67DC;
+area3Battle6 = 0x800A67E8;
+area3Battle7 = 0x800A67F4;
+area3Battles = 0x800A6800;

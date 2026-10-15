@@ -1,0 +1,25 @@
+# The battle overlays' renames (tools/renames.py), in the order they were
+# made: FIGHTSTG, WFIGHTMN, WFIGHTTS, STFGTREP and CARDGAME
+
+# the empty functions
+func_80088994 FIGHTSTG_nop
+func_800A0EEC FIGHTSTG_interpNop
+
+# WFIGHTMN's state 6
+func_800A69D0 WFIGHTMN_pairTech
+
+# FIGHTSTG's screen fade, two of whose functions are src/shared's
+FIGHTSTG_startScreenFade FIGHTSTG_startFader
+FIGHTSTG_drawScreenFade FIGHTSTG_drawFader
+FIGHTSTG_updateScreenFade FIGHTSTG_updateFader
+FIGHTSTG_createScreenFade FIGHTSTG_createFader
+
+# where FIGHTSTG's hit effect and Digimon change start their sprite effects
+D_800824C8 FIGHTSTG_hitEffectPos
+D_80082560 FIGHTSTG_changeStartPos
+D_80082568 FIGHTSTG_changeMidPos
+D_80082570 FIGHTSTG_changeEndPos
+
+# round 3: WFIGHTMN's technique looks for the last enemy
+WFIGHTMN_kindEffects WFIGHTMN_effectVisuals
+WFIGHTMN_unk7Effects WFIGHTMN_elementVisuals

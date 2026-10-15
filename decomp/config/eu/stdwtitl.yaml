@@ -1,0 +1,77 @@
+# Digimon World 2003, Europe (SLES-03936): stdwtitl
+name: stdwtitl
+sha1: 1777ec5d204bce2dcb77495a401291a22bd7e262
+options:
+  basename: stdwtitl
+  target_path: disks/eu/AAA/PRO/STDWTITL.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stdwtitl
+  src_path: src/menus/title
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stdwtitl.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stdwtitl.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stdwtitl.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stdwtitl.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stdwtitl
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, splash]
+      - [0x38, .rodata, menu]
+      - [0x4C, .rodata, title]
+      - [0x70, rodata, libpress]
+      # the modules (src/menus/title/), in the order they link
+      - [0xC0, c, scene]
+      - [0x3A4, c, logo]
+      - [0x788, c, movie]
+      - [0x12D0, c, glint]
+      - [0x188C, c, splash]
+      - [0x1BB8, c, title_loader]
+      - [0x1D28, c, slides]
+      - [0x2640, c, menu]
+      - [0x3024, c, edge_fade]
+      - [0x33AC, c, background]
+      - [0x3B84, c, title]
+      - [0x449C, asm, libpress]
+      - [0x4B2C, asm, libpress_vlc2]
+      - [0x4EAC, asm, libpress_build]
+      - [0x4F90, .data, data/stdwtitl]
+      - [0x510C, .data, data/title]
+      - [0x55D4, data, libpress]
+      - [0x6564, .data, data/movie]
+  - [0x65C0]

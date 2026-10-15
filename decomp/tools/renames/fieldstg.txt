@@ -1,0 +1,123 @@
+# FIELDSTG's renames (tools/renames.py), in the order they were made
+
+# the field's map and state, which the stages use too (include/field/field_map.h)
+D_8009A70C FIELDSTG_map
+D_800990B4 FIELDSTG_state
+
+# FIELDSTG's functions, by module (no other binary has these splat names)
+# commands.c: script command 813's task, which the stages send commands to
+func_80082F1C FIELDSTG_updateCommandTask
+func_80082F84 FIELDSTG_handleFieldCommand
+func_80083470 FIELDSTG_startCommandTask
+# event.c
+func_80084558 FIELDSTG_setEventPose
+# map_streamer.c
+func_800855E0 FIELDSTG_findOldestStream
+func_80085650 FIELDSTG_requestTiles
+func_800857DC FIELDSTG_drawCoverBlock
+func_80085A00 FIELDSTG_findStream
+func_80085A78 FIELDSTG_drawMapTiles
+func_80085EEC FIELDSTG_pickViewTiles
+func_80086460 FIELDSTG_drawCover
+# stream.c
+func_800864E8 FIELDSTG_touchStream
+func_80086518 FIELDSTG_seekStream
+func_800865A0 FIELDSTG_isStreamLoaded
+func_800865AC FIELDSTG_drawStream
+func_80086858 FIELDSTG_setStreamSource
+func_800868AC FIELDSTG_loadStreamSprites
+func_80086A3C FIELDSTG_clearStreamSlot
+func_80086A48 FIELDSTG_getStreamSlot
+func_80086A54 FIELDSTG_getStreamFrame
+func_80086A60 FIELDSTG_updateStream
+func_80086B54 FIELDSTG_createStream
+# start.c, banner.c
+func_80086C4C FIELDSTG_updateRoot
+func_80086D20 FIELDSTG_showAreaName
+# field.c (the executable calls leaveField, startListedEvent and openInn,
+# the stages' events 9000 startEventBattle5)
+func_8008A0F4 FIELDSTG_keepsFileCache
+func_8008A154 FIELDSTG_updateField
+func_8008ADE8 FIELDSTG_createField
+func_8008AEB4 FIELDSTG_leaveField
+func_8008B258 FIELDSTG_startEventBattle5
+func_8008B2C4 FIELDSTG_startListedEvent
+func_8008B320 FIELDSTG_openInn
+func_8008B398 FIELDSTG_startWarp
+# hidden_spots.c, actor_control.c
+func_8008C23C FIELDSTG_searchEventSpot
+func_8008D0C0 FIELDSTG_checkFlightProbe
+func_8008D2A0 FIELDSTG_checkFlightProbes
+func_8008D580 FIELDSTG_talkToActorAt
+# field_stage.c: the ends of the events of each question's two answers
+func_80090864 FIELDSTG_endChoice0Answer0
+func_800908C4 FIELDSTG_endChoice0Answer1
+func_800908F0 FIELDSTG_endChoice1Answer0
+func_80090950 FIELDSTG_endChoice1Answer1
+func_8009097C FIELDSTG_endChoice2Answer0
+func_800909DC FIELDSTG_endChoice2Answer1
+func_80090A08 FIELDSTG_endChoice3Answer0
+func_80090A68 FIELDSTG_endChoice3Answer1
+func_80090A94 FIELDSTG_endChoice4Answer0
+func_80090AF4 FIELDSTG_endChoice4Answer1
+func_80090B20 FIELDSTG_endChoice5Answer0
+func_80090B80 FIELDSTG_endChoice5Answer1
+func_80090BAC FIELDSTG_endChoice6Answer0
+func_80090C0C FIELDSTG_endChoice6Answer1
+func_80090C38 FIELDSTG_endChoice7Answer0
+func_80090C98 FIELDSTG_endChoice7Answer1
+func_80090CC4 FIELDSTG_endChoice8Answer0
+func_80090D24 FIELDSTG_endChoice8Answer1
+func_80090D50 FIELDSTG_endChoice9Answer0
+func_80090DB0 FIELDSTG_endChoice9Answer1
+func_80090DDC FIELDSTG_endChoice10Answer0
+func_80090E3C FIELDSTG_endChoice10Answer1
+func_80090E68 FIELDSTG_endChoice11Answer0
+func_80090EC8 FIELDSTG_endChoice11Answer1
+func_80090EF4 FIELDSTG_endChoice12Answer0
+func_80090F54 FIELDSTG_endChoice12Answer1
+func_80090F80 FIELDSTG_endChoice13Answer0
+func_80090FE0 FIELDSTG_endChoice13Answer1
+func_8009100C FIELDSTG_endChoice14Answer0
+func_8009106C FIELDSTG_endChoice14Answer1
+func_80091098 FIELDSTG_endChoice15Answer0
+func_800910F8 FIELDSTG_endChoice15Answer1
+# tween.c, script.c, battle.c
+func_80091298 FIELDSTG_startTween
+func_8009132C FIELDSTG_updateTween
+func_800914C0 FIELDSTG_resetScriptTimer
+func_80091520 FIELDSTG_waitScriptTime
+func_800915B0 FIELDSTG_waitAnimDone
+func_800915FC FIELDSTG_waitWalkDone
+func_80091648 FIELDSTG_toScreenPos
+func_800916B4 FIELDSTG_clearScriptFlag
+func_800916E8 FIELDSTG_findScriptCommand
+func_80091730 FIELDSTG_createScriptCommand
+func_80091774 FIELDSTG_handleScriptCommand
+func_800917D8 FIELDSTG_rollBattleSteps
+func_80091910 FIELDSTG_countBattleSteps
+# map.c: FieldMap's methods (the map index is GAME.unk26D8's, the one the
+# player is on)
+func_80091AA8 FIELDSTG_selectMap
+func_80091B78 FIELDSTG_setMapFile
+func_80091B90 FIELDSTG_setFirstMap
+func_80091BB4 FIELDSTG_setMap
+func_80091BC0 FIELDSTG_getMapCell
+func_80091F4C FIELDSTG_getWalkStep
+func_8009204C FIELDSTG_getFlyStep
+FIELDSTG_map.unk48 FIELDSTG_map.getWalkStep
+FIELDSTG_map.unk4C FIELDSTG_map.getFlyStep
+FIELDSTG_map.unk50 FIELDSTG_map.setFirstMap
+FIELDSTG_map.unk54 FIELDSTG_map.setMap
+FIELDSTG_map.unk58 FIELDSTG_map.isTileFree
+
+# FIELDSTG's rodata
+D_80082624 FIELDSTG_noOffset
+D_80082E88 FIELDSTG_startColor
+
+# Round 3
+FIELDSTG_talkVoice FIELDSTG_slideVoice
+
+# Final round: the two data FIELDSTG never reads
+D_80096983 FIELDSTG_triggerAnimsPad
+D_8009AA3C FIELDSTG_transitionUnused

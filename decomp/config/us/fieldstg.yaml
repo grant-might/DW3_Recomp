@@ -1,0 +1,97 @@
+# Digimon World 3, USA (SLUS-01436): fieldstg
+name: fieldstg
+sha1: 1168fd67a6fed16e7a084ee67449af9b8f216b8c
+options:
+  basename: fieldstg
+  target_path: disks/us/AAA/PRO/FIELDSTG.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/fieldstg
+  src_path: src/field/field_mode
+  build_path: build/us
+
+  ld_script_path: build/us/generated/fieldstg.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_fieldstg.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_fieldstg.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_fieldstg.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: fieldstg
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables, constants or strings
+      - [0x0, .rodata, commands]
+      - [0x7C, .rodata, lift]
+      - [0x94, .rodata, choice]
+      - [0xC4, .rodata, story]
+      - [0x150, .rodata, event]
+      - [0x184, .rodata, banner]
+      - [0x198, .rodata, trigger]
+      - [0x220, .rodata, speech]
+      - [0x240, .rodata, field]
+      - [0x858, .rodata, actor_control]
+      - [0xA40, .rodata, field_stage]
+      # the modules (src/field/field_mode/), in the order they link
+      - [0xAD4, c, commands]
+      - [0x1058, c, lift]
+      - [0x1550, c, choice]
+      - [0x1E80, c, story]
+      - [0x20CC, c, event]
+      - [0x28C4, c, cutscene]
+      - [0x2E30, c, effect]
+      - [0x3198, c, map_streamer]
+      - [0x40A0, c, stream]
+      - [0x4804, c, start]
+      - [0x48D8, c, banner]
+      - [0x50C8, c, balloon]
+      - [0x55A0, c, trigger]
+      - [0x5D90, c, speech]
+      - [0x61F8, c, map_objects]
+      - [0x6888, c, file_loader]
+      - [0x6ED8, c, actor_icon]
+      - [0x7278, c, field]
+      - [0x8FC8, c, launch]
+      - [0x9590, c, hidden_spots]
+      - [0xA154, c, gauge]
+      - [0xA5F4, c, camera]
+      - [0xAC78, c, actor_control]
+      - [0xDD0C, c, actor]
+      - [0xE41C, c, field_stage]
+      - [0xEE50, c, tween]
+      - [0xEF50, c, state]
+      - [0xF078, c, script]
+      - [0xF390, c, battle]
+      - [0xF660, c, map]
+      # FIELDSTG's data, all of it in one file
+      - [0xFC60, .data, data/fieldstg]
+  - [0x18748]

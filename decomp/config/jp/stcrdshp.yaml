@@ -1,0 +1,65 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stcrdshp
+name: stcrdshp
+sha1: ef197762dcf33c89bdf5697dd4c50925ff3a2c5f
+options:
+  basename: stcrdshp
+  target_path: disks/jp/AAA/PRO/STCRDSHP.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stcrdshp
+  src_path: src/cardgame/card_packs
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stcrdshp.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stcrdshp.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stcrdshp.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stcrdshp.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stcrdshp
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, pack_open]
+      - [0xF4, .rodata, buy]
+      - [0x1C4, .rodata, shop]
+      - [0x35C, c, pack_open]
+      - [0x2694, c, fader]
+      - [0x2958, c, card_grid]
+      - [0x3354, c, buy]
+      - [0x4E5C, c, scene]
+      - [0x4F80, c, shop]
+      - [0x6480, .data, pack_open]
+      - [0x9D08, .data, buy]
+      - [0x9D20, .data, shop]
+  - [0xA0F8]

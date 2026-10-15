@@ -1,0 +1,10 @@
+// names from eu: the European version's extra stage, whose functions the
+// Japanese one has in the same order
+updateTileLift = 0x800A578C; // type:func
+handleTileLift = 0x800A5BA8; // type:func
+createTileLift = 0x800A5C1C; // type:func
+updateStage = 0x800A5C84; // type:func
+startStage = 0x800A5CCC; // type:func
+setupStage = 0x800A5D28; // type:func
+startTween = 0x800A5E40; // type:func
+updateTween = 0x800A5ED4; // type:func

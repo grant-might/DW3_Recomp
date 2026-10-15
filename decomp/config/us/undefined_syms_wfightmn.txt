@@ -1,0 +1,8 @@
+/* addresses WFIGHTMN uses that none of its objects defines: FIGHTSTG's, which
+   it loads with, that FIGHTSTG doesn't name */
+
+/* without it, ld makes a symbol plus a number outside the sections absolute,
+   and it wouldn't move with the symbol */
+LD_FEATURE("SANE_EXPR")
+
+func_8008A22C = FIGHTSTG_createFader;

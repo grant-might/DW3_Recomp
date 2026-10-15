@@ -1,0 +1,23 @@
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageImages = 0x800A5F6C;
+actor0Conditions = 0x800A602C;
+actor1Conditions = 0x800A6034;
+actor2Conditions = 0x800A603C;
+actor3Conditions = 0x800A6044;
+actor4Conditions = 0x800A604C;
+actor5Conditions = 0x800A6054;
+actor0 = 0x800A605C;
+actor1 = 0x800A6070;
+actor2 = 0x800A6084;
+actor3 = 0x800A6098;
+actor4 = 0x800A60AC;
+actor5 = 0x800A60C0;
+stageActors = 0x800A60D4;
+stageObjects = 0x800A60F0;
+stageSlots = 0x800A61DC;
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A5DE0; // type:func
+startStage = 0x800A5E28; // type:func
+setupStage = 0x800A5E84; // type:func
+stageFuncs = 0x800A620C; // size:0x4

@@ -1,0 +1,64 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stitshop
+name: stitshop
+sha1: 805993e0241279465ea058bd24f94707a54aeca0
+options:
+  basename: stitshop
+  target_path: disks/jp/AAA/PRO/STITSHOP.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stitshop
+  src_path: src/menus/item_shop
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stitshop.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stitshop.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stitshop.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stitshop.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stitshop
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, trade]
+      - [0x400, .rodata, info]
+      - [0x4E8, .rodata, shop]
+      - [0x548, .rodata, equip]
+      - [0x56C, c, scene]
+      - [0x95C, c, trade]
+      - [0x46E4, c, item_list]
+      - [0x5D08, c, info]
+      - [0x875C, c, shop]
+      - [0x966C, c, equip]
+      - [0x9C8C, .data, data/stitshop]
+  - [0xA3BC]

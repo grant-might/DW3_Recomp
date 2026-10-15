@@ -1,0 +1,65 @@
+updateTileAnimsFrames0 = 0x800A6244; // size:0x50
+updateTileAnimsFrames1 = 0x800A6294; // size:0x50
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+func_80084B80 = 0x800853F8;
+
+// the names the stages share (the same code or data in each)
+stepLoopingAnimation = 0x800A5DE0; // type:func
+updateTileAnims = 0x800A5ED4; // type:func
+createTileAnims = 0x800A5FCC; // type:func
+updateStage = 0x800A5FF8; // type:func
+startStage = 0x800A60BC; // type:func
+setupStage = 0x800A6164; // type:func
+stageFuncs = 0x800A64C8; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A6370;
+stageImages = 0x800A62E4;
+stageActors = 0x800A6368;
+stageBattles = 0x800A68E0;
+stageEvents = 0x800A64CC;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+actor0 = 0x800A6354;
+script1608 = 0x800A6508;
+script1610 = 0x800A65FC;
+area0Battle0 = 0x800A66D0;
+area0Battle1 = 0x800A66DC;
+area0Battle2 = 0x800A66E8;
+area0Battle3 = 0x800A66F4;
+area0Battle4 = 0x800A6700;
+area0Battle5 = 0x800A670C;
+area0Battle6 = 0x800A6718;
+area0Battle7 = 0x800A6724;
+area0Battles = 0x800A6730;
+area1Battle0 = 0x800A6754;
+area1Battle1 = 0x800A6760;
+area1Battle2 = 0x800A676C;
+area1Battle3 = 0x800A6778;
+area1Battle4 = 0x800A6784;
+area1Battle5 = 0x800A6790;
+area1Battle6 = 0x800A679C;
+area1Battle7 = 0x800A67A8;
+area1Battles = 0x800A67B4;
+area2Battle0 = 0x800A67D8;
+area2Battle1 = 0x800A67E4;
+area2Battle2 = 0x800A67F0;
+area2Battle3 = 0x800A67FC;
+area2Battle4 = 0x800A6808;
+area2Battle5 = 0x800A6814;
+area2Battle6 = 0x800A6820;
+area2Battle7 = 0x800A682C;
+area2Battles = 0x800A6838;
+area3Battle0 = 0x800A685C;
+area3Battle1 = 0x800A6868;
+area3Battle2 = 0x800A6874;
+area3Battle3 = 0x800A6880;
+area3Battle4 = 0x800A688C;
+area3Battle5 = 0x800A6898;
+area3Battle6 = 0x800A68A4;
+area3Battle7 = 0x800A68B0;
+area3Battles = 0x800A68BC;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+endEvent1608 = 0x800A6118; // type:func

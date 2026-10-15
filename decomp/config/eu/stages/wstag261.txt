@@ -1,0 +1,33 @@
+// names from the C of the modules this version builds (tools/version_symbols.py)
+updateTileLift = 0x800A5DFC; // type:func
+handleCommand827 = 0x800A6218; // type:func
+createCommand827 = 0x800A628C; // type:func
+script1321 = 0x800A64D8;
+script1326 = 0x800A65BC;
+tileLiftShake = 0x800A66A0;
+stageImages = 0x800A66B4;
+actor0Talk0Conditions = 0x800A6724;
+actor0Talk0Actions = 0x800A672C;
+actor0Talk1Conditions = 0x800A6738;
+actor0Talk1Actions = 0x800A6740;
+actor1Talk0Conditions = 0x800A674C;
+actor1Talk0Actions = 0x800A6754;
+actor1Talk1Conditions = 0x800A6760;
+actor1Talk1Actions = 0x800A6768;
+actor0Talks = 0x800A6774;
+actor1Talks = 0x800A6798;
+actor0Conditions = 0x800A67BC;
+actor1Conditions = 0x800A67C4;
+actor0 = 0x800A67CC;
+actor1 = 0x800A67E0;
+stageActors = 0x800A67F4;
+stageObjects = 0x800A6800;
+stageSlots = 0x800A68C8;
+stageEvents = 0x800A6944;
+stageColor = 0x800A5DF8;
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A62F4; // type:func
+startStage = 0x800A634C; // type:func
+setupStage = 0x800A63A8; // type:func
+stageFuncs = 0x800A6940; // size:0x4

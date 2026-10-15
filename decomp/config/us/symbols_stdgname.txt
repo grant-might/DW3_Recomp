@@ -1,0 +1,57 @@
+// STDGNAME.PRO: the partner rename screen
+
+STDGNAME_updateScene = 0x80082724; // type:func
+STDGNAME_start = 0x8008281C; // type:func
+STDGNAME_startFader = 0x80082848; // type:func
+STDGNAME_drawFader = 0x800828D0; // type:func
+STDGNAME_updateFader = 0x80082A14; // type:func
+STDGNAME_createFader = 0x80082AC8; // type:func
+STDGNAME_startTween = 0x80082B10; // type:func
+STDGNAME_updateTween = 0x80082BA4; // type:func
+STDGNAME_createNameWindows = 0x80082C10; // type:func
+STDGNAME_showNameWindows = 0x80082E00; // type:func
+STDGNAME_drawKeyboard = 0x80083104; // type:func
+STDGNAME_updateKeyboard = 0x80083A30; // type:func
+STDGNAME_updateNameEntry = 0x80084640; // type:func
+STDGNAME_setNameVram = 0x80084744; // type:func
+STDGNAME_setName = 0x80084750; // type:func
+STDGNAME_getName = 0x800847E4; // type:func
+STDGNAME_closeNameEntry = 0x800848E4; // type:func
+STDGNAME_createNameEntry = 0x800848F0; // type:func
+STDGNAME_createMenu = 0x800856B4; // type:func
+STDGNAME_stepScreen = 0x800856F4; // type:func
+STDGNAME_drawBackground = 0x800858D8; // type:func
+STDGNAME_updateScreen = 0x800859CC; // type:func
+STDGNAME_fadeOutScreen = 0x80085ADC; // type:func
+STDGNAME_createScreen = 0x80085B20; // type:func
+STDGNAME_loadFiles = 0x80085B60; // type:func
+STDGNAME_filesLoading = 0x80085C08; // type:func
+STDGNAME_startFade = 0x80085C78; // type:func
+STDGNAME_updateFade = 0x80085D0C; // type:func
+STDGNAME_showMenuWindow = 0x80084998; // type:func
+STDGNAME_drawMenu = 0x80084B0C; // type:func
+STDGNAME_runMenu = 0x800850E0; // type:func
+STDGNAME_updateMenu = 0x80085354; // type:func
+
+// Data whose pieces are one object in C, and the keys without their padding
+STDGNAME_funcs = 0x80087480; // size:0x18
+STDGNAME_keyboard = 0x8008837C; // size:0xC
+STDGNAME_keyChars = 0x80086EEC; // size:0xD2
+STDGNAME_bigKeys = 0x800870B8; // size:0x3C
+STDGNAME_nameAnims = 0x80086FD8; // size:0xE0
+STDGNAME_keyArrowCluts = 0x800870F4; // size:0x18
+STDGNAME_nameStyle = 0x80086FC0; // size:0x18
+STDGNAME_keyPages = 0x80086EE0; // size:0xC
+
+// the text styles' glyphs and icons, the Japanese keyboard and the partner menu
+STDGNAME_nameGlyphs = 0x80085D78; // size:0x9E2
+STDGNAME_nameIcons = 0x8008675C; // size:0x4E6
+STDGNAME_keyPagesJp = 0x80086C44; // size:0x24
+STDGNAME_keyCharsJp = 0x80086C68; // size:0x276
+STDGNAME_menuSprites = 0x8008710C; // size:0x1A4
+STDGNAME_menuSlots = 0x800872B0; // size:0x30
+STDGNAME_menuWindows = 0x800872E0; // size:0xC0
+STDGNAME_menuAnims = 0x800873A0; // size:0xE0
+STDGNAME_menuGlyphs = 0x80087498; // size:0x9E2
+STDGNAME_menuIcons = 0x80087E7C; // size:0x4E6
+STDGNAME_menuStyle = 0x80088364; // size:0x18

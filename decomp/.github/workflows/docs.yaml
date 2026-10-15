@@ -1,0 +1,45 @@
+name: docs
+# Builds the API documentation (make docs: doxygen and the Doxygen Awesome
+# theme) and publishes it to GitHub Pages whenever main changes. It reads
+# only the source, the headers and the Markdown, so it needs no disc.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+
+    - run: git submodule update --init --depth 1 external/psyq_headers external/doxygen-awesome-css
+
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen graphviz
+
+    - run: make docs
+
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: build/docs/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+    - id: deploy
+      uses: actions/deploy-pages@v4

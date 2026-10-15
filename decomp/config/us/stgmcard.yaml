@@ -1,0 +1,63 @@
+# Digimon World 3, USA (SLUS-01436): stgmcard
+name: stgmcard
+sha1: 321d0a1e14178b79f0dc94a426a7643b49a75ceb
+options:
+  basename: stgmcard
+  target_path: disks/us/AAA/PRO/STGMCARD.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/stgmcard
+  src_path: src/menus/memory_card
+  build_path: build/us
+
+  ld_script_path: build/us/generated/stgmcard.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_stgmcard.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_stgmcard.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_stgmcard.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgmcard
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, menu]
+      # the modules (src/menus/memory_card/), in the order they link
+      - [0x20, c, scene]
+      - [0x408, c, info]
+      - [0xEE0, c, panel]
+      - [0x1414, c, menu]
+      - [0x1D50, c, saves]
+      - [0x4A14, c, screen]
+      # STGMCARD's data, all of it in one file
+      - [0x5274, .data, data/stgmcard]
+  - [0x5B3C]

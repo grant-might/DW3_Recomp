@@ -1,0 +1,54 @@
+updateTileAnimsFrames0 = 0x800A5084; // size:0x50
+updateTileAnimsFrames1 = 0x800A50D4; // size:0x50
+
+// the names the stages share (the same code or data in each)
+stepLoopingAnimation = 0x800A4CA4; // type:func
+updateTileAnims = 0x800A4D98; // type:func
+createTileAnims = 0x800A4E90; // type:func
+updateStage = 0x800A4EBC; // type:func
+startStage = 0x800A4F20; // type:func
+setupStage = 0x800A4F7C; // type:func
+stageFuncs = 0x800A5508; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A53B0;
+stageImages = 0x800A5350;
+stageBattles = 0x800A5334;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+area0Battle0 = 0x800A5124;
+area0Battle1 = 0x800A5130;
+area0Battle2 = 0x800A513C;
+area0Battle3 = 0x800A5148;
+area0Battle4 = 0x800A5154;
+area0Battle5 = 0x800A5160;
+area0Battle6 = 0x800A516C;
+area0Battle7 = 0x800A5178;
+area0Battles = 0x800A5184;
+area1Battle0 = 0x800A51A8;
+area1Battle1 = 0x800A51B4;
+area1Battle2 = 0x800A51C0;
+area1Battle3 = 0x800A51CC;
+area1Battle4 = 0x800A51D8;
+area1Battle5 = 0x800A51E4;
+area1Battle6 = 0x800A51F0;
+area1Battle7 = 0x800A51FC;
+area1Battles = 0x800A5208;
+area2Battle0 = 0x800A522C;
+area2Battle1 = 0x800A5238;
+area2Battle2 = 0x800A5244;
+area2Battle3 = 0x800A5250;
+area2Battle4 = 0x800A525C;
+area2Battle5 = 0x800A5268;
+area2Battle6 = 0x800A5274;
+area2Battle7 = 0x800A5280;
+area2Battles = 0x800A528C;
+area3Battle0 = 0x800A52B0;
+area3Battle1 = 0x800A52BC;
+area3Battle2 = 0x800A52C8;
+area3Battle3 = 0x800A52D4;
+area3Battle4 = 0x800A52E0;
+area3Battle5 = 0x800A52EC;
+area3Battle6 = 0x800A52F8;
+area3Battle7 = 0x800A5304;
+area3Battles = 0x800A5310;

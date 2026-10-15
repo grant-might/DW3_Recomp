@@ -1,0 +1,93 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): cardgame
+name: cardgame
+sha1: a26b33ea06e177d9d0a8fc57fccd1620c01e075c
+options:
+  basename: cardgame
+  target_path: disks/jp/AAA/PRO/CARDGAME.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/cardgame
+  src_path: src/cardgame/card_battle
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/cardgame.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_cardgame.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_cardgame.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_cardgame.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: cardgame
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, effect_script]
+      - [0x5BC, .rodata, questions]
+      - [0x5FC, .rodata, hand_pick]
+      - [0x6CC, .rodata, table_view]
+      - [0x7BC, .rodata, card_choice]
+      - [0x86C, .rodata, slot_effects]
+      - [0x88C, .rodata, pile_effects]
+      - [0x8CC, .rodata, round]
+      - [0x9F0, .rodata, battle_steps]
+      - [0xA40, .rodata, deck_choice]
+      - [0xA50, .rodata, windows]
+      - [0xA80, .rodata, panels]
+      - [0xA98, .rodata, sprites]
+      - [0xAC8, .rodata, screen]
+      - [0xAF0, .rodata, battle]
+      - [0xE54, .rodata, computer]
+      - [0x1184, c, effect_script]
+      - [0x3138, c, play_checks]
+      - [0x33E0, c, questions]
+      - [0x40B0, c, hand_pick]
+      - [0x7200, c, table_view]
+      - [0x8DDC, c, card_choice]
+      - [0xAB74, c, slot_effects]
+      - [0xC394, c, pile_effects]
+      - [0xE8A4, c, round]
+      - [0x120D8, c, battle_steps]
+      - [0x12CF8, c, scene]
+      - [0x12F54, c, deck_choice]
+      - [0x13A4C, c, windows]
+      - [0x14A0C, c, message_window]
+      - [0x15914, c, panels]
+      - [0x16FE4, c, sprites]
+      - [0x18B90, c, screen]
+      - [0x1A528, c, preloader]
+      - [0x1A698, c, battle]
+      - [0x20248, c, fader]
+      - [0x20654, c, computer]
+      - [0x21D64, .data, effect_script]
+      - [0x227B4, .data, data/cardgame_2]
+      - [0x228A8, .data, data/cardgame_3]
+  - [0x22D10]

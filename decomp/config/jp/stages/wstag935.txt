@@ -1,0 +1,11 @@
+// names from eu: the European version's extra stage, whose functions the
+// Japanese one has in the same order
+updateStage = 0x800A57D0; // type:func
+startStage = 0x800A5818; // type:func
+setupStage = 0x800A5874; // type:func
+startTween = 0x800A5960; // type:func
+updateTween = 0x800A59F4; // type:func
+updateEvent1616 = 0x800A5A60; // type:func
+startEvent1616 = 0x800A6374; // type:func
+updateEvent1618 = 0x800A63A0; // type:func
+startEvent1618 = 0x800A6CF4; // type:func

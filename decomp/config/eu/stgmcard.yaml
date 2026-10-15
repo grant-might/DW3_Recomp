@@ -1,0 +1,64 @@
+# Digimon World 2003, Europe (SLES-03936): stgmcard
+name: stgmcard
+sha1: 925dcb2835f6ac18c3c460f2c99c72d87fcd7db2
+options:
+  basename: stgmcard
+  target_path: disks/eu/AAA/PRO/STGMCARD.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stgmcard
+  src_path: src/menus/memory_card
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stgmcard.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stgmcard.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stgmcard.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stgmcard.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgmcard
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, menu]
+      # the modules (src/menus/memory_card/), in the order they link
+      - [0x20, c, scene]
+      - [0x408, c, info]
+      - [0xF28, c, panel]
+      - [0x145C, c, menu]
+      - [0x1DD0, c, saves]
+      - [0x4B40, c, screen]
+      # STGMCARD's data, all of it in one file
+      - [0x53D8, .data, data/stgmcard]
+  - [0x5CA0]

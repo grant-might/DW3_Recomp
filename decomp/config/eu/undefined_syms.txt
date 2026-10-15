@@ -1,0 +1,10 @@
+/* addresses the executable uses that none of its objects defines */
+
+/* the size the header (src/engine/header.s) gives the file's .text: the
+   executable and its tail, all of the file after the header, in whole
+   sectors, which the BIOS reads (the Makefile pads the file to them) */
+EXE_TEXT_SIZE = ALIGN(tail_ROM_END - main_ROM_START, 0x800);
+
+/* the overlays load after the executable's .bss (OVERLAY_VRAM, from
+   mk/version/<version>.mk) */
+ASSERT(main_BSS_END <= OVERLAY_VRAM, "the executable's .bss runs into the overlays: move OVERLAY_VRAM")

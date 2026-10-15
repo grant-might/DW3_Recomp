@@ -1,0 +1,14 @@
+// WSTAG331.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5774; // type:func
+startStage = 0x800A57BC; // type:func
+endEvent920 = 0x800A5818; // type:func
+endEvent970 = 0x800A5844; // type:func
+setupStage = 0x800A5870; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageColor = 0x800A5770;
+script970 = 0x800A5B70;
+area3Battle5 = 0x800A60C8;

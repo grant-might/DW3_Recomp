@@ -1,0 +1,74 @@
+// WSTAG655.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A5804; // type:func
+endEvent430 = 0x800A5860; // type:func
+endEvent431 = 0x800A58AC; // type:func
+setupStage = 0x800A58E4; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+script430 = 0x800A5A08;
+script431 = 0x800A5B08;
+area0Battle0 = 0x800A5C5C;
+area0Battle1 = 0x800A5C68;
+area0Battle2 = 0x800A5C74;
+area0Battle3 = 0x800A5C80;
+area0Battle4 = 0x800A5C8C;
+area0Battle5 = 0x800A5C98;
+area0Battle6 = 0x800A5CA4;
+area0Battle7 = 0x800A5CB0;
+area0Battles = 0x800A5CBC;
+area1Battle0 = 0x800A5CE0;
+area1Battle1 = 0x800A5CEC;
+area1Battle2 = 0x800A5CF8;
+area1Battle3 = 0x800A5D04;
+area1Battle4 = 0x800A5D10;
+area1Battle5 = 0x800A5D1C;
+area1Battle6 = 0x800A5D28;
+area1Battle7 = 0x800A5D34;
+area1Battles = 0x800A5D40;
+area2Battle0 = 0x800A5D64;
+area2Battle1 = 0x800A5D70;
+area2Battle2 = 0x800A5D7C;
+area2Battle3 = 0x800A5D88;
+area2Battle4 = 0x800A5D94;
+area2Battle5 = 0x800A5DA0;
+area2Battle6 = 0x800A5DAC;
+area2Battle7 = 0x800A5DB8;
+area2Battles = 0x800A5DC4;
+area3Battle0 = 0x800A5DE8;
+area3Battle1 = 0x800A5DF4;
+area3Battle2 = 0x800A5E00;
+area3Battle3 = 0x800A5E0C;
+area3Battle4 = 0x800A5E18;
+area3Battle5 = 0x800A5E24;
+area3Battle6 = 0x800A5E30;
+area3Battle7 = 0x800A5E3C;
+area3Battles = 0x800A5E48;
+stageBattles = 0x800A5E6C;
+stageImages = 0x800A5E88;
+actor3Talk0Conditions = 0x800A5EF8;
+actor3Talk0Actions = 0x800A5F00;
+actor3Talk1Conditions = 0x800A5F08;
+actor0Talks = 0x800A5F10;
+actor1Talks = 0x800A5F28;
+actor2Talks = 0x800A5F40;
+actor3Talks = 0x800A5F58;
+actor4Talks = 0x800A5F7C;
+actor0Conditions = 0x800A5F94;
+actor1Conditions = 0x800A5F9C;
+actor2Conditions = 0x800A5FA4;
+actor3Conditions = 0x800A5FAC;
+actor4Conditions = 0x800A5FB4;
+actor0 = 0x800A5FBC;
+actor1 = 0x800A5FD0;
+actor2 = 0x800A5FE4;
+actor3 = 0x800A5FF8;
+actor4 = 0x800A600C;
+stageActors = 0x800A6020;
+stageObjects = 0x800A6038;
+stageSlots = 0x800A605C;
+stageFuncs = 0x800A60BC; // size:0x4
+stageEvents = 0x800A60C0;

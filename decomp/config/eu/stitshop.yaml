@@ -1,0 +1,67 @@
+# Digimon World 2003, Europe (SLES-03936): stitshop
+name: stitshop
+sha1: 7b483f1898fe7c11605017259f8daa6cc8e8bdcc
+options:
+  basename: stitshop
+  target_path: disks/eu/AAA/PRO/STITSHOP.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stitshop
+  src_path: src/menus/item_shop
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stitshop.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stitshop.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stitshop.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stitshop.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stitshop
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, trade]
+      - [0x400, .rodata, info]
+      - [0x4E8, .rodata, shop]
+      - [0x548, .rodata, equip]
+      # the modules (src/menus/item_shop/), in the order they link
+      - [0x56C, c, scene]
+      - [0x95C, c, trade]
+      - [0x4778, c, item_list]
+      - [0x5DB4, c, info]
+      - [0x8874, c, shop]
+      - [0x97D8, c, equip]
+      # STITSHOP's data, all of it in one file
+      - [0x9DF8, .data, data/stitshop]
+  - [0xA528]

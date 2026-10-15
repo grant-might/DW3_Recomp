@@ -1,0 +1,37 @@
+{
+  "$schema": "https://recomp.fyi/schema/v1.json",
+  "game": "Digimon World 3",
+  "wikidata": "Q1224677",
+  "system": "PS1",
+  "type": "decomp",
+  "original": [
+    {
+      "region": "Europe",
+      "serial": "SLES-03936",
+      "sha1": "d1b7e4d646e3a9c2b88fdb25d20b5f7116bbb06d"
+    },
+    {
+      "region": "USA",
+      "serial": "SLUS-01436",
+      "sha1": "444653259f78ddb483fd22af72cce9276f42f214"
+    }
+  ],
+  "project": "Digimon World 3 decompilation",
+  "status": "complete",
+  "targets": ["PS1"],
+  "toolchain": "Splat",
+  "approach": "Matching decompilation with GCC 2.8.1, splat and maspsx, byte-identical for EU and US",
+  "maintainers": [
+    { "name": "ReGame-Labs", "link": "https://github.com/ReGame-Labs" }
+  ],
+  "links": [
+    { "label": "decomp.dev", "url": "https://decomp.dev/ReGame-Labs/dw3_decomp" }
+  ],
+  "help": [
+    "Naming functions and data",
+    "Readability of the matched C",
+    "Documentation"
+  ],
+  "tags": ["matching", "gcc", "maspsx", "psyq"],
+  "notes": "Every game function is C in both versions: the executable, the 21 overlays and all the stages, 3,606 functions in the European release (Digimon World 2003, the main version) and 3,380 in the USA one. The game's data is C too, and both versions rebuild byte for byte, checked against the SHA-1 of every original binary. The PsyQ SDK libraries, Sony's code and not the game's, stay as splat's disassembly and are left out of the progress. Readability work continues: names, comments and cleaner C, with 0 fake matches."
+}

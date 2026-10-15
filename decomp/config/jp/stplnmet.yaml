@@ -1,0 +1,62 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stplnmet
+name: stplnmet
+sha1: 3d9ffb6ce5c544afda6dfe6b5eda7149622f100b
+options:
+  basename: stplnmet
+  target_path: disks/jp/AAA/PRO/STPLNMET.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stplnmet
+  src_path: src/menus/player_name
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stplnmet.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stplnmet.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stplnmet.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stplnmet.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stplnmet
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, name_entry]
+      - [0x2A8, c, scene]
+      - [0x494, c, backdrop]
+      - [0xAC4, c, welcome]
+      - [0x10B0, c, name_entry]
+      - [0x311C, c, confirm]
+      - [0x41D8, c, choice]
+      - [0x4CFC, c, screen]
+      - [0x5794, .data, data/stplnmet]
+  - [0x6D6C]

@@ -1,0 +1,58 @@
+// WFIGHTTS.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+WFIGHTTS_strings = 0x800A5788; // size:0x9C0
+WFIGHTTS_initLayers = 0x800A6148; // type:func
+WFIGHTTS_loadImages = 0x800A63B8; // type:func
+WFIGHTTS_battleTest = 0x800A6520; // type:func
+WFIGHTTS_start = 0x800A73F0; // type:func
+WFIGHTTS_fighterList = 0x800A7420; // type:func
+WFIGHTTS_createFighterList = 0x800A794C; // type:func
+WFIGHTTS_cameraList = 0x800A7998; // type:func
+WFIGHTTS_createCameraList = 0x800A7DB8; // type:func
+WFIGHTTS_stageList = 0x800A7E04; // type:func
+WFIGHTTS_createStageList = 0x800A80E0; // type:func
+WFIGHTTS_motionList = 0x800A8118; // type:func
+WFIGHTTS_createMotionList = 0x800A8668; // type:func
+WFIGHTTS_effectList = 0x800A86B4; // type:func
+WFIGHTTS_createEffectList = 0x800A8C9C; // type:func
+WFIGHTTS_fighters = 0x800A8CF0; // size:0x1C
+WFIGHTTS_backPoints = 0x800A8D0C; // size:0x10
+WFIGHTTS_backColors = 0x800A8D1C; // size:0x10
+WFIGHTTS_speedMode = 0x800A8D2C; // size:0x4
+WFIGHTTS_fighterSide = 0x800A8D30; // size:0x4
+WFIGHTTS_fighterCursors = 0x800A8D34; // size:0x8
+WFIGHTTS_fighterScrolls = 0x800A8D3C; // size:0x8
+WFIGHTTS_cameraSide = 0x800A8D44; // size:0x4
+WFIGHTTS_cameraPicks = 0x800A8D48; // size:0x8
+WFIGHTTS_partnerCameraNames = 0x800A8D50; // size:0x30
+WFIGHTTS_enemyCameraNames = 0x800A8D80; // size:0xC
+WFIGHTTS_stageCursor = 0x800A8D8C; // size:0x4
+WFIGHTTS_stageScroll = 0x800A8D90; // size:0x4
+WFIGHTTS_stageNames = 0x800A8D94; // size:0xDC
+WFIGHTTS_motionNames = 0x800A8E70; // size:0xF8
+WFIGHTTS_effectNames = 0x800A8F68; // size:0x50
+WFIGHTTS_partnerView = 0x800A8FB8; // size:0x34
+WFIGHTTS_enemyView = 0x800A8FF8; // size:0x34
+WFIGHTTS_displayX = 0x800A902C; // size:0x4
+WFIGHTTS_displayY = 0x800A9030; // size:0x4
+WFIGHTTS_motionCursors = 0x800A9034; // size:0x1C
+WFIGHTTS_effectCursors = 0x800A9050; // size:0x1C
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+FIGHTSTG_createStage = 0x80086758; // defined:True
+FIGHTSTG_startEntrance = 0x80086DB0; // defined:True
+FIGHTSTG_createModels = 0x80087E04; // defined:True
+FIGHTSTG_startHitEffect = 0x800880FC; // defined:True
+FIGHTSTG_startDigimonChange = 0x8008A5A4; // defined:True
+FIGHTSTG_createLights = 0x8008AE68; // defined:True
+FIGHTSTG_createBattleScript = 0x8008C6C0; // defined:True
+FIGHTSTG_startCameraTurn = 0x8008C8F4; // defined:True
+FIGHTSTG_createBattleCamera = 0x800923C8; // defined:True
+FIGHTSTG_startPlayerTurn = 0x80092B00; // defined:True
+FIGHTSTG_setPlayerTurnStep = 0x80092B30; // defined:True
+FIGHTSTG_battle = 0x800A3FC0; // size:0xF8
+FIGHTSTG_fighterCache = 0x800A40B8; // size:0x28
+WFIGHTTS_screen = 0x800A8CE8; // size:0x8
+WFIGHTTS_unused = 0x800A8FEC; // size:0xC

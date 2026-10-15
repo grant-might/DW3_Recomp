@@ -1,0 +1,39 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A51B8; // type:func
+startStage = 0x800A5210; // type:func
+setupStage = 0x800A526C; // type:func
+stageFuncs = 0x800A57FC; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A56BC;
+stageSlots = 0x800A5784;
+stageImages = 0x800A5570;
+stageActors = 0x800A56B0;
+stageColor = 0x800A4CBC;
+stageEvents = 0x800A5800;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script1321 = 0x800A5394;
+script1326 = 0x800A5478;
+actor0Talk0Conditions = 0x800A55E0;
+actor0Talk0Actions = 0x800A55E8;
+actor0Talk1Conditions = 0x800A55F4;
+actor0Talk1Actions = 0x800A55FC;
+actor1Talk0Conditions = 0x800A5608;
+actor1Talk0Actions = 0x800A5610;
+actor1Talk1Conditions = 0x800A561C;
+actor1Talk1Actions = 0x800A5624;
+actor0Talks = 0x800A5630;
+actor1Talks = 0x800A5654;
+actor0Conditions = 0x800A5678;
+actor1Conditions = 0x800A5680;
+actor0 = 0x800A5688;
+actor1 = 0x800A569C;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateTileLift = 0x800A4CC0; // type:func
+handleCommand827 = 0x800A50DC; // type:func
+createCommand827 = 0x800A5150; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+tileLiftShake = 0x800A555C;

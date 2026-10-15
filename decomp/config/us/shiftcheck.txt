@@ -1,0 +1,2 @@
+# Addresses that don't move with the code (tools/shiftcheck.py --update):
+# binary, kind, where, what it points to; then the names and the object

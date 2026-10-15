@@ -1,0 +1,69 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A4CA8; // type:func
+startStage = 0x800A4CF0; // type:func
+setupStage = 0x800A4D78; // type:func
+stageFuncs = 0x800A5594; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A52DC;
+stageSlots = 0x800A54D4;
+stageImages = 0x800A5144;
+stageActors = 0x800A52C8;
+stageColor = 0x800A4CA4;
+stageBattles = 0x800A5128;
+stageEvents = 0x800A5598;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script1459 = 0x800A4EA8;
+area0Battle0 = 0x800A4F18;
+area0Battle1 = 0x800A4F24;
+area0Battle2 = 0x800A4F30;
+area0Battle3 = 0x800A4F3C;
+area0Battle4 = 0x800A4F48;
+area0Battle5 = 0x800A4F54;
+area0Battle6 = 0x800A4F60;
+area0Battle7 = 0x800A4F6C;
+area0Battles = 0x800A4F78;
+area1Battle0 = 0x800A4F9C;
+area1Battle1 = 0x800A4FA8;
+area1Battle2 = 0x800A4FB4;
+area1Battle3 = 0x800A4FC0;
+area1Battle4 = 0x800A4FCC;
+area1Battle5 = 0x800A4FD8;
+area1Battle6 = 0x800A4FE4;
+area1Battle7 = 0x800A4FF0;
+area1Battles = 0x800A4FFC;
+area2Battle0 = 0x800A5020;
+area2Battle1 = 0x800A502C;
+area2Battle2 = 0x800A5038;
+area2Battle3 = 0x800A5044;
+area2Battle4 = 0x800A5050;
+area2Battle5 = 0x800A505C;
+area2Battle6 = 0x800A5068;
+area2Battle7 = 0x800A5074;
+area2Battles = 0x800A5080;
+area3Battle0 = 0x800A50A4;
+area3Battle1 = 0x800A50B0;
+area3Battle2 = 0x800A50BC;
+area3Battle3 = 0x800A50C8;
+area3Battle4 = 0x800A50D4;
+area3Battle5 = 0x800A50E0;
+area3Battle6 = 0x800A50EC;
+area3Battle7 = 0x800A50F8;
+area3Battles = 0x800A5104;
+actor0Talk0Actions = 0x800A51E4;
+actor1Talk0Actions = 0x800A51EC;
+actor2Talk0Actions = 0x800A51F4;
+actor0Talks = 0x800A5204;
+actor1Talks = 0x800A521C;
+actor2Talks = 0x800A5234;
+actor3Talks = 0x800A524C;
+actor2Conditions = 0x800A5264;
+actor3Conditions = 0x800A526C;
+actor0 = 0x800A5278;
+actor1 = 0x800A528C;
+actor2 = 0x800A52A0;
+actor3 = 0x800A52B4;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+endEvent1459 = 0x800A4D4C; // type:func

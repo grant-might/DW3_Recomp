@@ -1,0 +1,73 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A5054; // type:func
+startStage = 0x800A50B8; // type:func
+setupStage = 0x800A5114; // type:func
+stageFuncs = 0x800A5E6C; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A56C0;
+stageSlots = 0x800A5D4C;
+stageImages = 0x800A5660;
+stageColor = 0x800A4CB8;
+stageBattles = 0x800A5644;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+area0Battle0 = 0x800A5434;
+area0Battle1 = 0x800A5440;
+area0Battle2 = 0x800A544C;
+area0Battle3 = 0x800A5458;
+area0Battle4 = 0x800A5464;
+area0Battle5 = 0x800A5470;
+area0Battle6 = 0x800A547C;
+area0Battle7 = 0x800A5488;
+area0Battles = 0x800A5494;
+area1Battle0 = 0x800A54B8;
+area1Battle1 = 0x800A54C4;
+area1Battle2 = 0x800A54D0;
+area1Battle3 = 0x800A54DC;
+area1Battle4 = 0x800A54E8;
+area1Battle5 = 0x800A54F4;
+area1Battle6 = 0x800A5500;
+area1Battle7 = 0x800A550C;
+area1Battles = 0x800A5518;
+area2Battle0 = 0x800A553C;
+area2Battle1 = 0x800A5548;
+area2Battle2 = 0x800A5554;
+area2Battle3 = 0x800A5560;
+area2Battle4 = 0x800A556C;
+area2Battle5 = 0x800A5578;
+area2Battle6 = 0x800A5584;
+area2Battle7 = 0x800A5590;
+area2Battles = 0x800A559C;
+area3Battle0 = 0x800A55C0;
+area3Battle1 = 0x800A55CC;
+area3Battle2 = 0x800A55D8;
+area3Battle3 = 0x800A55E4;
+area3Battle4 = 0x800A55F0;
+area3Battle5 = 0x800A55FC;
+area3Battle6 = 0x800A5608;
+area3Battle7 = 0x800A5614;
+area3Battles = 0x800A5620;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+stepTileSequences = 0x800A4CBC; // type:func
+updateTileCursors = 0x800A4E48; // type:func
+createTileCursors = 0x800A5028; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateTileCursorsFrames_0_0 = 0x800A5240;
+updateTileCursorsFrames_0_12 = 0x800A5250;
+updateTileCursorsFrames_1_0 = 0x800A5268;
+updateTileCursorsFrames_1_12 = 0x800A5278;
+updateTileCursorsFrames_2_0 = 0x800A5290;
+updateTileCursorsFrames_2_12 = 0x800A52A0;
+updateTileCursorsFrames_3_0 = 0x800A52B8;
+updateTileCursorsFrames_3_12 = 0x800A52C8;
+updateTileCursorsFrames_4_0 = 0x800A52E0;
+updateTileCursorsFrames_4_12 = 0x800A52F0;
+updateTileCursorsFrames_0 = 0x800A5308;
+updateTileCursorsFrames_1 = 0x800A5340;
+updateTileCursorsFrames_2 = 0x800A5378;
+updateTileCursorsFrames_3 = 0x800A53B0;
+updateTileCursorsFrames_4 = 0x800A53E8;
+updateTileCursorsFrames = 0x800A5420;

@@ -1,0 +1,68 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stgtrain
+name: stgtrain
+sha1: c553c8454917670e7ddfcadb4dd0f98477cb394b
+options:
+  basename: stgtrain
+  target_path: disks/jp/AAA/PRO/STGTRAIN.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stgtrain
+  src_path: src/menus/gym
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stgtrain.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stgtrain.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stgtrain.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stgtrain.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgtrain
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, screen]
+      - [0xD4, .rodata, result]
+      - [0x1A0, .rodata, session]
+      - [0x270, .rodata, menu]
+      - [0x3A8, c, sprite]
+      - [0xC80, c, scene]
+      - [0xE3C, c, screen]
+      - [0x3498, c, result]
+      - [0x5490, c, session]
+      - [0x6A00, c, actor]
+      - [0x759C, c, menu]
+      - [0x8AB0, c, files]
+      - [0x9430, .data, screen]
+      - [0x9510, .data, result]
+      - [0x96E4, .data, files]
+  - [0xA514]

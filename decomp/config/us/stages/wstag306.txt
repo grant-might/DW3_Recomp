@@ -1,0 +1,62 @@
+updateSoundTileFrames = 0x800A55F4; // size:0x18
+
+// the names the stages share (the same code or data in each)
+stepAnimationOnce = 0x800A4CA4; // type:func
+updateStage = 0x800A4F78; // type:func
+startStage = 0x800A5024; // type:func
+setupStage = 0x800A5080; // type:func
+stageFuncs = 0x800A5AD4; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A59D8;
+stageSlots = 0x800A5A8C;
+stageImages = 0x800A560C;
+stageActors = 0x800A59A0;
+stageEvents = 0x800A5AD8;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script930 = 0x800A51B8;
+script966 = 0x800A52F8;
+script980 = 0x800A5348;
+actor2Talks = 0x800A572C;
+actor3Talks = 0x800A5744;
+actor4Talks = 0x800A575C;
+actor5Talks = 0x800A5774;
+actor6Talks = 0x800A578C;
+actor7Talks = 0x800A57A4;
+actor8Talks = 0x800A57BC;
+actor9Talks = 0x800A57D4;
+actor10Talks = 0x800A57EC;
+actor11Talks = 0x800A5804;
+actor12Talks = 0x800A581C;
+actor0Conditions = 0x800A5834;
+actor1Conditions = 0x800A583C;
+actor2Conditions = 0x800A5844;
+actor3Conditions = 0x800A584C;
+actor4Conditions = 0x800A5854;
+actor5Conditions = 0x800A585C;
+actor6Conditions = 0x800A5864;
+actor7Conditions = 0x800A586C;
+actor8Conditions = 0x800A5874;
+actor9Conditions = 0x800A587C;
+actor10Conditions = 0x800A5884;
+actor11Conditions = 0x800A588C;
+actor12Conditions = 0x800A5894;
+actor0 = 0x800A589C;
+actor1 = 0x800A58B0;
+actor2 = 0x800A58C4;
+actor3 = 0x800A58D8;
+actor4 = 0x800A58EC;
+actor5 = 0x800A5900;
+actor6 = 0x800A5914;
+actor7 = 0x800A5928;
+actor8 = 0x800A593C;
+actor9 = 0x800A5950;
+actor10 = 0x800A5964;
+actor11 = 0x800A5978;
+actor12 = 0x800A598C;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateSoundTile = 0x800A4D7C; // type:func
+handleCommand851 = 0x800A4EDC; // type:func
+createSoundTile = 0x800A4F48; // type:func

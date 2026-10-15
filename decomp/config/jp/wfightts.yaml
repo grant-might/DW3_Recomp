@@ -1,0 +1,56 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): wfightts
+name: wfightts
+sha1: b5459a8b9fc52675541401964f812d2ab07d3a82
+options:
+  basename: wfightts
+  target_path: disks/jp/AAA/PRO/WFIGHTTS.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/wfightts
+  src_path: src/debug/battle_test
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/wfightts.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_wfightts.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_wfightts.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_wfightts.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: wfightts
+    type: code
+    start: 0x0
+    vram: 0x800A5770
+    vram_symbol: STAGE_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, battle_test]
+      - [0x9D8, c, battle_test]
+      - [0x3578, .data, battle_test]
+  - [0x38FC]

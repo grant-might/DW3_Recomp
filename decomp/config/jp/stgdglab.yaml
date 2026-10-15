@@ -1,0 +1,74 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stgdglab
+name: stgdglab
+sha1: 5354d3cb0a3a9149e36a22183a33fd32f886ed11
+options:
+  basename: stgdglab
+  target_path: disks/jp/AAA/PRO/STGDGLAB.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stgdglab
+  src_path: src/menus/digimon_lab
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stgdglab.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stgdglab.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stgdglab.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stgdglab.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgdglab
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, recipe_screen]
+      - [0x3C, .rodata, entry_panel]
+      - [0x58, .rodata, slot_screen]
+      - [0x12C, .rodata, menu]
+      - [0x1AC, .rodata, party_screen]
+      - [0x1DC, .rodata, skill_panel]
+      - [0x280, .rodata, entry_list]
+      - [0x298, c, scene]
+      - [0x684, c, recipe_screen]
+      - [0x27A0, c, entry_panel]
+      - [0x4370, c, slot_screen]
+      - [0x59AC, c, menu]
+      - [0x78F4, c, scroll_bar]
+      - [0x7BB0, c, party_screen]
+      - [0x94D8, c, skill_panel]
+      - [0xA9CC, c, entry_list]
+      - [0xBCFC, c, lab]
+      - [0xC5FC, .data, recipe_screen]
+      - [0xC61C, .data, menu]
+      - [0xC630, .data, party_screen]
+      - [0xC644, .data, lab]
+  - [0xCF3C]

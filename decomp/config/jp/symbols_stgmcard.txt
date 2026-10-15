@@ -1,0 +1,64 @@
+// STGMCARD.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+STGMCARD_updateScene = 0x80082A80; // type:func
+STGMCARD_start = 0x80082B78; // type:func
+STGMCARD_startFader = 0x80082BA4; // type:func
+STGMCARD_drawFader = 0x80082C2C; // type:func
+STGMCARD_updateFader = 0x80082D70; // type:func
+STGMCARD_createFader = 0x80082E24; // type:func
+STGMCARD_showInfo = 0x80082E68; // type:func
+STGMCARD_hideInfo = 0x80082E90; // type:func
+STGMCARD_refreshInfo = 0x80082F1C; // type:func
+STGMCARD_updateInfo = 0x80083440; // type:func
+STGMCARD_createInfo = 0x800838D4; // type:func
+STGMCARD_resetPanel = 0x80083940; // type:func
+STGMCARD_startPanel = 0x80083974; // type:func
+STGMCARD_setPanelTopColor = 0x80083984; // type:func
+STGMCARD_setPanelBottomColor = 0x80083998; // type:func
+STGMCARD_setPanelPos = 0x800839AC; // type:func
+STGMCARD_updatePanel = 0x800839B8; // type:func
+STGMCARD_createPanel = 0x80083DC0; // type:func
+STGMCARD_slideInHeader = 0x80083E74; // type:func
+STGMCARD_startSlotPick = 0x80083EE4; // type:func
+STGMCARD_slideOutHeader = 0x80083F4C; // type:func
+STGMCARD_moveSlotCursor = 0x80083F90; // type:func
+STGMCARD_slideInSlots = 0x80083FF0; // type:func
+STGMCARD_slideOutSlots = 0x80084034; // type:func
+STGMCARD_resetMenu = 0x80084078; // type:func
+STGMCARD_updateMenu = 0x80084128; // type:func
+STGMCARD_createMenu = 0x80084720; // type:func
+STGMCARD_showPort = 0x800847B0; // type:func
+STGMCARD_showError = 0x80084848; // type:func
+STGMCARD_closeMenuForError = 0x80084920; // type:func
+STGMCARD_refreshSaves = 0x80084998; // type:func
+STGMCARD_hideSaves = 0x800849D0; // type:func
+STGMCARD_runSaves = 0x80084AF4; // type:func
+STGMCARD_drawSaves = 0x80086FD4; // type:func
+STGMCARD_updateSaves = 0x800871A0; // type:func
+STGMCARD_createSaves = 0x80087404; // type:func
+STGMCARD_updateScreen = 0x8008745C; // type:func
+STGMCARD_createScreen = 0x80087774; // type:func
+STGMCARD_loadFiles = 0x80087884; // type:func
+STGMCARD_filesLoading = 0x80087A3C; // type:func
+STGMCARD_freeBuffers = 0x80087AAC; // type:func
+STGMCARD_startFade = 0x80087B10; // type:func
+STGMCARD_updateFade = 0x80087BA4; // type:func
+STGMCARD_startLerp = 0x80087C10; // type:func
+STGMCARD_updateLerp = 0x80087C50; // type:func
+STGMCARD_partnerAnims = 0x80087E38; // size:0xE0
+STGMCARD_partnerIcons = 0x80087F18; // size:0x20
+STGMCARD_slotIconX = 0x80087F38; // size:0xC
+STGMCARD_errorTexts = 0x80087F44; // size:0x2C
+STGMCARD_places = 0x80087F70; // size:0x68
+STGMCARD_prevModes = 0x80087FD8; // size:0x3C4
+STGMCARD_funcs = 0x8008839C; // size:0x38
+STGMCARD_saveIcon = 0x80088574; // size:0x10
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+STGMCARD_detailWindows = 0x80087CBC; // size:0x17C
+
+// the data's names, from its C (the build matches)
+STGMCARD_iconClut = 0x800883D4; // size:0x20
+STGMCARD_iconFrames = 0x800883F4; // size:0x180

@@ -1,0 +1,61 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): stdgname
+name: stdgname
+sha1: f5b45530ec410317f2716c0cae70329220271b9a
+options:
+  basename: stdgname
+  target_path: disks/jp/AAA/PRO/STDGNAME.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/stdgname
+  src_path: src/menus/partner_name
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/stdgname.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_stdgname.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_stdgname.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_stdgname.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stdgname
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, name_entry]
+      - [0x2A8, .rodata, menu]
+      - [0x2C4, .rodata, screen]
+      - [0x2DC, c, scene]
+      - [0x6C8, c, name_entry]
+      - [0x2680, c, menu]
+      - [0x33DC, c, screen]
+      - [0x3A60, .data, data/stdgname]
+  - [0x6070]

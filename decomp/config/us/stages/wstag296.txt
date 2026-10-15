@@ -1,0 +1,25 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A4CA4; // type:func
+startStage = 0x800A4CEC; // type:func
+setupStage = 0x800A4D48; // type:func
+stageFuncs = 0x800A50C8; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A4FAC;
+stageSlots = 0x800A5098;
+stageImages = 0x800A4E28;
+stageActors = 0x800A4F90;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+actor0Conditions = 0x800A4EE8;
+actor1Conditions = 0x800A4EF0;
+actor2Conditions = 0x800A4EF8;
+actor3Conditions = 0x800A4F00;
+actor4Conditions = 0x800A4F08;
+actor5Conditions = 0x800A4F10;
+actor0 = 0x800A4F18;
+actor1 = 0x800A4F2C;
+actor2 = 0x800A4F40;
+actor3 = 0x800A4F54;
+actor4 = 0x800A4F68;
+actor5 = 0x800A4F7C;

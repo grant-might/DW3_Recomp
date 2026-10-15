@@ -1,0 +1,34 @@
+// SHOCKTST.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+SHOCKTST_STR_PLAY_PATTERN = 0x80082CF8;
+SHOCKTST_STR_VIBRATION_TEST = 0x80082D68;
+SHOCKTST_STR_CROSS_STOP = 0x80082D78;
+SHOCKTST_STR_START_BACK = 0x80082D8C;
+SHOCKTST_updateScene = 0x80082DA0; // type:func
+SHOCKTST_start = 0x80082E98; // type:func
+SHOCKTST_highlight = 0x80082EC4; // type:func
+SHOCKTST_selectPattern = 0x80083064; // type:func
+SHOCKTST_showPattern = 0x80083274; // type:func
+SHOCKTST_showTimers = 0x8008332C; // type:func
+SHOCKTST_playPattern = 0x800833C0; // type:func
+SHOCKTST_playAllPatterns = 0x800835F4; // type:func
+SHOCKTST_moveCursor = 0x800836C0; // type:func
+SHOCKTST_editValue = 0x80083B2C; // type:func
+SHOCKTST_editRow = 0x80083DB4; // type:func
+SHOCKTST_updateEditor = 0x80083EA4; // type:func
+SHOCKTST_loadPatterns = 0x800842E0; // type:func
+SHOCKTST_createEditor = 0x8008436C; // type:func
+SHOCKTST_convertText = 0x800843F0; // type:func
+SHOCKTST_updateLoader = 0x80084714; // type:func
+SHOCKTST_createLoader = 0x8008499C; // type:func
+SHOCKTST_numberFormats = 0x80084A28;
+SHOCKTST_motorNames = 0x80084AE8;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+SHOCKTST_STR_SLOW = 0x80082CE0;
+SHOCKTST_STR_FAST = 0x80082CEC;
+SHOCKTST_PATH_DLSKDATA_TXT = 0x80082D24;
+SHOCKTST_menuRows = 0x800849C8;
+SHOCKTST_textPath = 0x80084AF0;

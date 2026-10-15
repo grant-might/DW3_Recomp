@@ -1,0 +1,157 @@
+name: build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  # Every version names its symbols as us does (tools/check_names.py), and
+  # the source has no NON_MATCHING code or inline asm in place of C
+  # (tools/hacks.py, which also counts the fake matches and hacks). They only
+  # read config/, src/ and include/, so they need no disc and run for forks
+  # too.
+  names:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+
+    - run: python3 tools/check_names.py
+
+    - run: python3 tools/hacks.py --check README.md docs/status.md
+
+  # A modern GCC compiles each version's game C (make lint, tools/lint.py)
+  # for its warnings: what it finds is config/<version>/lint.txt or fails,
+  # and the list only gets shorter, as shiftcheck's. It needs the PsyQ headers but no disc, and
+  # never touches the build.
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+        # and the parent commit, whose lint.txt the list is checked against
+        fetch-depth: 2
+
+    - run: git submodule update --init --depth 1 external/psyq_headers
+
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-mipsel-linux-gnu
+
+    - run: |
+        make VERSION=eu lint LINT_ARGS="--strict --base HEAD^"
+        make VERSION=us lint LINT_ARGS="--strict --base HEAD^"
+        make VERSION=jp lint LINT_ARGS="--strict --base HEAD^"
+
+  build:
+    # The original executable and overlays live in a private repository that only this
+    # repository's own runs can read, so builds from forks are skipped.
+    if: >-
+      github.repository == 'ReGame-Labs/dw3_decomp' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # The dependencies repository has each version's executable and
+        # AAA/PRO in a folder named after it (us/, eu/, jp/). report: upload
+        # build/<version>/report.json as <exe>_report, the artifact
+        # decomp.dev reads. shiftable: run shiftcheck and padcheck, which
+        # need every address in the code and data to be a symbol.
+        include:
+          # the default version, and decomp.dev's
+          - version: eu
+            exe: SLES_039.36
+            report: true
+            shiftable: true
+          - version: us
+            exe: SLUS_014.36
+            report: true
+            shiftable: true
+          # built from the shared C, but its symbol files still give the
+          # executable's data as numbers: not shiftable yet. decomp.dev
+          # doesn't show it yet, but its report is uploaded all the same.
+          - version: jp
+            exe: SLPS_034.46
+            report: true
+            shiftable: false
+    name: build (${{ matrix.version }})
+    env:
+      VERSION: ${{ matrix.version }}
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        submodules: recursive
+        persist-credentials: false
+        # and the parent commit, whose shiftcheck.txt the list is checked against
+        fetch-depth: 2
+
+    - uses: actions/checkout@v5
+      with:
+        repository: ReGame-Labs/dw3_decomp_dependencies
+        ssh-key: ${{ secrets.DW3_DEPENDENCIES_SSH_KEY }}
+        path: dependencies
+        persist-credentials: false
+
+    - run: |
+        mkdir -p "disks/$VERSION/AAA"
+        cp "dependencies/$VERSION/$EXE" "disks/$VERSION/"
+        cp -r "dependencies/$VERSION/AAA/PRO" "disks/$VERSION/AAA/"
+        rm -rf dependencies
+      env:
+        EXE: ${{ matrix.exe }}
+
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y binutils-mipsel-linux-gnu gcc-mipsel-linux-gnu
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: pip
+
+    - run: pip install -r requirements.txt
+
+    - run: tools/dl_deps.sh
+
+    # make and the tools take VERSION from the environment
+    - run: |
+        make generate
+        make -j$(nproc)
+        make compare
+
+    # every address in the code and data is a symbol, but for those
+    # config/<version>/shiftcheck.txt lists, and the list only gets shorter:
+    # it has no entry that is fixed, nor one that the parent commit's (for a
+    # pull request, the base branch's) doesn't have. The root commit has no
+    # parent to compare against.
+    - if: matrix.shiftable
+      run: |
+        if git rev-parse -q --verify HEAD^ >/dev/null; then
+          python3 tools/shiftcheck.py -v "$VERSION" --strict --base HEAD^
+        else
+          python3 tools/shiftcheck.py -v "$VERSION" --strict
+        fi
+
+    # and linked higher, the binaries only change where a relocation is
+    - if: matrix.shiftable
+      run: make padcheck
+
+    # A modern GCC builds the game too (make TOOLCHAIN=gcc,
+    # docs/toolchain.md): it doesn't match, but each binary must fit where
+    # the original's goes (tools/fitcheck.py). It doesn't fail the run yet.
+    - continue-on-error: true
+      run: make TOOLCHAIN=gcc -j$(nproc)
+
+    - if: matrix.report
+      run: make report
+
+    - if: matrix.report
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ matrix.exe }}_report
+        path: build/${{ matrix.version }}/report.json

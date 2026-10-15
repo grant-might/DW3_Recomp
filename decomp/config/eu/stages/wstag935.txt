@@ -1,0 +1,97 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A5E40; // type:func
+startStage = 0x800A5E88; // type:func
+setupStage = 0x800A5EE4; // type:func
+startTween = 0x800A5FD8; // type:func
+updateTween = 0x800A606C; // type:func
+stageFuncs = 0x800A7B1C; // size:0xC
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A7994;
+stageSlots = 0x800A7AEC;
+stageImages = 0x800A73C8;
+stageActors = 0x800A7958;
+stageEvents = 0x800A7B28;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+actor0Talk0Actions = 0x800A74B8;
+actor2Talk0Conditions = 0x800A74C0;
+actor2Talk0Actions = 0x800A74CC;
+actor2Talk1Conditions = 0x800A74D8;
+actor2Talk1Actions = 0x800A74E4;
+actor2Talk2Conditions = 0x800A74F4;
+actor2Talk2Actions = 0x800A7500;
+actor2Talk3Conditions = 0x800A7508;
+actor2Talk3Actions = 0x800A7514;
+actor4Talk0Conditions = 0x800A751C;
+actor4Talk0Actions = 0x800A7528;
+actor4Talk1Conditions = 0x800A7534;
+actor4Talk1Actions = 0x800A7540;
+actor4Talk2Conditions = 0x800A7550;
+actor4Talk2Actions = 0x800A755C;
+actor4Talk3Conditions = 0x800A7564;
+actor4Talk3Actions = 0x800A7570;
+actor6Talk0Conditions = 0x800A7578;
+actor6Talk0Actions = 0x800A7584;
+actor6Talk1Conditions = 0x800A7590;
+actor6Talk1Actions = 0x800A759C;
+actor6Talk2Conditions = 0x800A75AC;
+actor6Talk2Actions = 0x800A75B8;
+actor6Talk3Conditions = 0x800A75C0;
+actor6Talk3Actions = 0x800A75CC;
+actor7Talk0Actions = 0x800A75D4;
+actor9Talk0Conditions = 0x800A75DC;
+actor9Talk0Actions = 0x800A75E8;
+actor9Talk1Conditions = 0x800A75F4;
+actor9Talk1Actions = 0x800A7600;
+actor9Talk2Conditions = 0x800A7610;
+actor9Talk2Actions = 0x800A761C;
+actor9Talk3Conditions = 0x800A7624;
+actor9Talk3Actions = 0x800A7630;
+actor10Talk0Actions = 0x800A7638;
+actor0Talks = 0x800A7640;
+actor1Talks = 0x800A7658;
+actor2Talks = 0x800A7670;
+actor3Talks = 0x800A76AC;
+actor4Talks = 0x800A76C4;
+actor5Talks = 0x800A7700;
+actor6Talks = 0x800A7718;
+actor7Talks = 0x800A7754;
+actor8Talks = 0x800A776C;
+actor9Talks = 0x800A7784;
+actor10Talks = 0x800A77C0;
+actor11Talks = 0x800A77D8;
+actor1Conditions = 0x800A77F0;
+actor2Conditions = 0x800A77F8;
+actor3Conditions = 0x800A7800;
+actor4Conditions = 0x800A7808;
+actor5Conditions = 0x800A7810;
+actor6Conditions = 0x800A7818;
+actor8Conditions = 0x800A7820;
+actor9Conditions = 0x800A7828;
+actor10Conditions = 0x800A7830;
+actor11Conditions = 0x800A7838;
+actor0 = 0x800A7840;
+actor1 = 0x800A7854;
+actor2 = 0x800A7868;
+actor3 = 0x800A787C;
+actor4 = 0x800A7890;
+actor5 = 0x800A78A4;
+actor6 = 0x800A78B8;
+actor7 = 0x800A78CC;
+actor8 = 0x800A78E0;
+actor9 = 0x800A78F4;
+actor10 = 0x800A7908;
+actor11 = 0x800A791C;
+actor12 = 0x800A7930;
+actor13 = 0x800A7944;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+updateEvent1616 = 0x800A60D8; // type:func
+startEvent1616 = 0x800A6A04; // type:func
+updateEvent1618 = 0x800A6A30; // type:func
+startEvent1618 = 0x800A739C; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+event1616WindowFrames = 0x800A7B64;
+event1618WindowFrames = 0x800A7B74;

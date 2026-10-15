@@ -1,0 +1,61 @@
+# Digimon World 2003, Europe (SLES-03936): stfgtrep
+name: stfgtrep
+sha1: b59048734824ee31e3b4e777710c05926b47381d
+options:
+  basename: stfgtrep
+  target_path: disks/eu/AAA/PRO/STFGTREP.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stfgtrep
+  src_path: src/battle/report
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stfgtrep.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stfgtrep.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stfgtrep.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stfgtrep.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stfgtrep
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, partner]
+      - [0xE8, .rodata, report]
+      - [0x1C0, c, scene]
+      - [0x5B0, c, partner]
+      - [0x1EE8, c, report]
+      - [0x2FE0, c, fade]
+      - [0x318C, c, growth]
+      - [0x3DD8, .data, data/stfgtrep]
+  - [0x65F8]

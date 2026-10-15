@@ -1,0 +1,66 @@
+# Digimon World 2003, Europe (SLES-03936): stcrddek
+name: stcrddek
+sha1: f813f89a1ab17597e6a429c42d0acd81dd41aa49
+options:
+  basename: stcrddek
+  target_path: disks/eu/AAA/PRO/STCRDDEK.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stcrddek
+  src_path: src/cardgame/deck_editor
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stcrddek.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stcrddek.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stcrddek.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stcrddek.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stcrddek
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, editor]
+      - [0x100, .rodata, name_entry]
+      - [0x3A8, .rodata, screen]
+      # the modules (src/cardgame/deck_editor/), in the order they link
+      - [0x540, c, scene]
+      - [0x928, c, deck_cards]
+      - [0xCCC, c, editor]
+      - [0x3B38, c, name_entry]
+      - [0x5BC4, c, scroll_bar]
+      - [0x5E84, c, screen]
+      # STCRDDEK's data, all of it in one file
+      - [0x77D4, .data, data/stcrddek]
+  - [0x8BA4]

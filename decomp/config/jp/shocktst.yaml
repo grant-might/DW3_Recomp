@@ -1,0 +1,56 @@
+# Digimon World 3: Aratanaru Bouken no Tobira, Japan (SLPS-03446): shocktst
+name: shocktst
+sha1: d4a32eb20d7c5fdf4898e3ce9b71e3b5a9455714
+options:
+  basename: shocktst
+  target_path: disks/jp/AAA/PRO/SHOCKTST.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/jp/shocktst
+  src_path: src/debug/vibration_test
+  build_path: build/jp
+
+  ld_script_path: build/jp/generated/shocktst.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/jp/symbols.txt
+    - config/jp/symbols_shocktst.txt
+
+  undefined_funcs_auto_path: build/jp/generated/undefined_funcs_auto_shocktst.txt
+  undefined_syms_auto_path: build/jp/generated/undefined_syms_auto_shocktst.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: shocktst
+    type: code
+    start: 0x0
+    vram: 0x80082A60
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      - [0x0, .rodata, vibration_test]
+      - [0xF0, c, vibration_test]
+      - [0x1D18, .data, vibration_test]
+  - [0x1E44]

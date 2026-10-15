@@ -1,0 +1,75 @@
+// WSTAG225.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+stepAnimationOnce = 0x800A5770; // type:func
+resetTileEffect = 0x800A5848; // type:func
+updateTileEffect = 0x800A5880; // type:func
+handleCommand815 = 0x800A5B04; // type:func
+createCommand815 = 0x800A5B70; // type:func
+createTileEffect = 0x800A5BA0; // type:func
+updateStage = 0x800A5BCC; // type:func
+startStage = 0x800A5C44; // type:func
+endEvent5 = 0x800A5CA0; // type:func
+setupStage = 0x800A5CB0; // type:func
+tileEffectY = 0x800A5FC4;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+script5 = 0x800A5DE8;
+updateTileEffectFrames_0 = 0x800A5F10;
+updateTileEffectFrames_2 = 0x800A5F24;
+updateTileEffectFrames_1 = 0x800A5F74;
+updateTileEffectFrames = 0x800A5FB4;
+tileEffectSortY = 0x800A5FC0;
+tileEffectPlaces = 0x800A5FC8;
+stageImages = 0x800A5FD0;
+actor2Talks = 0x800A6080;
+actor3Talks = 0x800A6098;
+actor4Talks = 0x800A60B0;
+actor5Talks = 0x800A60C8;
+actor6Talks = 0x800A60E0;
+actor7Talks = 0x800A60F8;
+actor8Talks = 0x800A6110;
+actor9Talks = 0x800A6128;
+actor10Talks = 0x800A6140;
+actor11Talks = 0x800A6158;
+actor12Talks = 0x800A6170;
+actor13Talks = 0x800A6188;
+actor15Talks = 0x800A61A0;
+actor0Conditions = 0x800A61B8;
+actor1Conditions = 0x800A61C0;
+actor2Conditions = 0x800A61C8;
+actor3Conditions = 0x800A61D0;
+actor4Conditions = 0x800A61D8;
+actor5Conditions = 0x800A61E0;
+actor6Conditions = 0x800A61E8;
+actor7Conditions = 0x800A61F0;
+actor8Conditions = 0x800A61F8;
+actor9Conditions = 0x800A6200;
+actor10Conditions = 0x800A6208;
+actor11Conditions = 0x800A6210;
+actor12Conditions = 0x800A6218;
+actor13Conditions = 0x800A6220;
+actor14Conditions = 0x800A6228;
+actor15Conditions = 0x800A6230;
+actor0 = 0x800A6238;
+actor1 = 0x800A624C;
+actor2 = 0x800A6260;
+actor3 = 0x800A6274;
+actor4 = 0x800A6288;
+actor5 = 0x800A629C;
+actor6 = 0x800A62B0;
+actor7 = 0x800A62C4;
+actor8 = 0x800A62D8;
+actor9 = 0x800A62EC;
+actor10 = 0x800A6300;
+actor11 = 0x800A6314;
+actor12 = 0x800A6328;
+actor13 = 0x800A633C;
+actor14 = 0x800A6350;
+actor15 = 0x800A6364;
+stageActors = 0x800A6378;
+stageObjects = 0x800A63BC;
+stageSlots = 0x800A6494;
+stageFuncs = 0x800A64C4; // size:0x4
+stageEvents = 0x800A64C8;

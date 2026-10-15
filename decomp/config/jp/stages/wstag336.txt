@@ -1,0 +1,69 @@
+// WSTAG336.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A57B8; // type:func
+setupStage = 0x800A5814; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+area0Battle0 = 0x800A595C;
+area0Battle1 = 0x800A5968;
+area0Battle2 = 0x800A5974;
+area0Battle3 = 0x800A5980;
+area0Battle4 = 0x800A598C;
+area0Battle5 = 0x800A5998;
+area0Battle6 = 0x800A59A4;
+area0Battle7 = 0x800A59B0;
+area0Battles = 0x800A59BC;
+area1Battle0 = 0x800A59E0;
+area1Battle1 = 0x800A59EC;
+area1Battle2 = 0x800A59F8;
+area1Battle3 = 0x800A5A04;
+area1Battle4 = 0x800A5A10;
+area1Battle5 = 0x800A5A1C;
+area1Battle6 = 0x800A5A28;
+area1Battle7 = 0x800A5A34;
+area1Battles = 0x800A5A40;
+area2Battle0 = 0x800A5A64;
+area2Battle1 = 0x800A5A70;
+area2Battle2 = 0x800A5A7C;
+area2Battle3 = 0x800A5A88;
+area2Battle4 = 0x800A5A94;
+area2Battle5 = 0x800A5AA0;
+area2Battle6 = 0x800A5AAC;
+area2Battle7 = 0x800A5AB8;
+area2Battles = 0x800A5AC4;
+area3Battle0 = 0x800A5AE8;
+area3Battle1 = 0x800A5AF4;
+area3Battle2 = 0x800A5B00;
+area3Battle3 = 0x800A5B0C;
+area3Battle4 = 0x800A5B18;
+area3Battle5 = 0x800A5B24;
+area3Battle6 = 0x800A5B30;
+area3Battle7 = 0x800A5B3C;
+area3Battles = 0x800A5B48;
+stageBattles = 0x800A5B6C;
+stageImages = 0x800A5B88;
+actor0Talks = 0x800A5C28;
+actor1Talks = 0x800A5C40;
+actor2Talks = 0x800A5C58;
+actor3Talks = 0x800A5C70;
+actor4Talks = 0x800A5C88;
+actor5Talks = 0x800A5CA0;
+actor0Conditions = 0x800A5CB8;
+actor1Conditions = 0x800A5CC4;
+actor2Conditions = 0x800A5CD0;
+actor3Conditions = 0x800A5CDC;
+actor4Conditions = 0x800A5CE4;
+actor5Conditions = 0x800A5CF0;
+actor0 = 0x800A5CF8;
+actor1 = 0x800A5D0C;
+actor2 = 0x800A5D20;
+actor3 = 0x800A5D34;
+actor4 = 0x800A5D48;
+actor5 = 0x800A5D5C;
+stageActors = 0x800A5D70;
+stageObjects = 0x800A5D8C;
+stageSlots = 0x800A5F2C;
+stageFuncs = 0x800A5FA4; // size:0x4

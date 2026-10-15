@@ -1,0 +1,66 @@
+# Digimon World 3, USA (SLUS-01436): stitshop
+name: stitshop
+sha1: a7ef0031107436bf7c31f8a9b2518128f653aa22
+options:
+  basename: stitshop
+  target_path: disks/us/AAA/PRO/STITSHOP.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/stitshop
+  src_path: src/menus/item_shop
+  build_path: build/us
+
+  ld_script_path: build/us/generated/stitshop.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_stitshop.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_stitshop.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_stitshop.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stitshop
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, trade]
+      - [0x400, .rodata, info]
+      - [0x4E8, .rodata, shop]
+      - [0x548, .rodata, equip]
+      # the modules (src/menus/item_shop/), in the order they link
+      - [0x56C, c, scene]
+      - [0x95C, c, trade]
+      - [0x46E4, c, item_list]
+      - [0x5D08, c, info]
+      - [0x875C, c, shop]
+      - [0x966C, c, equip]
+      # STITSHOP's data, all of it in one file
+      - [0x9C8C, .data, data/stitshop]
+  - [0xA3BC]

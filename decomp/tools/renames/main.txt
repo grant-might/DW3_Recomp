@@ -1,0 +1,18 @@
+# The executable's renames (tools/renames.py), in the order they were made
+
+# GAME's fields that the field and the stages read (include/engine/game_state.h)
+GAME.unk30 GAME.battleSteps
+GAME.unk44 GAME.place
+GAME.unk46 GAME.placeArg
+GAME.unk26D4 GAME.lastFieldMode
+GAME.unk26D8 GAME.mapIndex
+GAME.unk26E0 GAME.playerDepth
+GAME.unk26E4 GAME.prizeSpot
+GAME.unk26EC GAME.flightZ
+GAME.unk26F8 GAME.randomGauges
+
+# round 4: the card images (include/engine/gfx.h), with their TIM
+CardImageHeader CardImage
+
+# final round: the text window method that sets a field nothing reads
+textWindowSetUnkC4 textWindowSetUnusedC4

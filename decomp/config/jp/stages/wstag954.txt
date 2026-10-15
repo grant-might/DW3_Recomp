@@ -1,0 +1,8 @@
+// names from eu: the European version's extra stage, whose functions the
+// Japanese one has in the same order
+stepLoopingAnimation = 0x800A5770; // type:func
+updateTileAnims = 0x800A5864; // type:func
+createTileAnims = 0x800A5938; // type:func
+updateStage = 0x800A5964; // type:func
+startStage = 0x800A59C8; // type:func
+setupStage = 0x800A5A24; // type:func

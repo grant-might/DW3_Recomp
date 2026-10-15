@@ -1,0 +1,55 @@
+# Digimon World 3, USA (SLUS-01436): shocktst
+name: shocktst
+sha1: 1c934c59465f27524cd42f30c9ef72a915702f3a
+options:
+  basename: shocktst
+  target_path: disks/us/AAA/PRO/SHOCKTST.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/shocktst
+  src_path: src/debug/vibration_test
+  build_path: build/us
+
+  ld_script_path: build/us/generated/shocktst.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_shocktst.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_shocktst.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_shocktst.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: shocktst
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      - [0x0, .rodata, vibration_test]
+      - [0xF0, c, vibration_test]
+      - [0x1D18, .data, vibration_test]
+  - [0x1E44]

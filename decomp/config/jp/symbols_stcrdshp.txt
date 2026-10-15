@@ -1,0 +1,62 @@
+// STCRDSHP.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+STCRDSHP_createPackOpenWindows = 0x80082DBC; // type:func
+STCRDSHP_showPackPage = 0x80083078; // type:func
+STCRDSHP_showPack = 0x80083350; // type:func
+STCRDSHP_showPackCard = 0x800834F8; // type:func
+STCRDSHP_drawPackOpen = 0x800838F4; // type:func
+STCRDSHP_listPacks = 0x8008410C; // type:func
+STCRDSHP_runPackOpen = 0x80084204; // type:func
+STCRDSHP_updatePackOpen = 0x8008500C; // type:func
+STCRDSHP_createPackOpen = 0x800850AC; // type:func
+STCRDSHP_startFader = 0x800850F4; // type:func
+STCRDSHP_drawFader = 0x8008517C; // type:func
+STCRDSHP_updateFader = 0x800852C0; // type:func
+STCRDSHP_createFader = 0x80085374; // type:func
+STCRDSHP_loadIcons = 0x800853B8; // type:func
+STCRDSHP_setCards = 0x80085470; // type:func
+STCRDSHP_hideCards = 0x800854C8; // type:func
+STCRDSHP_drawCards = 0x800854F0; // type:func
+STCRDSHP_drawTurningSlots = 0x800858EC; // type:func
+STCRDSHP_updateHiding = 0x80085A18; // type:func
+STCRDSHP_updateGrid = 0x80085AE0; // type:func
+STCRDSHP_createGrid = 0x80085D1C; // type:func
+STCRDSHP_createBuyWindows = 0x80085DB4; // type:func
+STCRDSHP_showBuyCard = 0x80085FBC; // type:func
+STCRDSHP_drawBuy = 0x8008645C; // type:func
+STCRDSHP_runBuy = 0x80086AD4; // type:func
+STCRDSHP_updateBuy = 0x8008770C; // type:func
+STCRDSHP_createBuy = 0x80087864; // type:func
+STCRDSHP_updateScene = 0x800878BC; // type:func
+STCRDSHP_start = 0x800879B4; // type:func
+STCRDSHP_createShopWindows = 0x800879E0; // type:func
+STCRDSHP_showTitle = 0x80087B6C; // type:func
+STCRDSHP_showOptions = 0x80087C78; // type:func
+STCRDSHP_drawShop = 0x80087D78; // type:func
+STCRDSHP_runShop = 0x80088040; // type:func
+STCRDSHP_showMoney = 0x800887A8; // type:func
+STCRDSHP_updateShop = 0x800887FC; // type:func
+STCRDSHP_createShop = 0x8008894C; // type:func
+STCRDSHP_loadFiles = 0x80088ABC; // type:func
+STCRDSHP_filesLoading = 0x80088B6C; // type:func
+STCRDSHP_startFade = 0x80088C0C; // type:func
+STCRDSHP_updateFade = 0x80088CA0; // type:func
+STCRDSHP_startLerp = 0x80088D0C; // type:func
+STCRDSHP_updateLerp = 0x80088D4C; // type:func
+STCRDSHP_getStock = 0x80088DB8; // type:func
+STCRDSHP_getPrice = 0x80088E94; // type:func
+STCRDSHP_packs = 0x8008C360;
+STCRDSHP_glowRows = 0x8008C750;
+STCRDSHP_cursorRows = 0x8008C768;
+STCRDSHP_titles = 0x8008C780;
+STCRDSHP_funcs = 0x8008C7D8;
+STCRDSHP_prices = 0x8008C978;
+STCRDSHP_stocks = 0x8008CA2C;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+STCRDSHP_slotCards = 0x80088EE0; // size:0x1EC0
+STCRDSHP_slotCards123 = 0x8008ADA0; // size:0x4C
+STCRDSHP_slotCards124 = 0x8008ADE0; // size:0x1580
+STCRDSHP_shopCards = 0x8008C7F8; // size:0x180

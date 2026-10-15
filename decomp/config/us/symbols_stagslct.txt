@@ -1,0 +1,18 @@
+// STAGSLCT.PRO: the debug stage select (scene 0x1500, "STSLCT")
+STAGSLCT_updateScene = 0x80084500; // type:func
+STAGSLCT_start = 0x80084564; // type:func
+STAGSLCT_moveCursor = 0x80084590; // type:func
+STAGSLCT_scrollPage = 0x80084660; // type:func
+STAGSLCT_showBiosVersion = 0x800846A4; // type:func
+STAGSLCT_zoomTitle = 0x800847C8; // type:func
+STAGSLCT_updateStageSelect = 0x800848D0; // type:func
+STAGSLCT_createStageSelect = 0x80085974; // type:func
+
+STAGSLCT_entryNames = 0x80082448; // size:0x2090
+STAGSLCT_STR_STAGE_SELECT = 0x800844D8; // size:0x24
+STAGSLCT_STR_CURSOR = 0x800844FC;
+STAGSLCT_regionNames = 0x800859A0; // size:0x1C
+STAGSLCT_entries = 0x800859BC; // size:0x1560
+STAGSLCT_screenRect = 0x80086F1C; // size:0x8
+STAGSLCT_biosVersion = 0x80086F24; // size:0x14
+STAGSLCT_biosVersionEnd = 0x80086F38; // size:0x2

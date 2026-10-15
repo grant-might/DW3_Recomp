@@ -1,0 +1,54 @@
+// WSTAG233.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+stepLoopingAnimation = 0x800A5770; // type:func
+updateTileAnims = 0x800A5864; // type:func
+createTileAnims = 0x800A595C; // type:func
+updateStage = 0x800A5988; // type:func
+startStage = 0x800A59EC; // type:func
+setupStage = 0x800A5A48; // type:func
+updateTileAnimsFrames0 = 0x800A5B50;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+updateTileAnimsFrames1 = 0x800A5BA0; // size:0x50
+area0Battle0 = 0x800A5BF0;
+area0Battle1 = 0x800A5BFC;
+area0Battle2 = 0x800A5C08;
+area0Battle3 = 0x800A5C14;
+area0Battle4 = 0x800A5C20;
+area0Battle5 = 0x800A5C2C;
+area0Battle6 = 0x800A5C38;
+area0Battle7 = 0x800A5C44;
+area0Battles = 0x800A5C50;
+area1Battle0 = 0x800A5C74;
+area1Battle1 = 0x800A5C80;
+area1Battle2 = 0x800A5C8C;
+area1Battle3 = 0x800A5C98;
+area1Battle4 = 0x800A5CA4;
+area1Battle5 = 0x800A5CB0;
+area1Battle6 = 0x800A5CBC;
+area1Battle7 = 0x800A5CC8;
+area1Battles = 0x800A5CD4;
+area2Battle0 = 0x800A5CF8;
+area2Battle1 = 0x800A5D04;
+area2Battle2 = 0x800A5D10;
+area2Battle3 = 0x800A5D1C;
+area2Battle4 = 0x800A5D28;
+area2Battle5 = 0x800A5D34;
+area2Battle6 = 0x800A5D40;
+area2Battle7 = 0x800A5D4C;
+area2Battles = 0x800A5D58;
+area3Battle0 = 0x800A5D7C;
+area3Battle1 = 0x800A5D88;
+area3Battle2 = 0x800A5D94;
+area3Battle3 = 0x800A5DA0;
+area3Battle4 = 0x800A5DAC;
+area3Battle5 = 0x800A5DB8;
+area3Battle6 = 0x800A5DC4;
+area3Battle7 = 0x800A5DD0;
+area3Battles = 0x800A5DDC;
+stageBattles = 0x800A5E00;
+stageImages = 0x800A5E1C;
+stageObjects = 0x800A5E7C;
+stageFuncs = 0x800A5FD4; // size:0x4

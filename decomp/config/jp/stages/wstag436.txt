@@ -1,0 +1,20 @@
+// WSTAG436.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateStage = 0x800A5770; // type:func
+startStage = 0x800A57B8; // type:func
+setupStage = 0x800A5814; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageImages = 0x800A58F8;
+actor0Talks = 0x800A5968;
+actor1Talks = 0x800A5980;
+actor0Conditions = 0x800A5998;
+actor1Conditions = 0x800A59A4;
+actor0 = 0x800A59B0;
+actor1 = 0x800A59C4;
+stageActors = 0x800A59D8;
+stageObjects = 0x800A59E4;
+stageSlots = 0x800A5A1C;
+stageFuncs = 0x800A5A4C; // size:0x4

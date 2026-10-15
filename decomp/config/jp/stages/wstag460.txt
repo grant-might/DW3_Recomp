@@ -1,0 +1,55 @@
+// WSTAG460.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+updateCommand830 = 0x800A5770; // type:func
+handleCommand830 = 0x800A5920; // type:func
+createCommand830 = 0x800A5958; // type:func
+stepTileAnimation = 0x800A5988; // type:func
+updateTileSolo = 0x800A5AA8; // type:func
+fadeOutTileSolo = 0x800A5C9C; // type:func
+createTileSolo = 0x800A5CB8; // type:func
+createTileSoloTask = 0x800A5CE8; // type:func
+stepTileAnimation2 = 0x800A5D14; // type:func
+updateTileDuo = 0x800A5E34; // type:func
+fadeOutTileDuo = 0x800A60FC; // type:func
+createTileDuo = 0x800A6118; // type:func
+createTileDuoTask = 0x800A6148; // type:func
+stepTileAnimation3 = 0x800A6174; // type:func
+isFarFromHome = 0x800A6294; // type:func
+getAngle = 0x800A62D0; // type:func
+moveWanderer = 0x800A6440; // type:func
+updateWanderer = 0x800A65BC; // type:func
+fadeOutWanderer = 0x800A6898; // type:func
+createWanderer = 0x800A68B4; // type:func
+createWandererTask = 0x800A68E4; // type:func
+updateStage = 0x800A693C; // type:func
+startStage = 0x800A69AC; // type:func
+endEvent370 = 0x800A6A08; // type:func
+setupStage = 0x800A6A40; // type:func
+updateTileSoloFrames0 = 0x800A6BF4;
+updateTileSoloFrames1 = 0x800A6C34;
+updateTileDuoFrames0 = 0x800A6D50;
+updateTileDuoFrames1 = 0x800A6D58;
+tileDuoObjectFrames = 0x800A6D60;
+updateWandererFrames0 = 0x800A6D64;
+updateWandererFrames1 = 0x800A6D90;
+wandererSpeeds = 0x800A6DC0;
+angleTangents = 0x800A6DC8;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+script370 = 0x800A6B2C;
+updateTileDuoFrames0_0 = 0x800A6C68;
+updateTileDuoFrames1_0 = 0x800A6CA8;
+updateTileDuoFrames0_1 = 0x800A6CDC;
+updateTileDuoFrames1_1 = 0x800A6D1C;
+stageImages = 0x800A6E0C;
+actor0Talks = 0x800A6E8C;
+actor1Conditions = 0x800A6EA4;
+actor0 = 0x800A6EAC;
+actor1 = 0x800A6EC0;
+stageActors = 0x800A6ED4;
+stageObjects = 0x800A6EE0;
+stageSlots = 0x800A7000;
+stageFuncs = 0x800A7060; // size:0x4
+stageEvents = 0x800A7064;

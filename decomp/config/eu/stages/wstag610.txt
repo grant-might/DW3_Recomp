@@ -1,0 +1,47 @@
+// names from the C of the modules this version builds (tools/version_symbols.py)
+area0Battle0 = 0x800A5F84;
+area0Battle1 = 0x800A5F90;
+area0Battle2 = 0x800A5F9C;
+area0Battle3 = 0x800A5FA8;
+area0Battle4 = 0x800A5FB4;
+area0Battle5 = 0x800A5FC0;
+area0Battle6 = 0x800A5FCC;
+area0Battle7 = 0x800A5FD8;
+area0Battles = 0x800A5FE4;
+area1Battle0 = 0x800A6008;
+area1Battle1 = 0x800A6014;
+area1Battle2 = 0x800A6020;
+area1Battle3 = 0x800A602C;
+area1Battle4 = 0x800A6038;
+area1Battle5 = 0x800A6044;
+area1Battle6 = 0x800A6050;
+area1Battle7 = 0x800A605C;
+area1Battles = 0x800A6068;
+area2Battle0 = 0x800A608C;
+area2Battle1 = 0x800A6098;
+area2Battle2 = 0x800A60A4;
+area2Battle3 = 0x800A60B0;
+area2Battle4 = 0x800A60BC;
+area2Battle5 = 0x800A60C8;
+area2Battle6 = 0x800A60D4;
+area2Battle7 = 0x800A60E0;
+area2Battles = 0x800A60EC;
+area3Battle0 = 0x800A6110;
+area3Battle1 = 0x800A611C;
+area3Battle2 = 0x800A6128;
+area3Battle3 = 0x800A6134;
+area3Battle4 = 0x800A6140;
+area3Battle5 = 0x800A614C;
+area3Battle6 = 0x800A6158;
+area3Battle7 = 0x800A6164;
+area3Battles = 0x800A6170;
+stageBattles = 0x800A6194;
+stageImages = 0x800A61B0;
+stageObjects = 0x800A6210;
+stageSlots = 0x800A6378;
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A5DE0; // type:func
+startStage = 0x800A5E28; // type:func
+setupStage = 0x800A5E84; // type:func
+stageFuncs = 0x800A63C0; // size:0x4

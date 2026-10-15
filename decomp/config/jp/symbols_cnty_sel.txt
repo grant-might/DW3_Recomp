@@ -1,0 +1,37 @@
+// CNTY_SEL.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+CNTY_SEL_tickScreen = 0x80082A98; // type:func
+CNTY_SEL_start = 0x80082C3C; // type:func
+CNTY_SEL_drawBackground = 0x80082CA0; // type:func
+CNTY_SEL_getFadeLevel = 0x80082D74; // type:func
+CNTY_SEL_drawFade = 0x80082DB0; // type:func
+CNTY_SEL_tickBackground = 0x80082F34; // type:func
+CNTY_SEL_startBackgroundTask = 0x80083088; // type:func
+CNTY_SEL_stepAnimation = 0x800830B4; // type:func
+CNTY_SEL_drawCursor = 0x8008318C; // type:func
+CNTY_SEL_setCursorSelection = 0x80083224; // type:func
+CNTY_SEL_tickCursor = 0x8008322C; // type:func
+CNTY_SEL_startCursorTask = 0x80083344; // type:func
+CNTY_SEL_getTopPanelScale = 0x8008337C; // type:func
+CNTY_SEL_drawTopPanel = 0x800833E0; // type:func
+CNTY_SEL_tickTopPanel = 0x8008348C; // type:func
+CNTY_SEL_startTopPanelTask = 0x800835B4; // type:func
+CNTY_SEL_getRightPanelScale = 0x800835E0; // type:func
+CNTY_SEL_drawRightPanel = 0x80083644; // type:func
+CNTY_SEL_tickRightPanel = 0x800836F0; // type:func
+CNTY_SEL_startRightPanelTask = 0x80083818; // type:func
+CNTY_SEL_getLeftPanelScale = 0x80083844; // type:func
+CNTY_SEL_drawLeftPanel = 0x800838B0; // type:func
+CNTY_SEL_tickLeftPanel = 0x80083970; // type:func
+CNTY_SEL_startLeftPanelTask = 0x80083A9C; // type:func
+CNTY_SEL_tickMenu = 0x80083AC8; // type:func
+CNTY_SEL_startMenuTask = 0x80084114; // type:func
+CNTY_SEL_screenRect = 0x80084140;
+CNTY_SEL_vramRect = 0x80084148;
+CNTY_SEL_fadeRect = 0x80084150;
+CNTY_SEL_cursorFlash = 0x80084158;
+CNTY_SEL_topPanelTweens = 0x8008416C;
+CNTY_SEL_rightPanelTweens = 0x8008417C;
+CNTY_SEL_leftPanelTweens = 0x8008418C;
+// end of the names from us

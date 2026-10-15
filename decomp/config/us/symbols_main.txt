@@ -1,0 +1,38 @@
+// The executable's own symbols, which splat doesn't give the overlays
+
+// the memory map (mk/version/<version>.mk), which the Makefile gives the
+// linker: where the executable loads the overlays, and the stages and other
+// sub-overlays (OVERLAY_ADDRESS and SUB_OVERLAY_ADDRESS)
+OVERLAY_VRAM = 0x80082448; // defined:True
+STAGE_VRAM = 0x800A4CA4; // defined:True
+
+// where the heap begins, after the overlays, which the linker gives the
+// executable (tools/link_heap.py): HEAP_START points at it
+HEAP_BASE = 0x800AA800; // defined:True
+
+// the mode overlays' symbols the executable uses, which it links against
+// (the Makefile's CHILDREN_main): their entry points (MODE_ENTRY_POINTS) and
+// FIELDSTG's functions and data game/events.c uses
+FIELDSTG_start = 0x80086CF4; // defined:True
+STDWTITL_start = 0x800827A0; // defined:True
+STDGNAME_start = 0x8008281C; // defined:True
+FIGHTSTG_start = 0x800868E0; // defined:True
+CARDGAME_start = 0x80095020; // defined:True
+STCRDDEK_start = 0x80082A80; // defined:True
+STCRDSHP_start = 0x8008739C; // defined:True
+STGTRAIN_start = 0x80083258; // defined:True
+STITSHOP_start = 0x80082AB0; // defined:True
+STGMCARD_start = 0x80082560; // defined:True
+STCRDABM_start = 0x80083368; // defined:True
+STFGTREP_start = 0x80082704; // defined:True
+STPLNMET_start = 0x800828B0; // defined:True
+STSTATUS_start = 0x80082DEC; // defined:True
+SHOCKTST_start = 0x80082630; // defined:True
+STGDGLAB_createScene = 0x800827D8; // defined:True
+CNTY_SEL_start = 0x80082624; // defined:True
+SOUNDTST_start = 0x80083BA8; // defined:True
+STAGSLCT_start = 0x80084564; // defined:True
+FIELDSTG_leaveField = 0x8008AEB4; // defined:True
+FIELDSTG_startListedEvent = 0x8008B2C4; // defined:True
+FIELDSTG_openInn = 0x8008B320; // defined:True
+FIELDSTG_battleFuncs = 0x8009A6EC; // defined:True

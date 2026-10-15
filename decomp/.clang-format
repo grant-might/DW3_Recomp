@@ -1,0 +1,40 @@
+# The C's style (CONTRIBUTING.md, Code), for clang-format 18: tools/format.sh
+# runs it, and leaves the data and a few files alone
+Language: Cpp
+BasedOnStyle: LLVM
+# Lines break where they were written: there is no limit to wrap at (some
+# lines are long on purpose, and GCC 2.8.1's line notes can depend on a
+# break)
+ColumnLimit: 0
+IndentWidth: 4
+ContinuationIndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Attach
+PointerAlignment: Right
+SpaceBeforeParens: ControlStatements
+# {0, 1} and (Vec2){x, y} in the code; the data's tables, with spaces inside
+# their braces, aren't formatted
+Cpp11BracedListStyle: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+IndentCaseLabels: false
+# a label one level left of the statements around it
+IndentGotoLabels: true
+AlignAfterOpenBracket: Align
+# comments aligned on purpose stay so
+AlignTrailingComments:
+  Kind: Leave
+AlignEscapedNewlines: Left
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+# a macro's body keeps its layout (COUNTDOWN_BORROW)
+SkipMacroDefinitionBody: true
+# the includes stay in the order they are written
+SortIncludes: Never
+ReflowComments: false
+# the shared code's functions, named with their overlay's prefix
+Macros:
+  - OVL_NAME(name)=name

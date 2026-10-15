@@ -1,0 +1,65 @@
+# Digimon World 3, USA (SLUS-01436): stcrddek
+name: stcrddek
+sha1: 04f46fb6aa7d83e0a0255c95fd2360ba138d0680
+options:
+  basename: stcrddek
+  target_path: disks/us/AAA/PRO/STCRDDEK.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/us/stcrddek
+  src_path: src/cardgame/deck_editor
+  build_path: build/us
+
+  ld_script_path: build/us/generated/stcrddek.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/us/symbols.txt
+    - config/us/symbols_stcrddek.txt
+
+  undefined_funcs_auto_path: build/us/generated/undefined_funcs_auto_stcrddek.txt
+  undefined_syms_auto_path: build/us/generated/undefined_syms_auto_stcrddek.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stcrddek
+    type: code
+    start: 0x0
+    vram: 0x80082448
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, editor]
+      - [0x100, .rodata, name_entry]
+      - [0x3A8, .rodata, screen]
+      # the modules (src/cardgame/deck_editor/), in the order they link
+      - [0x540, c, scene]
+      - [0x928, c, deck_cards]
+      - [0xCCC, c, editor]
+      - [0x3AAC, c, name_entry]
+      - [0x592C, c, scroll_bar]
+      - [0x5C00, c, screen]
+      # STCRDDEK's data, all of it in one file
+      - [0x74FC, .data, data/stcrddek]
+  - [0x88CC]

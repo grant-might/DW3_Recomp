@@ -1,0 +1,28 @@
+// The Dockerfile's build environment as a VS Code dev container, as
+// tools/docker.sh runs it: the repository mounted at /dw3 (disks/ and
+// external/ included, never part of the image), the compiler and tools
+// that the image has in /opt/dw3/bin (BIN_DIR) and its Python on the PATH
+{
+  "name": "dw3_decomp",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "options": ["--platform=linux/amd64"]
+  },
+  "runArgs": ["--platform=linux/amd64"],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/dw3,type=bind",
+  "workspaceFolder": "/dw3",
+  // Ubuntu's own user, which the dev container gives your user id, so that
+  // what the build writes stays yours
+  "remoteUser": "ubuntu",
+  // the image has no git, which VS Code's source control needs
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" }
+  },
+  "postCreateCommand": "make compile_commands",
+  "customizations": {
+    "vscode": {
+      "extensions": ["llvm-vs-code-extensions.vscode-clangd"]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+// WFIGHTTS.PRO: the battle test
+
+WFIGHTTS_strings = 0x800A4CBC; // size:0x9C0
+WFIGHTTS_start = 0x800A6924; // type:func
+WFIGHTTS_stageList = 0x800A7338; // type:func
+WFIGHTTS_createStageList = 0x800A7614; // type:func
+WFIGHTTS_loadImages = 0x800A58EC; // type:func
+WFIGHTTS_initLayers = 0x800A567C; // type:func
+WFIGHTTS_battleTest = 0x800A5A54; // type:func
+WFIGHTTS_fighterList = 0x800A6954; // type:func
+WFIGHTTS_createFighterList = 0x800A6E80; // type:func
+WFIGHTTS_cameraList = 0x800A6ECC; // type:func
+WFIGHTTS_createCameraList = 0x800A72EC; // type:func
+WFIGHTTS_motionList = 0x800A764C; // type:func
+WFIGHTTS_createMotionList = 0x800A7B9C; // type:func
+WFIGHTTS_effectList = 0x800A7BE8; // type:func
+WFIGHTTS_createEffectList = 0x800A81D0; // type:func
+WFIGHTTS_screen = 0x800A821C; // size:0x8
+WFIGHTTS_fighters = 0x800A8224; // size:0x1C
+WFIGHTTS_backPoints = 0x800A8240; // size:0x10
+WFIGHTTS_backColors = 0x800A8250; // size:0x10
+WFIGHTTS_speedMode = 0x800A8260; // size:0x4
+WFIGHTTS_fighterSide = 0x800A8264; // size:0x4
+WFIGHTTS_fighterCursors = 0x800A8268; // size:0x8
+WFIGHTTS_fighterScrolls = 0x800A8270; // size:0x8
+WFIGHTTS_cameraSide = 0x800A8278; // size:0x4
+WFIGHTTS_cameraPicks = 0x800A827C; // size:0x8
+WFIGHTTS_partnerCameraNames = 0x800A8284; // size:0x30
+WFIGHTTS_enemyCameraNames = 0x800A82B4; // size:0xC
+WFIGHTTS_stageCursor = 0x800A82C0; // size:0x4
+WFIGHTTS_stageScroll = 0x800A82C4; // size:0x4
+WFIGHTTS_stageNames = 0x800A82C8; // size:0xDC
+WFIGHTTS_motionNames = 0x800A83A4; // size:0xF8
+WFIGHTTS_effectNames = 0x800A849C; // size:0x50
+WFIGHTTS_partnerView = 0x800A84EC; // size:0x34
+WFIGHTTS_unused = 0x800A8520; // size:0xC
+WFIGHTTS_enemyView = 0x800A852C; // size:0x34
+WFIGHTTS_displayX = 0x800A8560; // size:0x4
+WFIGHTTS_displayY = 0x800A8564; // size:0x4
+WFIGHTTS_motionCursors = 0x800A8568; // size:0x1C
+WFIGHTTS_effectCursors = 0x800A8584; // size:0x1C
+FIGHTSTG_battle = 0x800A31E8; // FIGHTSTG's battle (Battle) defined:True
+FIGHTSTG_fighterCache = 0x800A32E0; // FIGHTSTG's fighter cache (FighterCache) defined:True
+FIGHTSTG_createBattleCamera = 0x800919EC; // FIGHTSTG's (BattleCamera) defined:True
+
+// FIGHTSTG's, which the overlay gets from fightstg_syms.ld or undefined_syms_wfightts.txt
+FIGHTSTG_createStage = 0x80086128; // defined:True
+FIGHTSTG_startEntrance = 0x80086780; // defined:True
+FIGHTSTG_createModels = 0x800877D4; // defined:True
+FIGHTSTG_startHitEffect = 0x80087ACC; // defined:True
+FIGHTSTG_startDigimonChange = 0x80089F74; // defined:True
+FIGHTSTG_createLights = 0x8008A838; // defined:True
+FIGHTSTG_createBattleScript = 0x8008C090; // defined:True
+FIGHTSTG_startPlayerTurn = 0x80092124; // defined:True
+FIGHTSTG_setPlayerTurnStep = 0x80092154; // defined:True
+FIGHTSTG_startCameraTurn = 0x800A120C; // defined:True

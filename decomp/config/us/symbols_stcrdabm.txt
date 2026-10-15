@@ -1,0 +1,33 @@
+// STCRDABM.PRO: the card album (scene 0x1200, "STALBM")
+STCRDABM_startFader = 0x80082520; // type:func
+STCRDABM_drawFader = 0x800825A8; // type:func
+STCRDABM_updateFader = 0x800826EC; // type:func
+STCRDABM_createFader = 0x800827A0; // type:func
+STCRDABM_loadIcons = 0x800827E4; // type:func
+STCRDABM_setPage = 0x800828AC; // type:func
+STCRDABM_hideCards = 0x800828E4; // type:func
+STCRDABM_drawCards = 0x8008290C; // type:func
+STCRDABM_drawTurningSlots = 0x80082D54; // type:func
+STCRDABM_pageHasCards = 0x80082ECC; // type:func
+STCRDABM_updateHiding = 0x80082F18; // type:func
+STCRDABM_updateGrid = 0x80082FE0; // type:func
+STCRDABM_createGrid = 0x80083210; // type:func
+STCRDABM_updateScene = 0x80083270; // type:func
+STCRDABM_start = 0x80083368; // type:func
+STCRDABM_createWindows = 0x80083394; // type:func
+STCRDABM_showPageInfo = 0x800835AC; // type:func
+STCRDABM_showCardInfo = 0x80083820; // type:func
+STCRDABM_drawAlbum = 0x80083C4C; // type:func
+STCRDABM_findPageCards = 0x80084314; // type:func
+STCRDABM_runAlbum = 0x80084384; // type:func
+STCRDABM_updateAlbum = 0x80084C8C; // type:func
+STCRDABM_createAlbum = 0x80084DB8; // type:func
+STCRDABM_loadFiles = 0x80084DF4; // type:func
+STCRDABM_filesLoading = 0x80084ED4; // type:func
+STCRDABM_startFade = 0x80084FBC; // type:func
+STCRDABM_updateFade = 0x80085050; // type:func
+STCRDABM_startLerp = 0x800850BC; // type:func
+STCRDABM_updateLerp = 0x800850FC; // type:func
+
+STCRDABM_cursorBlink = 0x80085168; // size:0x18
+STCRDABM_funcs = 0x80085180; // size:0x18

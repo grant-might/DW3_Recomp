@@ -1,0 +1,54 @@
+// WSTAG785.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+stepAnimation = 0x800A5774; // type:func
+updateTileSet = 0x800A5894; // type:func
+createTileSet = 0x800A5B34; // type:func
+createCommand835 = 0x800A5B68; // type:func
+drawActorMark = 0x800A5B98; // type:func
+updateActorMark = 0x800A5C44; // type:func
+createCommand807 = 0x800A5EA0; // type:func
+handleCommand807 = 0x800A5ED0; // type:func
+updateStage = 0x800A5F9C; // type:func
+startStage = 0x800A6040; // type:func
+endEvent1 = 0x800A609C; // type:func
+setupStage = 0x800A60AC; // type:func
+updateTileSetFrames1 = 0x800A6AA0;
+updateTileSetFrames2 = 0x800A6ADC;
+updateTileSetFrames3 = 0x800A6B10;
+updateTileSetFrames0 = 0x800A6B2C;
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageColor = 0x800A5770;
+script1 = 0x800A6198;
+script3 = 0x800A6988;
+stageImages = 0x800A6B48;
+actor0Conditions = 0x800A6C08;
+actor1Conditions = 0x800A6C10;
+actor2Conditions = 0x800A6C18;
+actor3Conditions = 0x800A6C20;
+actor4Conditions = 0x800A6C28;
+actor5Conditions = 0x800A6C30;
+actor6Conditions = 0x800A6C38;
+actor7Conditions = 0x800A6C40;
+actor8Conditions = 0x800A6C48;
+actor9Conditions = 0x800A6C50;
+actor10Conditions = 0x800A6C58;
+actor11Conditions = 0x800A6C60;
+actor0 = 0x800A6C68;
+actor1 = 0x800A6C7C;
+actor2 = 0x800A6C90;
+actor3 = 0x800A6CA4;
+actor4 = 0x800A6CB8;
+actor5 = 0x800A6CCC;
+actor6 = 0x800A6CE0;
+actor7 = 0x800A6CF4;
+actor8 = 0x800A6D08;
+actor9 = 0x800A6D1C;
+actor10 = 0x800A6D30;
+actor11 = 0x800A6D44;
+stageActors = 0x800A6D58;
+stageObjects = 0x800A6D8C;
+stageFuncs = 0x800A6F60; // size:0x4
+stageEvents = 0x800A6F64;

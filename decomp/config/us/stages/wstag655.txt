@@ -1,0 +1,75 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A4CA4; // type:func
+startStage = 0x800A4D38; // type:func
+setupStage = 0x800A4E18; // type:func
+stageFuncs = 0x800A55F0; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A556C;
+stageSlots = 0x800A5590;
+stageImages = 0x800A53BC;
+stageActors = 0x800A5554;
+stageEvents = 0x800A55F4;
+stageBattles = 0x800A53A0;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script430 = 0x800A4F3C;
+script431 = 0x800A503C;
+area0Battle0 = 0x800A5190;
+area0Battle1 = 0x800A519C;
+area0Battle2 = 0x800A51A8;
+area0Battle3 = 0x800A51B4;
+area0Battle4 = 0x800A51C0;
+area0Battle5 = 0x800A51CC;
+area0Battle6 = 0x800A51D8;
+area0Battle7 = 0x800A51E4;
+area0Battles = 0x800A51F0;
+area1Battle0 = 0x800A5214;
+area1Battle1 = 0x800A5220;
+area1Battle2 = 0x800A522C;
+area1Battle3 = 0x800A5238;
+area1Battle4 = 0x800A5244;
+area1Battle5 = 0x800A5250;
+area1Battle6 = 0x800A525C;
+area1Battle7 = 0x800A5268;
+area1Battles = 0x800A5274;
+area2Battle0 = 0x800A5298;
+area2Battle1 = 0x800A52A4;
+area2Battle2 = 0x800A52B0;
+area2Battle3 = 0x800A52BC;
+area2Battle4 = 0x800A52C8;
+area2Battle5 = 0x800A52D4;
+area2Battle6 = 0x800A52E0;
+area2Battle7 = 0x800A52EC;
+area2Battles = 0x800A52F8;
+area3Battle0 = 0x800A531C;
+area3Battle1 = 0x800A5328;
+area3Battle2 = 0x800A5334;
+area3Battle3 = 0x800A5340;
+area3Battle4 = 0x800A534C;
+area3Battle5 = 0x800A5358;
+area3Battle6 = 0x800A5364;
+area3Battle7 = 0x800A5370;
+area3Battles = 0x800A537C;
+actor3Talk0Conditions = 0x800A542C;
+actor3Talk0Actions = 0x800A5434;
+actor3Talk1Conditions = 0x800A543C;
+actor0Talks = 0x800A5444;
+actor1Talks = 0x800A545C;
+actor2Talks = 0x800A5474;
+actor3Talks = 0x800A548C;
+actor4Talks = 0x800A54B0;
+actor0Conditions = 0x800A54C8;
+actor1Conditions = 0x800A54D0;
+actor2Conditions = 0x800A54D8;
+actor3Conditions = 0x800A54E0;
+actor4Conditions = 0x800A54E8;
+actor0 = 0x800A54F0;
+actor1 = 0x800A5504;
+actor2 = 0x800A5518;
+actor3 = 0x800A552C;
+actor4 = 0x800A5540;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+endEvent430 = 0x800A4D94; // type:func
+endEvent431 = 0x800A4DE0; // type:func

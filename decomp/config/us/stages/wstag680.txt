@@ -1,0 +1,28 @@
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A52A0; // type:func
+startStage = 0x800A5318; // type:func
+setupStage = 0x800A5374; // type:func
+stageFuncs = 0x800A5854; // size:0x4
+
+// named by their use (FIELDSTG_state, the field state, in setupStage)
+stageObjects = 0x800A5710;
+stageImages = 0x800A5678;
+stageActors = 0x800A5708;
+stageEvents = 0x800A5858;
+
+// named by their place in the stage's tables (tools/name_stage_data.py)
+script412 = 0x800A5438;
+actor0Conditions = 0x800A56E8;
+actor0 = 0x800A56F4;
+
+// functions named by what calls them (tools/name_stage_funcs.py)
+stepRiser = 0x800A4DA0; // type:func
+updateRisers = 0x800A4E9C; // type:func
+handleCommand814 = 0x800A5140; // type:func
+createCommand814 = 0x800A5270; // type:func
+
+// named by the function or table that uses them (tools/name_stage_uses.py)
+updateRisersFrames_0 = 0x800A5618;
+updateRisersFrames_1 = 0x800A5628;
+updateRisersFrames_6 = 0x800A5638;
+updateRisersFrames = 0x800A564C;

@@ -1,0 +1,70 @@
+// WSTAG481.PRO's own symbols, which only its splat config reads
+
+// names from us (tools/match_versions.py --seed): the same function or datum
+stepTileSequences = 0x800A5788; // type:func
+updateTileCursors = 0x800A5914; // type:func
+createTileCursors = 0x800A5AF4; // type:func
+updateStage = 0x800A5B20; // type:func
+startStage = 0x800A5B84; // type:func
+setupStage = 0x800A5BE0; // type:func
+// end of the names from us
+
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stageColor = 0x800A5784;
+updateTileCursorsFrames_0_0 = 0x800A5D0C;
+updateTileCursorsFrames_0_12 = 0x800A5D1C;
+updateTileCursorsFrames_1_0 = 0x800A5D34;
+updateTileCursorsFrames_1_12 = 0x800A5D44;
+updateTileCursorsFrames_2_0 = 0x800A5D5C;
+updateTileCursorsFrames_2_12 = 0x800A5D6C;
+updateTileCursorsFrames_3_0 = 0x800A5D84;
+updateTileCursorsFrames_3_12 = 0x800A5D94;
+updateTileCursorsFrames_4_0 = 0x800A5DAC;
+updateTileCursorsFrames_4_12 = 0x800A5DBC;
+updateTileCursorsFrames_0 = 0x800A5DD4;
+updateTileCursorsFrames_1 = 0x800A5E0C;
+updateTileCursorsFrames_2 = 0x800A5E44;
+updateTileCursorsFrames_3 = 0x800A5E7C;
+updateTileCursorsFrames_4 = 0x800A5EB4;
+updateTileCursorsFrames = 0x800A5EEC;
+area0Battle0 = 0x800A5F00;
+area0Battle1 = 0x800A5F0C;
+area0Battle2 = 0x800A5F18;
+area0Battle3 = 0x800A5F24;
+area0Battle4 = 0x800A5F30;
+area0Battle5 = 0x800A5F3C;
+area0Battle6 = 0x800A5F48;
+area0Battle7 = 0x800A5F54;
+area0Battles = 0x800A5F60;
+area1Battle0 = 0x800A5F84;
+area1Battle1 = 0x800A5F90;
+area1Battle2 = 0x800A5F9C;
+area1Battle3 = 0x800A5FA8;
+area1Battle4 = 0x800A5FB4;
+area1Battle5 = 0x800A5FC0;
+area1Battle6 = 0x800A5FCC;
+area1Battle7 = 0x800A5FD8;
+area1Battles = 0x800A5FE4;
+area2Battle0 = 0x800A6008;
+area2Battle1 = 0x800A6014;
+area2Battle2 = 0x800A6020;
+area2Battle3 = 0x800A602C;
+area2Battle4 = 0x800A6038;
+area2Battle5 = 0x800A6044;
+area2Battle6 = 0x800A6050;
+area2Battle7 = 0x800A605C;
+area2Battles = 0x800A6068;
+area3Battle0 = 0x800A608C;
+area3Battle1 = 0x800A6098;
+area3Battle2 = 0x800A60A4;
+area3Battle3 = 0x800A60B0;
+area3Battle4 = 0x800A60BC;
+area3Battle5 = 0x800A60C8;
+area3Battle6 = 0x800A60D4;
+area3Battle7 = 0x800A60E0;
+area3Battles = 0x800A60EC;
+stageBattles = 0x800A6110;
+stageImages = 0x800A612C;
+stageObjects = 0x800A618C;
+stageSlots = 0x800A6818;
+stageFuncs = 0x800A6938; // size:0x4

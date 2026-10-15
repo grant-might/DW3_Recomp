@@ -1,0 +1,65 @@
+# Digimon World 2003, Europe (SLES-03936): stplnmet
+name: stplnmet
+sha1: 033c688b39835931ff0231a94363ceb5b4031ee1
+options:
+  basename: stplnmet
+  target_path: disks/eu/AAA/PRO/STPLNMET.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stplnmet
+  src_path: src/menus/player_name
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stplnmet.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stplnmet.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stplnmet.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stplnmet.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stplnmet
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, name_entry]
+      # the modules (src/menus/player_name/), in the order they link
+      - [0x2A8, c, scene]
+      - [0x494, c, backdrop]
+      - [0xAC4, c, welcome]
+      - [0x10C0, c, name_entry]
+      - [0x321C, c, confirm]
+      - [0x4310, c, choice]
+      - [0x4E64, c, screen]
+      # STPLNMET's data, all of it in one file
+      - [0x5934, .data, data/stplnmet]
+  - [0x6F0C]

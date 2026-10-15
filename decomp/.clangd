@@ -1,0 +1,11 @@
+# clangd takes the build's flags from compile_commands.json, which
+# `make compile_commands` writes for one version (tools/compile_commands.py)
+CompileFlags:
+  Add:
+    # GCC 2.8.1's C calls methods through unprototyped pointers, as the
+    # original does (TASK_HEADER's update); C23's rule isn't this code's
+    - -Wno-deprecated-non-prototype
+Diagnostics:
+  # A file includes engine/game.h, which includes every module's header,
+  # rather than the ones it uses (CONTRIBUTING.md, Code)
+  UnusedIncludes: None

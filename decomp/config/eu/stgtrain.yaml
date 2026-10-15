@@ -1,0 +1,71 @@
+# Digimon World 2003, Europe (SLES-03936): stgtrain
+name: stgtrain
+sha1: 32344e9ffca3db7686aa70f6e0082510d0ba258b
+options:
+  basename: stgtrain
+  target_path: disks/eu/AAA/PRO/STGTRAIN.PRO
+  base_path: ../..
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm/eu/stgtrain
+  src_path: src/menus/gym
+  build_path: build/eu
+
+  ld_script_path: build/eu/generated/stgtrain.ld
+
+  global_vram_start: 0x80000000
+  global_vram_end: 0x80200000
+
+  find_file_boundaries: True
+
+  generate_asm_macros_files: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/eu/symbols.txt
+    - config/eu/symbols_stgtrain.txt
+
+  undefined_funcs_auto_path: build/eu/generated/undefined_funcs_auto_stgtrain.txt
+  undefined_syms_auto_path: build/eu/generated/undefined_syms_auto_stgtrain.txt
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  ld_bss_is_noload: False
+
+  migrate_rodata_to_functions: True
+  create_data_pads: False
+
+segments:
+  - name: stgtrain
+    type: code
+    start: 0x0
+    vram: 0x80082CB0
+    vram_symbol: OVERLAY_VRAM
+    align: 4
+    subalign: 4
+    subsegments:
+      # us's modules, each with its rodata, data and bss (tools/split_version.py)
+      # each module's rodata: the ones with jump tables or strings
+      - [0x0, .rodata, screen]
+      - [0xD4, .rodata, result]
+      - [0x1A0, .rodata, session]
+      - [0x270, .rodata, menu]
+      # the modules (src/menus/gym/), in the order they link
+      - [0x3A8, c, sprite]
+      - [0xC80, c, scene]
+      - [0xE3C, c, screen]
+      - [0x350C, c, result]
+      - [0x5564, c, session]
+      - [0x6B08, c, actor]
+      - [0x76A4, c, menu]
+      - [0x8BF4, c, files]
+      # each module's data
+      - [0x9574, .data, screen]
+      - [0x9654, .data, result]
+      - [0x9828, .data, files]
+  - [0xA658]

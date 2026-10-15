@@ -1,0 +1,23 @@
+// names from the C of the modules this version builds (tools/version_symbols.py)
+stepRiser = 0x800A5EDC; // type:func
+updateRisers = 0x800A5FD8; // type:func
+handleCommand814 = 0x800A627C; // type:func
+createCommand814 = 0x800A63AC; // type:func
+script412 = 0x800A657C;
+updateRisersFrames_0 = 0x800A675C;
+updateRisersFrames_1 = 0x800A676C;
+updateRisersFrames_6 = 0x800A677C;
+updateRisersFrames = 0x800A6790;
+stageImages = 0x800A67BC;
+actor0Conditions = 0x800A682C;
+actor0 = 0x800A6838;
+stageActors = 0x800A684C;
+stageObjects = 0x800A6854;
+stageEvents = 0x800A699C;
+func_80084B80 = 0x800853F8;
+
+// the names the stages share (the same code or data in each)
+updateStage = 0x800A63DC; // type:func
+startStage = 0x800A6454; // type:func
+setupStage = 0x800A64B0; // type:func
+stageFuncs = 0x800A6998; // size:0x4
