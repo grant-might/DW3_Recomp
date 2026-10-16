@@ -184,9 +184,43 @@ if(_psx_sdl_backend STREQUAL "SDL3")
     option(PSX_SDL3_FETCH
         "Fetch the pinned SDL3 release when no system SDL3 package is found"
         ON)
+    # Under MSVC the system search is skipped on purpose. Every SDL3 it can find on a Windows
+    # machine is either MSVC-built or unlinkable, and a GNU one (an MSYS2 install, a MinGW dev
+    # package) makes the link fail on __mingw_* symbols. The pinned fetch below is the only SDL3
+    # that can be trusted there, and the requirements already tell players it is downloaded.
+    #
+    # A cache entry is NOT a caller request. A previous configure leaves SDL3_DIR in
+    # CMakeCache.txt, and honouring that is how the same player gets the same failure twice. Only
+    # an SDL3_DIR from the ENVIRONMENT counts as deliberate, and its flavour is checked below.
+    if(MSVC)
+        if(NOT "$ENV{SDL3_DIR}" STREQUAL "")
+            set(SDL3_DIR "$ENV{SDL3_DIR}")
+        elseif(SDL3_DIR)
+            message(STATUS
+                "psxrecomp: dropping the inherited SDL3_DIR (${SDL3_DIR}); not a caller request")
+            unset(SDL3_DIR CACHE)
+            unset(SDL3_DIR)
+        endif()
+        # zlib's hints can be inherited the same way, so drop those too.
+        foreach(_psx_stale_var IN ITEMS ZLIB_LIBRARY ZLIB_LIBRARY_RELEASE ZLIB_LIBRARY_DEBUG
+                                   ZLIB_INCLUDE_DIR ZLIB_ROOT)
+            if(DEFINED ${_psx_stale_var})
+                unset(${_psx_stale_var} CACHE)
+                unset(${_psx_stale_var})
+            endif()
+        endforeach()
+        unset(_psx_stale_var)
+    endif()
+    if(MSVC AND NOT SDL3_DIR)
+        set(_psx_sdl3_search_system OFF)
+        message(STATUS
+            "psxrecomp: MSVC build, so SDL3 comes from the pinned fetch, no system search")
+    else()
+        set(_psx_sdl3_search_system ON)
+    endif()
     # cmake-clang-v1 1.0.9+ ships SDL3 under deps/; 1.0.7–1.0.8 used pack root.
     # Prefer SDL3_DIR / HINTS — never CMAKE_PREFIX_PATH=pack (mingw include poisons libc++).
-    if(NOT SDL3_DIR)
+    if(_psx_sdl3_search_system AND NOT SDL3_DIR)
         foreach(_psx_tc_pfx IN LISTS _PSX_TOOLCHAIN_PREFIX_HINTS)
             foreach(_psx_sdl_root IN ITEMS "${_psx_tc_pfx}/deps" "${_psx_tc_pfx}")
                 if(EXISTS "${_psx_sdl_root}/lib/cmake/SDL3/SDL3Config.cmake" OR
@@ -204,10 +238,13 @@ if(_psx_sdl_backend STREQUAL "SDL3")
     foreach(_psx_tc_pfx IN LISTS _PSX_TOOLCHAIN_PREFIX_HINTS)
         list(APPEND _PSX_SDL3_HINTS "${_psx_tc_pfx}/deps" "${_psx_tc_pfx}")
     endforeach()
-    find_package(SDL3 3.4 CONFIG QUIET COMPONENTS SDL3
-        HINTS ${_PSX_SDL3_HINTS}
-        PATH_SUFFIXES lib/cmake/SDL3)
+    if(_psx_sdl3_search_system)
+        find_package(SDL3 3.4 CONFIG QUIET COMPONENTS SDL3
+            HINTS ${_PSX_SDL3_HINTS}
+            PATH_SUFFIXES lib/cmake/SDL3)
+    endif()
     unset(_PSX_SDL3_HINTS)
+    unset(_psx_sdl3_search_system)
     if(TARGET SDL3::SDL3)
         if(MSVC)
             # Net for a GNU SDL3 living outside the roots excluded above: MSVC cannot
@@ -235,8 +272,8 @@ if(_psx_sdl_backend STREQUAL "SDL3")
                     "MSVC cannot link it, so the link would stop on unresolved __mingw_* "
                     "symbols.\nRename or remove that SDL3 (an MSYS2 install usually lives "
                     "under C:/msys64/mingw64), then build again: SDL3 is then downloaded "
-                    "and built with MSVC. Alternatively point SDL3_DIR at an MSVC build "
-                    "of SDL3.")
+                    "and built with MSVC. Alternatively set the SDL3_DIR environment "
+                    "variable to an MSVC build of SDL3.")
             endif()
             unset(_psx_sdl3_gnu_artifacts)
             unset(_psx_sdl3_gnu_list)
