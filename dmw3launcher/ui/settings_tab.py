@@ -546,8 +546,9 @@ class SettingsTab(QWidget):
         self.btn_apply.setEnabled(True)
         self.head.setText(f"These are the {label} build's own settings ({p}).")
         if not p.is_file():
-            self.head.setText(f"The {label} build has no settings.toml yet ({p}). Start it once "
-                              f"and the runtime writes one; the defaults below are what it will use.")
+            self.head.setText(f"The {label} build has no settings.toml yet ({p}). Applying writes "
+                              f"one with the values below, which is what the runtime then reads "
+                              f"and keeps updating.")
         if not st.available():
             # Refuse to touch the file rather than rewrite it without comment support.
             self.head.setText(
@@ -610,8 +611,10 @@ class SettingsTab(QWidget):
         try:
             st.set_values(p, updates)
         except Exception as exc:  # noqa: BLE001
-            QMessageBox.critical(self, "Could not write settings",
-                                 f"{exc}\n\nIs tomlkit installed? (pip install tomlkit)")
+            # The exception says what is wrong: a build folder that does not exist yet, or tomlkit
+            # genuinely absent. Blaming tomlkit for every failure sent a player looking at Python
+            # packages when the real cause was a settings file that had never been created.
+            QMessageBox.critical(self, "Could not write settings", str(exc))
             return
         # The env-only knobs live in the launcher's own config, never in the runtime's settings.toml.
         try:

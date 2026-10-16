@@ -31,7 +31,7 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:  # noqa: BLE001
         pass
 
-from dmw3launcher import builds, disc, paths, runtime, saves      # noqa: E402
+from dmw3launcher import builds, builder, disc, paths, runtime, saves   # noqa: E402
 from dmw3launcher import settings as st                           # noqa: E402
 from dmw3launcher.ui import theme                         # noqa: E402
 
@@ -107,6 +107,49 @@ try:
           "A5 an unrelated video key kept its value")
     check(set(snap_before) == set(snap_after), "A6 section set unchanged",
           f"{sorted(snap_before)} -> {sorted(snap_after)}")
+    # A7-A8 The two states the Settings tab meets before a build has ever run. A file that does not
+    # exist must be CREATED, because the player is looking at the defaults the runtime will use and
+    # Apply has to be able to write them. A missing build FOLDER must be refused with a reason, not a
+    # traceback, because there is no executable for the settings to belong to.
+    _fresh_dir = _tmpA / "fresh"
+    _fresh_dir.mkdir()
+    _fresh = _fresh_dir / "settings.toml"
+    st.set_values(_fresh, {("video", "vsync"): "on", ("video", "rewind_depth"): 50})
+    _fresh_snap = st.snapshot(_fresh)
+    check(_fresh.is_file() and _fresh_snap.get("video", {}).get("rewind_depth") == 50,
+          "A7 a settings.toml that does not exist yet is created, not refused",
+          f"exists={_fresh.is_file()}")
+    try:
+        st.set_values(_tmpA / "no-such-build" / "settings.toml", {("video", "vsync"): "on"})
+        _refused = ""
+    except Exception as exc:  # noqa: BLE001
+        _refused = str(exc)
+    check("no folder yet" in _refused,
+          "A8 a region with no build folder is refused with a reason", _refused[:70] or "wrote")
+    # A9-A12 The two defaults the launcher ships. A brand-new build is given a settings.toml naming
+    # the renderer, because the runtime reads that choice from the file and keeps its own default in
+    # compiled code; an existing file is never overwritten. Rewind is off unless a player asks for it,
+    # and the launch path states that explicitly so the tick box cannot disagree with the game.
+    _bd = _tmpA / "starter"
+    _bd.mkdir()
+    builder._write_starter_settings(_bd, lambda _m: None)
+    _starter = _bd / "settings.toml"
+    check(_starter.is_file() and st.snapshot(_starter).get("video", {}).get("renderer") == "vulkan",
+          "A9 a new build is given settings.toml with renderer vulkan",
+          f"exists={_starter.is_file()}")
+    _starter.write_text('[video]\nrenderer = "opengl"\n', encoding="utf-8")
+    builder._write_starter_settings(_bd, lambda _m: None)
+    check(st.snapshot(_starter).get("video", {}).get("renderer") == "opengl",
+          "A10 an existing settings.toml is left alone by the starter write")
+    check(st.ENV_BOOL_DEFAULTS.get("PSX_REWIND") is False,
+          "A11 rewind is off by default in the Settings tab")
+    _orig_load_env = st.load_env
+    st.load_env = lambda region: {}                      # type: ignore[assignment]
+    try:
+        check(st.env_for_launch("USA").get("PSX_REWIND") == "0",
+              "A12 a launch exports rewind off when the player has not asked for it")
+    finally:
+        st.load_env = _orig_load_env                     # type: ignore[assignment]
 finally:
     shutil.rmtree(_tmpA, ignore_errors=True)
 

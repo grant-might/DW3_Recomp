@@ -26,7 +26,7 @@ VIDEO_BOOLS = (
     ("frame_interpolation", "Frame interpolation"),
 )
 VIDEO_CHOICES = (
-    ("renderer", "Renderer", ("opengl", "vulkan", "software")),
+    ("renderer", "Renderer", ("vulkan", "opengl", "software")),
     ("texture_filtering", "Texture filter", ("nearest", "linear")),
     ("crt_filter", "CRT filter", ("raw", "scanlines", "smooth")),
     ("aspect_ratio", "Aspect ratio", ("4:3", "16:9")),
@@ -142,7 +142,10 @@ ENV_BOOLS = (
 ENV_BOOL_DEFAULTS = {
     "PSX_SMOOTH_60FPS": False,
     "PSX_FRAME_BLEND": False,
-    "PSX_REWIND": True,
+    # Rewind is off unless a player turns it on. Snapshots cost work every interval, the feature is
+    # a convenience rather than part of the game, and it is the first thing to suspect when a build
+    # feels slow. The launch path states the off value explicitly, see env_for_launch.
+    "PSX_REWIND": False,
 }
 ENV_INT_CHOICES = (
     ("PSX_REWIND_FMV_INTERVAL", "Rewind FMV interval", ("4", "8", "12", "16")),
@@ -182,9 +185,12 @@ def env_for_launch(region: str) -> dict[str, str]:
     """The environment to export for a launch of `region`, or {} when nothing is configured.
 
     builds.launch merges this onto the child's environment, so a control the player never touched
-    adds nothing and changes nothing.
+    adds nothing and changes nothing. The one exception is rewind: it is exported as OFF unless the
+    player has turned it on, so the tick box and what the game actually runs can never disagree.
     """
-    return load_env(region)
+    env = load_env(region)
+    env.setdefault("PSX_REWIND", "0")
+    return env
 CONTROLLER_FIELDS = (
     ("p1_device", "Player 1 device"),
     ("p1_mode", "Player 1 mode"),
@@ -198,10 +204,17 @@ def available() -> bool:
 
 
 def load(path: pathlib.Path):
-    """Parse the settings file, preserving comments and ordering."""
-    text = path.read_text(encoding="utf-8-sig")
+    """Parse the settings file, preserving comments and ordering.
+
+    A missing file is an empty document rather than an error. The runtime creates settings.toml on a
+    build's first clean run, and the Settings tab has to be able to write one before that has
+    happened, because it shows the defaults the runtime will use until a file exists.
+    """
     if tomlkit is None:
         raise RuntimeError("tomlkit is not installed (pip install tomlkit)")
+    if not path.is_file():
+        return tomlkit.document()
+    text = path.read_text(encoding="utf-8-sig")
     return tomlkit.parse(text)
 
 
@@ -217,7 +230,16 @@ def set_values(path: pathlib.Path, updates: dict[tuple[str, str], Any]) -> None:
 
     Unknown keys, unknown sections and all comments survive untouched, the file stays
     hand-editable and the game's own settings menu keeps working on it.
+
+    The file is created when it does not exist yet, with the values handed in. A missing build
+    FOLDER is refused with a plain reason instead: there is no executable there for the settings to
+    belong to, so creating one would only make a build that is not really there.
     """
+    if not path.parent.is_dir():
+        raise RuntimeError(
+            f"The {path.parent.name} build has no folder yet, so there is nothing to write. "
+            f"Build that region's disc on the Play tab first: settings live in {path.parent} "
+            f"beside the game's executable.")
     doc = load(path)
     for (section, key), value in updates.items():
         if section not in doc:

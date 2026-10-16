@@ -629,6 +629,30 @@ def assemble_overlay_toolchain(out_dir: pathlib.Path, project_dir: pathlib.Path,
     return ok
 
 
+# The renderer a NEW build starts with. The runtime carries its own default in compiled code and
+# reads the choice from this file, so the only way to change what a fresh build uses is to write one.
+# Vulkan is what the Settings tab offers first: it is the faster path, and the runtime falls back to
+# software by itself when a machine cannot provide it.
+STARTER_SETTINGS_TOML = (
+    "# Written by the launcher when this build was made. The game reads and updates this file.\n"
+    "[video]\n"
+    'renderer = "vulkan"\n'
+)
+
+
+def _write_starter_settings(out: pathlib.Path, log) -> None:
+    """Give a brand-new build a settings.toml naming the renderer, and never touch an existing one.
+
+    A file that is already there belongs to the player (or to the game's own settings menu), so it
+    is left exactly as it is. This runs once per build, at assemble time.
+    """
+    p = out / "settings.toml"
+    if p.is_file():
+        return
+    p.write_text(STARTER_SETTINGS_TOML, encoding="utf-8")
+    log("== wrote settings.toml with renderer = vulkan; the game keeps it up to date from here")
+
+
 def assemble_into(folder: str, exe_name: str | None, project_dir: pathlib.Path,
                   cmake_build: pathlib.Path, log) -> pathlib.Path | None:
     """Copy the finished, self-contained runtime into `Builds/<folder>/` beside the launcher.
@@ -636,7 +660,8 @@ def assemble_into(folder: str, exe_name: str | None, project_dir: pathlib.Path,
     The runtime resolves game.toml, bios/ and its input files from its working directory, so the
     destination carries the exe, its game.toml, the bundled BIOS and - via
     `assemble_overlay_toolchain` - the bundled overlay compiler. Everything runtime-generated
-    (input.ini, cards, caches) the game writes itself on first run.
+    (input.ini, cards, caches) the game writes itself on first run, and the launcher writes the first
+    settings.toml so a new build starts on the renderer it offers first.
     """
     out = builds.builds_dir() / folder
     out.mkdir(parents=True, exist_ok=True)
@@ -654,6 +679,7 @@ def assemble_into(folder: str, exe_name: str | None, project_dir: pathlib.Path,
     for f in (framework_dir() / "bios").glob("*"):
         if f.is_file():
             shutil.copy2(f, bios_out / f.name)
+    _write_starter_settings(out, log)
     assemble_overlay_toolchain(out, project_dir, log)
     log(f"== placed {exe_dst.name} in {out}")
     return exe_dst
