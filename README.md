@@ -48,6 +48,10 @@ unknown keys.
 - **About 3 GB of free disk space**: your disc image plus the generated build, which is about
   1.5 GB.
 - **Internet access for the first build.** CMake fetches SDL3 while configuring the project.
+- **No MSYS2 or MinGW copy of SDL3 in the search path.** If you have MSYS2 or MinGW installed, its
+  SDL3 is built with GNU tools and MSVC cannot link it. The build skips such a copy and downloads
+  its own, which is what the line above describes, so you normally do nothing. If a build ever stops
+  and names a `libSDL3.a`, that file's folder is the one to rename or remove.
 
 Before it starts, the Play tab checks for **CMake, Ninja and a compiler**. If one is missing it
 names it, for example `Missing: CMake, Ninja, a C/C++ compiler (MSVC Build Tools or clang)`, and

@@ -102,6 +102,63 @@ if(NOT _psx_sdl_backend STREQUAL "SDL3" AND
         "PSX_SDL_BACKEND must be SDL3 or SDL2 (got '${PSX_SDL_BACKEND}')")
 endif()
 
+# MSVC can never link a GNU-toolchain library, and on a machine with MSYS2/MinGW
+# installed find_package() happily returns one. An SDL3 from mingw64 is the case that
+# bit a builder: the link then dies on __mingw_vsnprintf / __mingw_fprintf /
+# __mingw_strtok_r (LNK2019 + LNK1120). The same roots can hand us a MinGW zlib, so
+# exclude such roots from every package search and let the pinned FetchContent builds
+# supply the library instead, which is what the launcher's requirements promise.
+# Under a MinGW/clang toolchain none of this runs: there a .a is the correct library.
+if(MSVC AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.23)
+    set(_psx_gnu_candidates "")
+    foreach(_psx_gnu_env IN ITEMS MINGW_PREFIX MSYSTEM_PREFIX MINGW_HOME MSYS2_ROOT)
+        if(DEFINED ENV{${_psx_gnu_env}} AND NOT "$ENV{${_psx_gnu_env}}" STREQUAL "")
+            list(APPEND _psx_gnu_candidates "$ENV{${_psx_gnu_env}}")
+        endif()
+    endforeach()
+    if(DEFINED ENV{PATH})
+        file(TO_CMAKE_PATH "$ENV{PATH}" _psx_path_list)
+        foreach(_psx_path_seg IN LISTS _psx_path_list)
+            if(_psx_path_seg MATCHES "[Mm]sys|[Mm]ingw")
+                get_filename_component(_psx_path_up "${_psx_path_seg}" DIRECTORY)
+                get_filename_component(_psx_path_up2 "${_psx_path_up}" DIRECTORY)
+                list(APPEND _psx_gnu_candidates "${_psx_path_up}" "${_psx_path_up2}")
+            endif()
+        endforeach()
+        unset(_psx_path_list)
+    endif()
+    foreach(_psx_gnu_guess IN ITEMS
+            "C:/msys64/mingw64" "C:/msys64/ucrt64" "C:/msys64/clang64" "C:/msys64"
+            "C:/msys32/mingw32" "C:/tools/msys64/mingw64" "C:/MinGW" "C:/mingw64"
+            "C:/mingw32" "$ENV{LOCALAPPDATA}/Programs/msys64/mingw64")
+        list(APPEND _psx_gnu_candidates "${_psx_gnu_guess}")
+    endforeach()
+    list(REMOVE_DUPLICATES _psx_gnu_candidates)
+    foreach(_psx_gnu_root IN LISTS _psx_gnu_candidates)
+        if(_psx_gnu_root AND
+           (EXISTS "${_psx_gnu_root}/lib/cmake/SDL3/SDL3Config.cmake" OR
+            EXISTS "${_psx_gnu_root}/share/cmake/SDL3/SDL3Config.cmake" OR
+            EXISTS "${_psx_gnu_root}/lib/cmake/SDL3/SDL3-config.cmake" OR
+            EXISTS "${_psx_gnu_root}/include/zlib.h"))
+            list(APPEND CMAKE_IGNORE_PREFIX_PATH "${_psx_gnu_root}")
+            message(STATUS
+                "psxrecomp: ignoring a GNU toolchain root for an MSVC build: ${_psx_gnu_root}")
+        endif()
+    endforeach()
+    unset(_psx_gnu_candidates)
+    if(CMAKE_IGNORE_PREFIX_PATH)
+        list(REMOVE_DUPLICATES CMAKE_IGNORE_PREFIX_PATH)
+    endif()
+    # A cached or exported SDL3_DIR pointing into a GNU tree poisons the search the
+    # same way, so drop it and let the fetch replace it.
+    if(DEFINED SDL3_DIR AND SDL3_DIR MATCHES "([Mm]sys|[Mm]ingw|ucrt64|clang64)")
+        message(STATUS
+            "psxrecomp: ignoring SDL3_DIR from a GNU toolchain: ${SDL3_DIR}")
+        unset(SDL3_DIR CACHE)
+        unset(SDL3_DIR)
+    endif()
+endif()
+
 set(PSX_SDL_INCLUDE_DIRS "")
 set(PSX_SDL_LIBRARY_DIRS "")
 set(PSX_SDL_LIBRARIES "")
@@ -152,6 +209,38 @@ if(_psx_sdl_backend STREQUAL "SDL3")
         PATH_SUFFIXES lib/cmake/SDL3)
     unset(_PSX_SDL3_HINTS)
     if(TARGET SDL3::SDL3)
+        if(MSVC)
+            # Net for a GNU SDL3 living outside the roots excluded above: MSVC cannot
+            # link a GNU archive at all, because its objects need the MinGW CRT. Stop
+            # with the reason and the fix instead of letting the linker print a wall
+            # of LNK2019 lines that says nothing to the person building.
+            set(_psx_sdl3_gnu_artifacts "")
+            foreach(_psx_sdl3_cfg IN ITEMS RELEASE RELWITHDEBINFO MINSIZEREL DEBUG NOCONFIG "")
+                foreach(_psx_sdl3_prop IN ITEMS IMPORTED_LOCATION IMPORTED_IMPLIB)
+                    get_target_property(_psx_sdl3_art "SDL3::SDL3"
+                        "${_psx_sdl3_prop}_${_psx_sdl3_cfg}")
+                    if(_psx_sdl3_art AND _psx_sdl3_art MATCHES "\\.a$")
+                        list(APPEND _psx_sdl3_gnu_artifacts "${_psx_sdl3_art}")
+                    endif()
+                    unset(_psx_sdl3_art)
+                endforeach()
+            endforeach()
+            if(_psx_sdl3_gnu_artifacts)
+                list(REMOVE_DUPLICATES _psx_sdl3_gnu_artifacts)
+                string(REPLACE ";" "\n  " _psx_sdl3_gnu_list
+                    "${_psx_sdl3_gnu_artifacts}")
+                message(FATAL_ERROR
+                    "SDL3 was found, but it is a MinGW/GNU build and this build uses "
+                    "MSVC:\n  ${_psx_sdl3_gnu_list}\n"
+                    "MSVC cannot link it, so the link would stop on unresolved __mingw_* "
+                    "symbols.\nRename or remove that SDL3 (an MSYS2 install usually lives "
+                    "under C:/msys64/mingw64), then build again: SDL3 is then downloaded "
+                    "and built with MSVC. Alternatively point SDL3_DIR at an MSVC build "
+                    "of SDL3.")
+            endif()
+            unset(_psx_sdl3_gnu_artifacts)
+            unset(_psx_sdl3_gnu_list)
+        endif()
         message(STATUS "psxrecomp: using prebuilt/system SDL3 (skip FetchContent)")
     endif()
     if(NOT TARGET SDL3::SDL3 AND PSX_SDL3_FETCH)
