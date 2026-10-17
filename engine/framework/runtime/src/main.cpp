@@ -10846,8 +10846,13 @@ int main(int argc, char** argv) {
              * touch this flag, so applying it here (config-load time) is stable.
              * Full history + removal plan: psxrecomp sio.c g_pad_legacy_cfg. */
             sio_set_legacy_cfg(gc.runtime.legacy_pad_config ? 1 : 0);
+            /* The GPU-direct present samples the hi-res FBO, and FMV playback leaves stale
+             * rows across the top of it (the MDEC writes VRAM without entering the upload
+             * path), so the GPU path shows a stripe-noise band over every CG. The CPU
+             * present reads the VRAM mirror directly and was verified clean, so it is the
+             * default. PSX_GL_FORCE_CPU_PRESENT=0 opts back into the GPU-direct path. */
             { const char *e = std::getenv("PSX_GL_FORCE_CPU_PRESENT");
-              if (e && e[0] && e[0] != '0') g_gl_fbo_present = 0; }
+              if (!(e && e[0] == '0')) g_gl_fbo_present = 0; }
             game_entry_pc = gc.entry_pc;
             fast_boot     = gc.runtime.fast_boot;
             bios_hle      = gc.runtime.bios_hle;
