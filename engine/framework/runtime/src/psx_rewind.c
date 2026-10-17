@@ -247,10 +247,14 @@ static int rewind_wanted(void)
     const char *e;
     if (s_enabled < 0) {
         e = getenv("PSX_REWIND");
-        if (e && e[0] == '0')
-            s_enabled = 0;
-        else
+        /* OFF unless explicitly asked for. A capture copies and compresses the whole machine
+           state every PSX_REWIND_INTERVAL frames (every PSX_REWIND_FMV_INTERVAL while an FMV
+           runs), which is more than a frame's budget and shows up as stutter in gameplay and
+           as glitching video during the intro CGs. Opt in with PSX_REWIND=1. */
+        if (e && e[0] != '\0' && e[0] != '0')
             s_enabled = 1;
+        else
+            s_enabled = 0;
         {
             uint32_t iv_def = s_interval_pref > 0 ? (uint32_t)s_interval_pref
                                                   : RW_DEF_INTERVAL;

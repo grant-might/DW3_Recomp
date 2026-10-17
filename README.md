@@ -97,6 +97,11 @@ Then use the **Play** tab.
 Discs are read from `Discs/` beside the launcher, or from wherever you picked yours; the path is
 recorded in that build's own `game.toml`. A recompile is only needed once per region.
 
+Every build runs with rewind **off** by default. A rewind capture copies and compresses the whole
+machine state every 15 frames (every 4 frames while a CG is playing), which costs more than a
+frame's budget and shows up as stutter in gameplay and as glitching video during the intro CGs.
+Turn it on in Settings if you want it, or start the exe with `PSX_REWIND=1`.
+
 ## Mods (the Mods tab)
 
 A mod package is a ZIP whose archive root holds `manifest.toml`. The Mods tab loads it, shows what
