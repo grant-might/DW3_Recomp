@@ -55,6 +55,9 @@ ROW_GAP = 8           # between controls sitting on one row
 
 _LISTENERS: list[Callable[[], None]] = []
 
+# The palette last adopted from the editor, so re-adopting it is a no-op (see use_editor_theme).
+_APPLIED_PAL: dict | None = None
+
 
 def on_change(fn: Callable[[], None]) -> None:
     """Register a callback fired whenever the palette is swapped."""
@@ -77,11 +80,21 @@ def use_editor_theme(pal: dict | None) -> str:
     than a copy; `BORDER_STRONG` becomes our border because the editor's hairline `BORDER` is
     nearly invisible against its own surfaces, where the launcher draws real frames. Returns the
     theme's label, for status text.
+
+    Applying a palette restyles every page, and every window built while it is active pays for
+    that restyle again. Adopting the palette already in force is therefore a no-op: without this
+    the launcher restyles itself once per page and per tab construction, and a harness that keeps
+    windows alive ends up restyling all of them on each new window.
     """
+    global _APPLIED_PAL
     if not pal:
         globals().update(_DEFAULTS)
+        _APPLIED_PAL = None
         _notify()
         return "Launcher default"
+    if pal == _APPLIED_PAL:
+        return str(pal.get("label", "theme"))
+    _APPLIED_PAL = dict(pal)
     mapping = {
         "BG": pal.get("BG"),
         "BG_ALT": pal.get("SIDEBAR"),

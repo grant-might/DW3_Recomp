@@ -61,6 +61,22 @@ those two are in place yourself.
 The recompiler (`engine/`) and its MIT OpenBIOS image are bundled, so the only thing you supply is
 the disc.
 
+## Installing from scratch
+
+1. Install Python 3 from https://www.python.org/downloads/ and tick "Add python.exe to PATH".
+2. Download this repository with the green **Code** button and **Download ZIP**, then extract it
+   somewhere you can write, not under `Program Files`. A `git clone` works the same way.
+3. Run `run.bat`. The first run creates `.venv` beside the launcher and installs the dependencies,
+   then opens the launcher. Every run after that goes straight in.
+4. Put your disc image somewhere permanent, for example `Discs/` beside the launcher.
+5. On the **Play** tab, **Add disc image...**, then **Build selected disc**. A first build of a region
+   takes 10 to 20 minutes and needs a C compiler (MSVC or clang), CMake and Ninja; the Activity log
+   streams the real progress.
+6. Press **Play (USA)**, **Play (Europe)** or **Play (Japan)**.
+
+Nothing else is downloaded and no prebuilt executable is shipped: every player builds their own game
+from their own disc.
+
 ## Running it
 
 ```
@@ -101,6 +117,23 @@ Every build runs with rewind **off** by default. A rewind capture copies and com
 machine state every 15 frames (every 4 frames while a CG is playing), which costs more than a
 frame's budget and shows up as stutter in gameplay and as glitching video during the intro CGs.
 Turn it on in Settings if you want it, or start the exe with `PSX_REWIND=1`.
+
+## Updating to a new version
+
+Every release since 0.4.1 changes the game executable, so replacing the launcher files alone is not
+enough: the region you play has to be built again.
+
+1. Close the launcher, and close the game if it is running.
+2. **Copy `cards/` somewhere safe.** It holds your saves (`cards/USA`, `cards/EUR`, `cards/JP`) and
+   it is the only thing in the folder you cannot rebuild.
+3. Replace the launcher's own files with the new version. The clean way is to delete everything
+   except `cards/` and `Discs/`, then extract the new download beside them.
+4. Run `run.bat`, then rebuild each region you play from the Play tab. Rebuilding reads your disc
+   again and takes 10 to 20 minutes.
+5. If you use mods, install them from `DW3_Mods` again and press **Rebuild (region)**. A disc build
+   does not compile mods in, and the game refuses to launch while mods are marked enabled but are not
+   compiled in.
+6. Put `cards/` back if you moved it.
 
 ## Mods (the Mods tab)
 
@@ -148,9 +181,22 @@ title-bar X, or Alt+F4) is the way out.
 
 - `Builds/EUR/`, `Builds/USA/`, `Builds/JP/`: the builds you make from your discs (one folder each).
 - `Discs/`: your disc images, if you keep them here. Optional; you can point at any path.
-- `cards/`: extra PS1 memory cards you want the Memory Card tab to list. Optional.
+- `cards/USA/`, `cards/EUR/`, `cards/JP/`: your memory cards, one folder per region. The game reads
+  and writes them there, and the Memory Card tab lists them. Extra cards dropped in `cards/` itself
+  are listed too.
 - `editor/`: the save editor the Memory Card tab embeds. Ships with the launcher.
 - `engine/`: the bundled recompiler, the OpenBIOS image, and the overlay toolchain inputs.
+
+## Memory cards
+
+Cards live in `cards/USA`, `cards/EUR` and `cards/JP`, one folder per region, beside the launcher.
+The game reads and writes them there (`card1.mcd` is slot 1, `card2.mcd` is slot 2), and the
+**Memory Card** tab lists the same files, so what the editor shows is what the game uses.
+
+A card is a standard 128 KiB PS1 memory card image, so a card from an emulator works as it is: copy
+it into the region's folder as `card1.mcd`. Before 0.4.1 the cards lived inside `Builds/<region>/`;
+on first run the launcher copies any it finds there into `cards/<region>/` and leaves the originals
+where they were.
 
 ## Licences
 

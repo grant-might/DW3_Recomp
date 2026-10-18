@@ -341,8 +341,9 @@ class MemcardTab(QWidget):
             where = ("no build has run yet" if not ready
                      else "build(s) " + ", ".join(ready) + " found")
             self._set_status(
-                f"No memory card found ({where}). Each build keeps its own card1.mcd / card2.mcd, "
-                f"and you can drop extra cards in {paths.cards_dir()} or open one directly.")
+                f"No memory card found ({where}). Each region keeps its cards in "
+                f"{builds.cards_root()}\\<region>, and you can drop extra cards in "
+                f"{paths.cards_dir()} or open one directly.")
             self.btn_open.setEnabled(False)
             return
 

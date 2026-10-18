@@ -26,6 +26,7 @@ from __future__ import annotations
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -114,15 +115,44 @@ def build_status(region: str) -> tuple[bool, pathlib.Path]:
     return exe.is_file(), exe
 
 
+def cards_root() -> pathlib.Path:
+    """The player's memory cards, in the open beside the launcher rather than inside a build."""
+    return paths.launcher_root() / "cards"
+
+
+def cards_dir(region: str) -> pathlib.Path:
+    return cards_root() / spec(region).folder
+
+
 def card_paths(region: str) -> list[pathlib.Path]:
-    """The two memory cards this build streams saves from (standard 128 KiB PSX cards)."""
-    d = build_dir(region)
+    """The two memory cards this region's build streams saves from (standard 128 KiB PSX cards)."""
+    d = cards_dir(region)
     return [d / "card1.mcd", d / "card2.mcd"]
 
 
 def card_dirs() -> list[pathlib.Path]:
-    """Every build folder, so the Memory Card tab can find its per-build cards."""
-    return [build_dir(b.region) for b in BUILDS]
+    """Every region's card folder, so the Memory Card tab can find its cards."""
+    return [cards_dir(b.region) for b in BUILDS]
+
+
+def migrate_cards() -> list[tuple[pathlib.Path, pathlib.Path]]:
+    """Copy cards that still live inside a build folder to the visible cards/<region>/ folder.
+
+    A card already in the new place is never overwritten, and the old file is left alone, so a
+    player who rolls back to an older launcher still has their save where it was.
+    """
+    moved: list[tuple[pathlib.Path, pathlib.Path]] = []
+    for b in BUILDS:
+        dest_dir = cards_dir(b.region)
+        src_dir = build_dir(b.region)
+        for name in ("card1.mcd", "card2.mcd"):
+            src = src_dir / name
+            dest = dest_dir / name
+            if src.is_file() and not dest.exists():
+                dest_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dest)
+                moved.append((src, dest))
+    return moved
 
 
 def settings_toml(region: str) -> pathlib.Path:
@@ -267,7 +297,12 @@ def launch(region: str, extra_env: dict[str, str] | None = None,
         log_path.parent.mkdir(parents=True, exist_ok=True)
         out = open(log_path, "w", encoding="utf-8", errors="replace")  # noqa: SIM115 (handed to Popen)
     try:
-        return subprocess.Popen([str(exe)], cwd=str(d), env=env, creationflags=creation,
+        card_dir = cards_dir(region)
+        card_dir.mkdir(parents=True, exist_ok=True)
+        # Cards and savestates live in cards/<region>/ where a player can find them, so the
+        # runtime is told where to look; left alone it resolves them from its own folder.
+        return subprocess.Popen([str(exe), "--memcard-dir", str(card_dir)], cwd=str(d), env=env,
+                                creationflags=creation,
                                 stdout=out, stderr=subprocess.STDOUT,
                                 startupinfo=_minimized_startupinfo(), close_fds=True)
     finally:

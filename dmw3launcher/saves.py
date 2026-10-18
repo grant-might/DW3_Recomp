@@ -68,7 +68,7 @@ def _stat(p: pathlib.Path) -> tuple[int, float]:
 
 def search_dirs(extra_card_dirs: list[pathlib.Path] | None = None) -> list[pathlib.Path]:
     """Every folder a memory card may live in, most specific first."""
-    dirs = list(builds.card_dirs())                 # Builds/USA, Builds/EUR, Builds/JP (card1/card2)
+    dirs = list(builds.card_dirs())                 # cards/USA, cards/EUR, cards/JP (card1/card2)
     dirs += [paths.cards_dir(), paths.user_data_dir() / "cards"]
     dirs += list(extra_card_dirs or [])
     return dirs

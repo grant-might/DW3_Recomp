@@ -12,6 +12,7 @@
 #include "device_trace.h"    /* general two-process device-event cycle ring */
 #include "psx_interpreter.h"
 #include "cdrom.h"
+#include "mdec.h"
 #include "fntrace.h"
 #include "text_xlate.h"
 #include "boot_state.h"
@@ -6593,7 +6594,17 @@ static NetplayVblankEpilogue sdl_vblank_present_body(void) {
          * do NOT flush_cpu_uploads (MDEC already wrote the CPU mirror; forcing
          * FBO uploads every frame cut MotK intro from ~50 to ~30 FPS). */
 #ifndef PSX_SDL_NO_RENDER
-        if (g_gl_active && g_gl_fbo_present && !di.depth24 &&
+        /* A movie writes the CPU VRAM mirror and never the FBO, so it must take the CPU
+         * present, which is the path that carries the FMV band fix. Gameplay keeps the
+         * fast FBO present: reading back every gameplay frame is what made 0.4.0 slow.
+         * fmv_frame alone is false during this game's CG (it is 15-bit), so the decoder's
+         * own recent-activity counter decides. */
+        static unsigned s_movie_log_tick = 0;
+        const bool movie_frame = mdec_recently_active(2) != 0;
+        if (movie_frame && (s_movie_log_tick++ % 60) == 0)
+            fprintf(stderr, "psxrecomp: movie present: mdec_active=%d fmv_frame=%d depth24=%d\n",
+                    mdec_recently_active(2), (int)fmv_frame, (int)di.depth24);
+        if (g_gl_active && g_gl_fbo_present && !di.depth24 && !movie_frame &&
             !local_viewport_crop) {
             if (wide_present) {
                 /* GPU-direct native-wide present: blit the displayed buffer's
@@ -10846,13 +10857,10 @@ int main(int argc, char** argv) {
              * touch this flag, so applying it here (config-load time) is stable.
              * Full history + removal plan: psxrecomp sio.c g_pad_legacy_cfg. */
             sio_set_legacy_cfg(gc.runtime.legacy_pad_config ? 1 : 0);
-            /* The GPU-direct present samples the hi-res FBO, and FMV playback leaves stale
-             * rows across the top of it (the MDEC writes VRAM without entering the upload
-             * path), so the GPU path shows a stripe-noise band over every CG. The CPU
-             * present reads the VRAM mirror directly and was verified clean, so it is the
-             * default. PSX_GL_FORCE_CPU_PRESENT=0 opts back into the GPU-direct path. */
+            /* Diagnostic/fallback: force the CPU readout for every frame. Movie frames take
+             * it automatically (see the present decision in the frame loop). */
             { const char *e = std::getenv("PSX_GL_FORCE_CPU_PRESENT");
-              if (!(e && e[0] == '0')) g_gl_fbo_present = 0; }
+              if (e && e[0] && e[0] != '0') g_gl_fbo_present = 0; }
             game_entry_pc = gc.entry_pc;
             fast_boot     = gc.runtime.fast_boot;
             bios_hle      = gc.runtime.bios_hle;

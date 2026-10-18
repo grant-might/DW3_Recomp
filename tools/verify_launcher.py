@@ -174,12 +174,21 @@ finally:
     saves.search_dirs = _orig_search      # type: ignore[assignment]
     shutil.rmtree(_tmpB, ignore_errors=True)
 
-# B4-B5 Japan is a buildable region, so it owns cards exactly as USA and Europe do: its build
+# B4-B5 Japan is a buildable region, so it owns cards exactly as USA and Europe do: its card
 # folder is searched, and a card's own product code - the one table in disc.py - names its release.
-_jpdirB = builds.build_dir(builds.REGION_JP)
+_jpdirB = builds.cards_dir(builds.REGION_JP)
 check(_jpdirB in saves.search_dirs(),
-      "B4 the Japanese build's folder is searched for memory cards like the other two",
+      "B4 the Japanese region's card folder is searched for memory cards like the other two",
       str(_jpdirB).replace(str(paths.launcher_root()), "<launcher>"))
+# B6 Cards live in an open folder per region, not inside the build the player never opens.
+_dirsB6 = {b.region: builds.cards_dir(b.region) for b in builds.BUILDS}
+_pathsB6 = {r: builds.card_paths(r) for r in _dirsB6}
+check(all(d.parent == builds.cards_root() and d.name == builds.spec(region).folder
+          for region, d in _dirsB6.items())
+      and all(p.parent == _dirsB6[r] for r, ps in _pathsB6.items() for p in ps)
+      and all(p.name in ("card1.mcd", "card2.mcd") for ps in _pathsB6.values() for p in ps),
+      "B6 every region's cards live in cards/<region>, not inside Builds/",
+      f"{builds.cards_root().name}/: " + ", ".join(sorted(d.name for d in _dirsB6.values())))
 _codesB = {name: saves.entry_region(name) for name in
            ("BASLUS-01436DMW3-USA", "BESLES-03936DMW3-EUR", "BISLPS-03446DMW3-JPN")}
 check(_codesB == {"BASLUS-01436DMW3-USA": builds.REGION_US,
@@ -2238,9 +2247,9 @@ try:
 
     _band = _shot.pixelColor(int(_vp.x() + _v.viewport().width() - 10), _caret_row + _lh // 2)
     _above = _shot.pixelColor(int(_vp.x() + _v.viewport().width() - 10), _caret_row - _lh // 2)
-    check(_near(_band, _QColorS(theme.PANEL_HI)) and not _near(_band, _above),
+    check(_near(_band, _QColorS(theme.PANEL_HI)) and not _near(_band, _above, 8),
           "S1 the caret's line is banded in the panel colour and the line above it is not",
-          f"{_band.name()} vs {_above.name()} (PANEL_HI {theme.PANEL_HI})")
+          f"{_band.name()} vs {_above.name()} (PANEL_HI {theme.PANEL_HI}, BG {theme.BG})")
 
     _ink: dict[str, object] = {}
     for _which, _row in (("active", _caret_row), ("neighbour", _caret_row - _lh)):
@@ -2651,9 +2660,13 @@ try:
     finally:
         _vb.subprocess.Popen = _vorig_popen                          # type: ignore[assignment]
         _vb.exe_path, _vb.build_dir, _vb.run_log_path = _vorig_exe, _vorig_dir, _vorig_log
-    check(_vcap.get("argv") == [str(_vld / "fake.exe")] and _vcap.get("cwd") == str(_vld),
-          "V18 a launch runs the exe with cwd set to its own build folder",
-          f"argv={_vcap.get('argv')} cwd={_vcap.get('cwd')}")
+    _virt = _vcap.get("argv") or []
+    check(len(_virt) == 3 and _virt[0] == str(_vld / "fake.exe")
+          and _virt[1] == "--memcard-dir"
+          and pathlib.Path(_virt[2]) == _vb.cards_dir(_vb.REGION_US)
+          and _vcap.get("cwd") == str(_vld),
+          "V18 a launch runs the exe from its build folder, pointed at that region's cards",
+          f"argv={_virt} cwd={_vcap.get('cwd')}")
     check((_vcap.get("env") or {}).get(_vb.DEV_INPUT_VAR) == "1"
           and _vb.DEV_INPUT_VAR == "PSX_DEV_INPUT",
           "V19 the launch sets PSX_DEV_INPUT=1 (pad merged onto Player 1)")

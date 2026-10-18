@@ -11,7 +11,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from dmw3launcher import paths  # noqa: E402
+from dmw3launcher import builds, paths  # noqa: E402
 from dmw3launcher.ui import theme  # noqa: E402
 from dmw3launcher.ui.main_window import MainWindow, VERSION  # noqa: E402
 
@@ -41,6 +41,10 @@ def main() -> int:
     # The window carries the same icon, so the title bar, the taskbar and the alt-tab list agree.
 
     cfg = paths.load_config()
+    moved = builds.migrate_cards()   # cards still inside a build folder move to cards/<region>/
+    if moved:
+        print(f"memory cards are now in {builds.cards_root()}: "
+              + ", ".join(str(dest.relative_to(builds.cards_root())) for _src, dest in moved))
     win = MainWindow(cfg)
     win.show()
     return app.exec()
