@@ -70,6 +70,34 @@ struct BinSegment {
     uint32_t      start_lba;     // first disc-relative sector of this file
     uint32_t      sector_count;  // sectors stored in this file
     bool          raw;           // 2352-byte raw sectors (BIN) vs 2048 (ISO)
+
+    /**
+     * Read-ahead cache. The runtime asks for one sector at a time, and every
+     * miss is a seek plus a read on the host file. On a spinning disk that seek
+     * costs several milliseconds, which lands directly in the frame budget
+     * while the CPU and GPU idle. Reading a window of whole sectors per miss
+     * turns a streaming read into one sequential host read per window.
+     *
+     * Four slots so that a data stream and an interleaved XA audio stream do
+     * not evict each other on every alternation; sequential access stays inside
+     * one window and misses only at window boundaries.
+     */
+    static constexpr uint32_t kCacheSlots   = 4;
+    static constexpr uint32_t kCacheSectors = 64;   // ~150 KiB raw, ~128 KiB 2048
+
+    struct CacheSlot {
+        uint32_t             first = 0;   // local sector index of data[0]
+        uint32_t             count = 0;   // valid sectors held
+        std::vector<uint8_t> data;
+    };
+
+    CacheSlot slots[kCacheSlots];
+    uint32_t  next_slot = 0;
+    uint64_t  cache_hits = 0;
+    uint64_t  cache_misses = 0;
+    uint64_t  host_reads = 0;    // physical reads actually issued
+
+    uint32_t SectorBytes() const { return raw ? 2352u : 2048u; }
 };
 
 class ISOReader {

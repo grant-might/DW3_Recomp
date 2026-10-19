@@ -2469,9 +2469,10 @@ try:
     check([_modU.combo_region.itemData(i) for i in range(_modU.combo_region.count())]
           == [b.region for b in builds.BUILDS],
           "U6 the Mods tab lists USA before Europe")
-    check([_setU.combo_region.itemData(i) for i in range(_setU.combo_region.count())]
-          == [b.region for b in builds.BUILDS],
-          "U7 the Settings tab lists USA before Europe")
+    check(not hasattr(_setU, "combo_region")
+          and "every build" in _setU.lbl_scope.text().lower(),
+          "U7 the Settings tab is one set for every build, with no region picker",
+          _setU.lbl_scope.text())
 except Exception as _exc:  # noqa: BLE001
     check(False, "U1-U7 fresh-clone tab discovery checks raised", f"{type(_exc).__name__}: {_exc}")
 
@@ -2684,6 +2685,51 @@ try:
     _vwin.close()
 except Exception as _exc:  # noqa: BLE001
     check(False, "V1-V21 native-build checks raised", f"{type(_exc).__name__}: {_exc}")
+
+# --- V22 settings are universal: the page shows the build file's value, Apply writes every build
+# The bug this guards: the page used to read and write one region's settings.toml behind a Build
+# picker, so a change made while the picker showed another region never reached the build being
+# played, and the control kept displaying a value the exe would never see.
+try:
+    from PySide6.QtWidgets import QMessageBox as _QMBU                                # noqa: PLC0415
+
+    _uni = pathlib.Path(_mkdtemp("hermes-verify-uni-"))
+    for _b in builds.BUILDS:
+        (_uni / "Builds" / _b.folder).mkdir(parents=True)
+    # Only one region has a settings file, and it is deliberately NOT the first build in the
+    # list: the page must show the file that exists, not the picker's default region.
+    (_uni / "Builds" / builds.spec(builds.REGION_EU).folder / "settings.toml").write_text(
+        '[video]\nvsync = "immediate"\n', encoding="utf-8")
+
+    _orig_dir, _orig_env = builds.build_dir, st.save_env
+    _orig_info, _orig_crit = _QMBU.information, _QMBU.critical
+    try:
+        builds.build_dir = lambda region: _uni / "Builds" / builds.spec(region).folder
+        st.save_env = lambda region, values: None
+        _QMBU.information = staticmethod(lambda *a, **k: None)
+        _QMBU.critical = staticmethod(lambda *a, **k: None)
+
+        _tabU = _STab({"version": 1, "editor_root": None})
+        _vsU = _tabU._widgets[("video", "vsync")]
+        check(_vsU.currentData() == "immediate",
+              "V22 the Settings page shows the value the build file actually holds",
+              f"page={_vsU.currentData()!r} file=immediate")
+
+        _vsU.setCurrentIndex(_vsU.findData("on"))
+        _tabU.apply()
+        _afterU = [(builds.spec(b.region).label,
+                    st.snapshot(builds.settings_toml(b.region)).get("video", {}).get("vsync"))
+                   for b in builds.BUILDS]
+        check(all(value == "on" for _label, value in _afterU),
+              "V23 Apply writes the setting into every build, not just one",
+              str(_afterU))
+    finally:
+        builds.build_dir, st.save_env = _orig_dir, _orig_env
+        _QMBU.information, _QMBU.critical = _orig_info, _orig_crit
+    shutil.rmtree(_uni, ignore_errors=True)
+except Exception as _exc:  # noqa: BLE001
+    check(False, "V22-V23 universal-settings checks raised",
+          f"{type(_exc).__name__}: {_exc}")
 
 # --- W. the builder: the pre-flight, and the shipped engine's portability fixes ----------------
 # The public Play tab is a BUILDER. The two things that matter most are that it never starts a

@@ -144,17 +144,12 @@ class SettingsTab(QWidget):
         self.head.setObjectName("hint")
         outer.addWidget(self.head)
 
-        pick = QHBoxLayout()
-        pick.setSpacing(theme.ROW_GAP)
-        pick.addWidget(QLabel("Build"))
-        self.combo_region = QComboBox()
-        for b in builds.BUILDS:
-            self.combo_region.addItem(b.label, b.region)
-        self.combo_region.setFixedWidth(FIELD_W)
-        self.combo_region.currentIndexChanged.connect(self._pick_region)
-        pick.addWidget(self.combo_region)
-        pick.addStretch(1)
-        outer.addLayout(pick)
+        # One set of settings for every build. It used to be one file per region behind a Build
+        # picker, which meant a change made while the picker showed another region silently never
+        # reached the build the player was actually running.
+        self.lbl_scope = QLabel("These settings apply to every build.")
+        self.lbl_scope.setObjectName("hint")
+        outer.addWidget(self.lbl_scope)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -298,11 +293,6 @@ class SettingsTab(QWidget):
         bar.addWidget(self.btn_apply)
         outer.addLayout(bar)
 
-        index = self.combo_region.findData(self.region)
-        if index >= 0:
-            self.combo_region.blockSignals(True)
-            self.combo_region.setCurrentIndex(index)
-            self.combo_region.blockSignals(False)
         self._perf_defaults()
         self.reload()
 
@@ -464,9 +454,26 @@ class SettingsTab(QWidget):
             self._env_widgets[name] = w
 
     # ------------------------------------------------------------------ data
-    def _pick_region(self) -> None:
-        self.region = self.combo_region.currentData() or builds.default_region()
-        self.reload()
+    def _built_regions(self) -> list[str]:
+        """Regions whose build folder exists, so their settings.toml can be read and written."""
+        return [b.region for b in builds.BUILDS if builds.build_dir(b.region).is_dir()]
+
+    def _display_region(self) -> str:
+        """The build whose file the page shows: the most recently written settings.toml.
+
+        The settings are universal, so every built region carries the same values; picking the
+        newest keeps the page honest right after a build, or after the game itself rewrites its own
+        file.
+        """
+        built = self._built_regions()
+        if not built:
+            return builds.default_region()
+
+        def written(region: str) -> float:
+            path = builds.settings_toml(region)
+            return path.stat().st_mtime if path.is_file() else 0.0
+
+        return max(built, key=written)
 
     # ---------------------------------------------------------- Video & Performance defaults
     def _perf_defaults(self) -> None:
@@ -534,21 +541,26 @@ class SettingsTab(QWidget):
 
     def reload(self) -> None:
         self._reload_env()
+        self.region = self._display_region()
         p = builds.settings_toml(self.region)
-        label = builds.spec(self.region).label
-        if not builds.build_status(self.region)[0]:
-            self.head.setText(f"The {label} build is not on disk yet, build it on the Play tab "
-                              f"first, and its settings.toml ({p}) appears here.")
+        built = self._built_regions()
+        if not built:
+            self.head.setText(
+                "No build on disk yet. These values are saved now and written into every build "
+                "this launcher makes.")
             self.setEnabled(True)
-            self.btn_apply.setEnabled(False)
+            self.btn_apply.setEnabled(st.available())
             self.lbl_ctrl.setText("not set")
+            if not st.available():
+                self.head.setText(
+                    "tomlkit is not installed, so the launcher will not rewrite any settings "
+                    "file. Install it with\n\n    pip install tomlkit\n")
             return
         self.btn_apply.setEnabled(True)
-        self.head.setText(f"These are the {label} build's own settings ({p}).")
-        if not p.is_file():
-            self.head.setText(f"The {label} build has no settings.toml yet ({p}). Applying writes "
-                              f"one with the values below, which is what the runtime then reads "
-                              f"and keeps updating.")
+        labels = ", ".join(builds.spec(region).label for region in built)
+        self.head.setText(
+            f"One set for every build ({labels}). Applying writes it into each of them now, so the "
+            f"game reads it on the next launch. Showing {builds.spec(self.region).label} ({p}).")
         if not st.available():
             # Refuse to touch the file rather than rewrite it without comment support.
             self.head.setText(
@@ -596,7 +608,6 @@ class SettingsTab(QWidget):
         self.lbl_note.setText("unknown keys and comments are preserved")
 
     def apply(self) -> None:
-        p = builds.settings_toml(self.region)
         updates: dict[tuple[str, str], object] = {}
         for (sect, key), w in self._widgets.items():
             if isinstance(w, QCheckBox):
@@ -608,24 +619,47 @@ class SettingsTab(QWidget):
                                         else w.currentText())
             elif isinstance(w, QSpinBox):
                 updates[(sect, key)] = int(w.value())
+
+        # One set for every build, so every existing build gets the write. A region with no build
+        # folder has no settings.toml to hold the values yet; the build writes the page's current
+        # values when it is made.
+        written: list[str] = []
+        failed: list[str] = []
+        for region in self._built_regions():
+            try:
+                st.set_values(builds.settings_toml(region), updates)
+                written.append(builds.spec(region).label)
+            except Exception as exc:  # noqa: BLE001
+                # The exception says what is wrong: a folder that vanished under us, or tomlkit
+                # genuinely absent. Name the region so a partial write is never silent.
+                failed.append(f"{builds.spec(region).label}: {exc}")
+        if failed:
+            QMessageBox.critical(self, "Could not write settings",
+                                 "These builds were not updated:\n\n" + "\n".join(failed))
+            if not written:
+                return
+
+        # The env-only knobs live in the launcher's own config, never in the runtime's settings.toml,
+        # and they are universal too: save them for every region.
         try:
-            st.set_values(p, updates)
-        except Exception as exc:  # noqa: BLE001
-            # The exception says what is wrong: a build folder that does not exist yet, or tomlkit
-            # genuinely absent. Blaming tomlkit for every failure sent a player looking at Python
-            # packages when the real cause was a settings file that had never been created.
-            QMessageBox.critical(self, "Could not write settings", str(exc))
-            return
-        # The env-only knobs live in the launcher's own config, never in the runtime's settings.toml.
-        try:
-            st.save_env(self.region, self._env_values())
+            values = self._env_values()
+            for b in builds.BUILDS:
+                st.save_env(b.region, values)
         except Exception as exc:  # noqa: BLE001
             QMessageBox.critical(self, "Could not save performance settings",
                                  f"{exc}\n\nIs the launcher folder writable?")
             return
-        self.lbl_note.setText("applied")
-        QMessageBox.information(self, "Settings", "Written to settings.toml. Start the game "
-                                                  "to use them.")
+
+        if written:
+            self.lbl_note.setText("applied to " + ", ".join(written))
+            QMessageBox.information(self, "Settings",
+                                    "Written to " + ", ".join(written)
+                                    + ". Start the game to use them.")
+        else:
+            self.lbl_note.setText("saved for the next build")
+            QMessageBox.information(self, "Settings",
+                                    "No build on disk yet. These values are saved and will be "
+                                    "written into every build the launcher makes.")
 
     def _open_raw(self) -> None:
         p = builds.settings_toml(self.region)

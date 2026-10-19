@@ -6,7 +6,10 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
+#include <chrono>
+#include <thread>
 
 namespace PS1 {
 
@@ -377,6 +380,17 @@ bool ISOReader::Open(const std::string& filename) {
 }
 
 void ISOReader::Close() {
+    for (const BinSegment& seg : segments_) {
+        const uint64_t asked = seg.cache_hits + seg.cache_misses;
+        if (asked == 0) continue;
+        std::fprintf(stderr,
+                     "psxrecomp: disc cache: %llu sector requests, %llu host reads, "
+                     "%.1f%% served from the window (%u sectors per read)\n",
+                     static_cast<unsigned long long>(asked),
+                     static_cast<unsigned long long>(seg.host_reads),
+                     100.0 * static_cast<double>(seg.cache_hits) / static_cast<double>(asked),
+                     BinSegment::kCacheSectors);
+    }
     chd_.reset();
     for (BinSegment& seg : segments_) {
         if (seg.file.is_open()) {
@@ -466,6 +480,90 @@ bool ISOReader::ReadSubChannelQ(uint32_t lba, uint8_t* buffer, bool* valid) cons
     return true;
 }
 
+namespace {
+
+/* Diagnostic: emulate the seek plus rotation cost of a spinning disk. The
+ * read-ahead cache below is what makes a mechanical drive usable, and a machine
+ * with an SSD cannot show the difference, so this lets the fix be measured:
+ * every physical host read sleeps the configured number of milliseconds.
+ * PSX_ISO_SEEK_STALL_MS=8 is roughly a real 3.5" HDD random seek. */
+int iso_seek_stall_ms() {
+    static const int ms = [] {
+        const char* e = std::getenv("PSX_ISO_SEEK_STALL_MS");
+        return e ? std::max(0, std::atoi(e)) : 0;
+    }();
+    return ms;
+}
+
+/* Cache off, for A/B measurement only: PSX_ISO_NO_CACHE=1 restores the old
+ * one-seek-per-sector behaviour. */
+bool iso_cache_enabled() {
+    static const bool on = [] {
+        const char* e = std::getenv("PSX_ISO_NO_CACHE");
+        return !(e && e[0] != '0');
+    }();
+    return on;
+}
+
+/* One physical host read of `count` whole sectors starting at local sector
+ * `first`. Returns the bytes obtained, 0 on failure. */
+std::streamsize host_read(BinSegment& seg, uint32_t first, uint32_t count,
+                          uint8_t* out) {
+    const uint32_t bytes = seg.SectorBytes();
+    seg.file.clear();
+    seg.file.seekg(static_cast<std::streampos>(first) * bytes, std::ios::beg);
+    if (!seg.file.good()) {
+        seg.file.clear();
+        return 0;
+    }
+    seg.file.read(reinterpret_cast<char*>(out),
+                  static_cast<std::streamsize>(count) * bytes);
+    const std::streamsize got = seg.file.gcount();
+    seg.file.clear();
+    if (got > 0) {
+        ++seg.host_reads;
+        const int stall = iso_seek_stall_ms();
+        if (stall > 0) std::this_thread::sleep_for(std::chrono::milliseconds(stall));
+    }
+    return got;
+}
+
+/* Bytes of sector `local_lba`, served from the segment's read-ahead window.
+ * The pointer stays valid until the next call for the same segment, so callers
+ * copy out immediately. Returns nullptr when the sector could not be reached. */
+const uint8_t* cached_sector(BinSegment& seg, uint32_t local_lba) {
+    const uint32_t bytes = seg.SectorBytes();
+    for (uint32_t i = 0; i < BinSegment::kCacheSlots; ++i) {
+        const BinSegment::CacheSlot& s = seg.slots[i];
+        if (s.count != 0 && local_lba >= s.first && local_lba - s.first < s.count) {
+            ++seg.cache_hits;
+            return s.data.data() + static_cast<size_t>(local_lba - s.first) * bytes;
+        }
+    }
+    ++seg.cache_misses;
+    if (!iso_cache_enabled() || local_lba >= seg.sector_count) return nullptr;
+
+    BinSegment::CacheSlot& s = seg.slots[seg.next_slot];
+    seg.next_slot = (seg.next_slot + 1) % BinSegment::kCacheSlots;
+
+    const uint32_t first =
+        (local_lba / BinSegment::kCacheSectors) * BinSegment::kCacheSectors;
+    uint32_t count = BinSegment::kCacheSectors;
+    if (count > seg.sector_count - first) count = seg.sector_count - first;
+
+    const size_t window = static_cast<size_t>(BinSegment::kCacheSectors) * bytes;
+    if (s.data.size() < window) s.data.resize(window);
+    s.count = 0;
+    const std::streamsize got = host_read(seg, first, count, s.data.data());
+    if (got <= 0) return nullptr;
+    s.first = first;
+    s.count = static_cast<uint32_t>(got / bytes);
+    if (local_lba - s.first >= s.count) return nullptr;
+    return s.data.data() + static_cast<size_t>(local_lba - s.first) * bytes;
+}
+
+}  // namespace
+
 BinSegment* ISOReader::SegmentForLBA(uint32_t lba) {
     // Linear scan: images carry a handful of segments (one per track file).
     for (BinSegment& seg : segments_) {
@@ -498,41 +596,22 @@ bool ISOReader::ReadSector(uint32_t lba, uint8_t* buffer) {
     }
     const uint32_t local_lba = lba - seg->start_lba;
 
-    // Clear any error flags from a previous failed read
-    seg->file.clear();
-
-    if (seg->raw) {
-        // Raw BIN format - read full sector, extract user data
-        std::streampos offset =
-            static_cast<std::streampos>(local_lba) * RAW_SECTOR_SIZE + RAW_DATA_OFFSET;
-        seg->file.seekg(offset, std::ios::beg);
-
-        if (!seg->file.good()) {
-            seg->file.clear();
-            return false;
-        }
-
-        seg->file.read(reinterpret_cast<char*>(buffer), SECTOR_SIZE);
-        std::streamsize bytes_read = seg->file.gcount();
-        bool success = (bytes_read == SECTOR_SIZE);
-        seg->file.clear();
-        return success;
-    } else {
-        // ISO format - sectors are already 2048 bytes
-        std::streampos offset = static_cast<std::streampos>(local_lba) * SECTOR_SIZE;
-        seg->file.seekg(offset, std::ios::beg);
-
-        if (!seg->file.good()) {
-            seg->file.clear();
-            return false;
-        }
-
-        seg->file.read(reinterpret_cast<char*>(buffer), SECTOR_SIZE);
-        std::streamsize bytes_read = seg->file.gcount();
-        bool success = (bytes_read == SECTOR_SIZE);
-        seg->file.clear();
-        return success;
+    if (const uint8_t* sector = cached_sector(*seg, local_lba)) {
+        std::memcpy(buffer, sector + (seg->raw ? RAW_DATA_OFFSET : 0), SECTOR_SIZE);
+        return true;
     }
+    if (iso_cache_enabled()) {
+        return false;   // a miss the window could not fill
+    }
+
+    // Cache disabled (A/B measurement): one host read for this sector alone.
+    uint8_t one[RAW_SECTOR_SIZE];
+    if (host_read(*seg, local_lba, 1, one) <
+        static_cast<std::streamsize>(seg->SectorBytes())) {
+        return false;
+    }
+    std::memcpy(buffer, one + (seg->raw ? RAW_DATA_OFFSET : 0), SECTOR_SIZE);
+    return true;
 }
 
 bool ISOReader::ReadRawSector(uint32_t lba, uint8_t* buffer) {
@@ -548,19 +627,15 @@ bool ISOReader::ReadRawSector(uint32_t lba, uint8_t* buffer) {
     }
     const uint32_t local_lba = lba - seg->start_lba;
 
-    seg->file.clear();
-    std::streampos offset = static_cast<std::streampos>(local_lba) * RAW_SECTOR_SIZE;
-    seg->file.seekg(offset, std::ios::beg);
-    if (!seg->file.good()) {
-        seg->file.clear();
+    if (const uint8_t* sector = cached_sector(*seg, local_lba)) {
+        std::memcpy(buffer, sector, RAW_SECTOR_SIZE);
+        return true;
+    }
+    if (iso_cache_enabled()) {
         return false;
     }
-
-    seg->file.read(reinterpret_cast<char*>(buffer), RAW_SECTOR_SIZE);
-    std::streamsize bytes_read = seg->file.gcount();
-    bool success = (bytes_read == RAW_SECTOR_SIZE);
-    seg->file.clear();
-    return success;
+    return host_read(*seg, local_lba, 1, buffer) ==
+           static_cast<std::streamsize>(RAW_SECTOR_SIZE);
 }
 
 bool ISOReader::IsOpen() const {
