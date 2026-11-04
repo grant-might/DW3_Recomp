@@ -467,6 +467,13 @@ static int post_load_probe_env_on(void) {
 }
 static Uint64   s_fps_last_time = 0;
 static uint64_t s_fps_last_frame = 0;
+/* Frame-time window for the readout and the [PERF] log line: every frame delta in the current
+ * one-second bucket, so the F line can show the average and the worst frame instead of only a
+ * rate that hides hitches. */
+static Uint64   s_perf_last_tick = 0;
+static Uint64   s_perf_win_ticks = 0;
+static Uint64   s_perf_win_max = 0;
+static uint64_t s_perf_win_frames = 0;
 static std::string s_fps_base_title;
 static int      s_fps_telemetry_enabled = -1; /* -1 = unread env */
 static FramePacer s_frame_pacer = { 0 };
@@ -5886,6 +5893,13 @@ static NetplayVblankEpilogue sdl_vblank_present_body(void) {
     if (fps_telemetry_enabled() && !psx_netplay_in_load_barrier()) {
         const Uint64 now = SDL_GetPerformanceCounter();
         const Uint64 frequency = SDL_GetPerformanceFrequency();
+        if (s_perf_last_tick && now > s_perf_last_tick) {
+            const Uint64 delta = now - s_perf_last_tick;
+            s_perf_win_ticks += delta;
+            if (delta > s_perf_win_max) s_perf_win_max = delta;
+            ++s_perf_win_frames;
+        }
+        s_perf_last_tick = now;
         if (!s_fps_last_time) {
             s_fps_last_time = now;
             s_fps_last_frame = s_frame_count;
@@ -5897,6 +5911,13 @@ static NetplayVblankEpilogue sdl_vblank_present_body(void) {
             const double seconds = (double)(now - s_fps_last_time) / (double)frequency;
             const double fps = (double)(s_frame_count - s_fps_last_frame) / seconds;
             const double speed = fps / 59.94;
+            /* Frame time over the same window: a rate alone cannot tell a steady 30 from a 60
+             * that drops every other frame, and those need different fixes. */
+            const double inv_ms = frequency ? 1000.0 / (double)frequency : 0.0;
+            const double frame_avg_ms = s_perf_win_frames
+                ? (double)s_perf_win_ticks * inv_ms / (double)s_perf_win_frames
+                : (fps > 0.0 ? 1000.0 / fps : 0.0);
+            const double frame_max_ms = (double)s_perf_win_max * inv_ms;
             double display_fps = 0.0;
             if (g_frame_interpolation && g_gl_active) {
                 display_fps = g_frame_interpolation_fps > 0
@@ -5907,23 +5928,23 @@ static NetplayVblankEpilogue sdl_vblank_present_body(void) {
                 char title[256];
                 if (display_fps > 0.0) {
                     snprintf(title, sizeof(title),
-                             "%s  [Game %.0f fps %.2fx | Display %.0f fps]",
-                             s_fps_base_title.c_str(), fps, speed, display_fps);
+                             "%s  [Game %.0f fps %.2fx | %.1f ms | Display %.0f fps]",
+                             s_fps_base_title.c_str(), fps, speed, frame_avg_ms, display_fps);
                 } else {
-                    snprintf(title, sizeof(title), "%s  [Game %.0f fps %.2fx]",
-                             s_fps_base_title.c_str(), fps, speed);
+                    snprintf(title, sizeof(title), "%s  [Game %.0f fps %.2fx | %.1f ms]",
+                             s_fps_base_title.c_str(), fps, speed, frame_avg_ms);
                 }
                 SDL_SetWindowTitle(sdl_window, title);
             }
             if (!g_headless) {
-                char osd[96];
+                char osd[128];
                 if (display_fps > 0.0) {
                     snprintf(osd, sizeof(osd),
-                             "Game %.0f FPS  %.2fx | Display %.0f FPS",
-                             fps, speed, display_fps);
+                             "Game %.0f FPS  %.2fx | %.1f ms | Display %.0f FPS",
+                             fps, speed, frame_avg_ms, display_fps);
                 } else {
-                    snprintf(osd, sizeof(osd), "Game %.0f FPS  %.2fx",
-                             fps, speed);
+                    snprintf(osd, sizeof(osd), "Game %.0f FPS  %.2fx | %.1f ms",
+                             fps, speed, frame_avg_ms);
                 }
                 host_osd_set_status(osd);
             }
@@ -5957,12 +5978,23 @@ static NetplayVblankEpilogue sdl_vblank_present_body(void) {
                 s_np_guest_ticks = 0;
                 s_np_timing_frames = 0;
             } else {
-                std::fprintf(stderr, "[FPS] game: %.1f fps (%.2fx) | frames: %llu\n",
-                             fps, speed, (unsigned long long)s_frame_count);
+                std::fprintf(stderr,
+                             "[FPS] game: %.1f fps (%.2fx) | frames: %llu | "
+                             "frame=%.2f ms max=%.2f ms\n",
+                             fps, speed, (unsigned long long)s_frame_count,
+                             frame_avg_ms, frame_max_ms);
             }
+            /* Machine-readable summary for support: one line a second, greppable, and it names the
+             * presentation mode that was actually in force. */
+            std::fprintf(stderr, "[PERF] fps=%.1f frame_ms=%.2f max_ms=%.2f present=%s\n",
+                         fps, frame_avg_ms, frame_max_ms,
+                         present_vsync_owns_cadence() ? "vsync" : "pacer");
             std::fflush(stderr);
             s_fps_last_time = now;
             s_fps_last_frame = s_frame_count;
+            s_perf_win_ticks = 0;
+            s_perf_win_max = 0;
+            s_perf_win_frames = 0;
         }
     }
 

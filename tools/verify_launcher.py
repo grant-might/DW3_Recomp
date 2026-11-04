@@ -2731,6 +2731,27 @@ except Exception as _exc:  # noqa: BLE001
     check(False, "V22-V23 universal-settings checks raised",
           f"{type(_exc).__name__}: {_exc}")
 
+# --- V24 a deferred window starts with placeholders, then fills them without adding tabs
+# The launch path builds the pages after show() so the window is not held hostage by Qt's
+# one-time style setup. That only helps if the fill-in really happens and the tab count is
+# stable, so both are asserted here.
+try:
+    from dmw3launcher.ui.main_window import MainWindow as _MWD                      # noqa: PLC0415
+
+    _winD = _MWD({"version": 1, "editor_root": None}, defer_tabs=True)
+    _had_pages_before = hasattr(_winD, "play")
+    _tabs_before = _winD.tabs.count()
+    _winD.build_tabs()
+    _tabs_after = _winD.tabs.count()
+    _has_pages_after = hasattr(_winD, "play") and hasattr(_winD, "settings")
+    check(not _had_pages_before and _has_pages_after and _tabs_before == _tabs_after,
+          "V24 a deferred window starts with placeholders, then fills them in place",
+          f"pages_before={_had_pages_before} tabs={_tabs_before}->{_tabs_after} "
+          f"pages_after={_has_pages_after}")
+    _winD.close()
+except Exception as _exc:  # noqa: BLE001
+    check(False, "V24 deferred-startup check raised", f"{type(_exc).__name__}: {_exc}")
+
 # --- W. the builder: the pre-flight, and the shipped engine's portability fixes ----------------
 # The public Play tab is a BUILDER. The two things that matter most are that it never starts a
 # 10-15 minute recompile it cannot finish, and that the framework it ships does not reintroduce the

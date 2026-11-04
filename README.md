@@ -96,6 +96,30 @@ Python 3 is required, from https://www.python.org/downloads/.
 
 Then use the **Play** tab.
 
+## Keys and the performance readout
+
+While playing, press **F** to toggle a readout in the game window's title bar:
+
+```
+Digimon World 2003 Recompiled  [Game 60 fps 1.00x | 16.7 ms]
+```
+
+- **60 fps, 1.00x** is full speed. The game runs at the PS1's 59.94 Hz, so 1.00x means real time.
+- **16.7 ms** is the average time a frame took over the last second. 16.7 is the budget at 60 fps,
+  so anything well above it means the machine is missing frames.
+
+The same numbers go to `Builds\<region>\logs\runtime.log` once a second, and the log line carries
+two things the title bar has no room for:
+
+```
+[PERF] fps=60.0 frame_ms=16.68 max_ms=84.05 present=vsync
+```
+
+`max_ms` is the worst single frame in that second, and `present=` is how the game is presenting,
+either `vsync` or `pacer`. If a game feels stuttery, that line is the first thing to send us.
+
+Other keys: **Alt+Enter** toggles fullscreen. Rebinding lives in `keybinds.ini` beside the game.
+
 ## Building the game (the Play tab)
 
 1. **Add disc image...** and pick your `.cue` or `.bin`. The launcher reads the disc's own boot

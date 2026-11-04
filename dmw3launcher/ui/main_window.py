@@ -16,7 +16,7 @@ from .mods_tab import ModsTab
 from .play_tab import PlayTab
 from .settings_tab import SettingsTab
 
-VERSION = "0.4.2"
+VERSION = "0.4.3"
 # The logo is drawn at the header bar's own height (its art is 727x320, a wordmark, not an icon).
 LOGO_ART_H = 64
 
@@ -28,9 +28,11 @@ TAB_LABELS = {"play": "Play", "memcard": "Memory Card", "mods": "Mods",
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, cfg: dict) -> None:
+    def __init__(self, cfg: dict, defer_tabs: bool = False) -> None:
         super().__init__()
         self.cfg = cfg
+        self._defer_tabs = bool(defer_tabs)
+        self._pages_built = not defer_tabs
         self._bg: QPixmap | None = theme.background()
 
         self.setWindowTitle(paths.APP_NAME)
@@ -90,22 +92,39 @@ class MainWindow(QMainWindow):
         # ---- tabs ---------------------------------------------------------
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
-        self.play = PlayTab(cfg)
-        self.memcard = MemcardTab(cfg)
-        self.mods = ModsTab(cfg)
-        self.decomp = DecompTab(cfg)
-        self.settings = SettingsTab(cfg)
+        self._tab_hosts: dict[str, QVBoxLayout] = {}
+        if defer_tabs:
+            # The Play page alone costs seconds the first time it is built: Qt pays its style
+            # and font setup once per widget class, and a stock machine has thousands of font
+            # families to search. Building that before show() makes the window arrive late and
+            # look dead. With defer_tabs the window appears immediately and the pages land in
+            # their placeholders on the next event-loop tick (see build_tabs).
+            for key in TAB_ORDER:
+                host = QWidget()
+                host_layout = QVBoxLayout(host)
+                host_layout.setContentsMargins(0, 0, 0, 0)
+                host_layout.setSpacing(0)
+                self._tab_hosts[key] = host_layout
+                self.tabs.addTab(host, TAB_LABELS[key])
+            self._tab_widgets: dict[str, QWidget] = {}
+            self._tab_keys: tuple[tuple[str, str, QWidget], ...] = ()
+        else:
+            self.play = PlayTab(cfg)
+            self.memcard = MemcardTab(cfg)
+            self.mods = ModsTab(cfg)
+            self.decomp = DecompTab(cfg)
+            self.settings = SettingsTab(cfg)
 
-        # The tabs carry the user's own art: the tab NAME as a word-image (320x80) instead of a
-        # text label. Re-applied on every restyle, because the auto-tint follows the palette.
-        # TAB_ORDER/TAB_LABELS are module constants so the verifier and this list cannot drift.
-        self._tab_widgets = {"play": self.play, "memcard": self.memcard, "mods": self.mods,
-                             "decomp": self.decomp, "settings": self.settings}
-        self._tab_keys = tuple((key, TAB_LABELS[key], self._tab_widgets[key])
-                               for key in TAB_ORDER)
-        for _key, _label, _widget in self._tab_keys:
-            self.tabs.addTab(_widget, "")
-        self._apply_tab_art()
+            # The tabs carry the user's own art: the tab NAME as a word-image (320x80) instead of a
+            # text label. Re-applied on every restyle, because the auto-tint follows the palette.
+            # TAB_ORDER/TAB_LABELS are module constants so the verifier and this list cannot drift.
+            self._tab_widgets = {"play": self.play, "memcard": self.memcard, "mods": self.mods,
+                                 "decomp": self.decomp, "settings": self.settings}
+            self._tab_keys = tuple((key, TAB_LABELS[key], self._tab_widgets[key])
+                                   for key in TAB_ORDER)
+            for _key, _label, _widget in self._tab_keys:
+                self.tabs.addTab(_widget, "")
+            self._apply_tab_art()
 
         holder = QWidget()
         hl2 = QVBoxLayout(holder)
@@ -133,6 +152,31 @@ class MainWindow(QMainWindow):
         self._restyle()      # the Memory Card tab may already have activated the editor theme
 
     # ------------------------------------------------------------------ theme
+    def build_tabs(self) -> None:
+        """Construct the five pages and drop them into the placeholders from a deferred start.
+
+        Called from the event loop after show(), so the window is already on screen while Qt pays
+        the one-time style and font setup that the Play page triggers. A synchronous window
+        (defer_tabs=False) is already built and this is a no-op.
+        """
+        if self._pages_built:
+            return
+        self._pages_built = True
+        pages: dict[str, QWidget] = {
+            "play": PlayTab(self.cfg),
+            "memcard": MemcardTab(self.cfg),
+            "mods": ModsTab(self.cfg),
+            "decomp": DecompTab(self.cfg),
+            "settings": SettingsTab(self.cfg),
+        }
+        for key, widget in pages.items():
+            setattr(self, key, widget)
+            self._tab_hosts[key].addWidget(widget)
+        self._tab_widgets = pages
+        self._tab_keys = tuple((key, TAB_LABELS[key], pages[key]) for key in TAB_ORDER)
+        self._apply_tab_art()
+        self._restyle()
+
     def _restyle(self) -> None:
         """Re-apply everything that bakes a palette colour into a stylesheet or a paint.
 
@@ -145,12 +189,15 @@ class MainWindow(QMainWindow):
         inside the editor.
         """
         css = theme.stylesheet()
+        pages = [getattr(self, key, None) for key in ("play", "mods", "decomp", "settings")]
         if theme.editor_theme_active():
             self.setStyleSheet("")
             self.tabs.setStyleSheet(theme.tabbar_stylesheet())
-            for w in (self.header, self.play, self.mods, self.decomp, self.settings):
+            for w in (self.header, *[p for p in pages if p is not None]):
                 w.setStyleSheet(css)
-            self.memcard.style_chrome(css)
+            memcard = getattr(self, "memcard", None)
+            if memcard is not None:
+                memcard.style_chrome(css)
         else:
             self.setStyleSheet(css)
         self.header.set_fill(theme.BG)      # page colour, so header and page never seam
@@ -166,6 +213,8 @@ class MainWindow(QMainWindow):
         the selected tab keeps the accent underline under the word rather than around it.
         """
         sized = False
+        if not self._tab_keys:
+            return      # deferred start: the placeholders carry text until build_tabs runs
         art = theme.tab_images(theme.TAB_ART_H)      # one load for the whole row
         for index, (key, label, _widget) in enumerate(self._tab_keys):
             pm = art.get(key)
@@ -184,7 +233,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ events
     def _tab_changed(self, index: int) -> None:
         w = self.tabs.widget(index)
-        if hasattr(w, "refresh") and w is not self.play:
+        if hasattr(w, "refresh") and w is not getattr(self, "play", None):
             try:
                 w.refresh()
             except Exception:

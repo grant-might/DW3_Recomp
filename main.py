@@ -9,6 +9,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
+from PySide6.QtCore import QTimer  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from dmw3launcher import builds, paths  # noqa: E402
@@ -45,8 +46,11 @@ def main() -> int:
     if moved:
         print(f"memory cards are now in {builds.cards_root()}: "
               + ", ".join(str(dest.relative_to(builds.cards_root())) for _src, dest in moved))
-    win = MainWindow(cfg)
+    win = MainWindow(cfg, defer_tabs=True)
     win.show()
+    # Build the pages on the next event-loop turn: the window is already on screen, so the
+    # one-time Qt style setup the Play page triggers cannot delay it.
+    QTimer.singleShot(0, win.build_tabs)
     return app.exec()
 
 
